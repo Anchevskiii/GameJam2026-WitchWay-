@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://dfvx0kq62k03"]
+
+[node name="Main" type="Node2D"]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="PlaceholderLabel" type="Label" parent="CanvasLayer"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -40.0
+offset_right = 250.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "It's a Feature, Not a Bug: Halloween Edition
+Ready for Development"
+horizontal_alignment = 1
+vertical_alignment = 1

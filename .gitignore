@@ -1,0 +1,38 @@
+# Godot 4+ specific ignores
+.godot/
+*.translation
+
+# Local tools & portable runtimes (downloaded via setup.ps1)
+.tools/
+
+# Exported game builds
+/build/
+/export/
+/dist/
+*.apk
+*.aab
+*.exe
+!open_project.bat
+!setup.bat
+
+# User save games and runtime configs
+*.save
+savegame.json
+/user/
+
+# Mono / C# (just in case)
+.mono/
+*.csproj
+*.sln
+
+# IDE and OS specific
+.vs/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Crash logs
+godot.log
