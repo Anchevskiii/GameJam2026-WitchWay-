@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dfvx0kq62k03"]
 
-[ext_resource type="PackedScene" uid="uid://cb5xq8nm47k21" path="res://scenes/levels/tutorial_room.tscn" id="1_tutorial_room"]
+[ext_resource type="PackedScene" path="res://scenes/levels/tutorial_room.tscn" id="1_tutorial_room"]
 
 [node name="Main" type="Node2D"]
 
