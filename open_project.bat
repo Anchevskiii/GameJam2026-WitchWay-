@@ -1,8 +1,9 @@
 @echo off
+setlocal
 cd /d "%~dp0"
 echo Launching Godot Editor...
-if exist ".\.tools\godot\godot.exe" (
-    start "" ".\.tools\godot\godot.exe" -e --path "%~dp0"
+if exist ".tools\godot\godot.exe" (
+    start "" ".tools\godot\godot.exe" -e --path .
 ) else (
-    godot -e --path "%~dp0"
+    start "" godot -e --path .
 )

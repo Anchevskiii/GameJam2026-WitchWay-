@@ -125,3 +125,41 @@ res://
 **Podatkovni model (Kratek pregled):**[cite: 1, 2]
 - **Shranjevanje napredka (Save System):** Uporablja se preprosta `.json` datoteka (shranjena na lokalni disk ob vstopu v *Living Room*), ki beleži le najvišji doseženi nivo in nastavitve igralca.[cite: 1, 2]
 - **Podatki o entitetah in nivojih:** Konfiguracije zombijev, duhov in parametrov za generiranje sob (koliko sob, kateri hrošč) se shranjujejo preko vgrajenih **Godot Resources (`.tres`)** datotek.[cite: 1, 2] Te omogočajo hitro nastavljanje v Godotovem inšpektorju brez uporabe zunanjih baz podatkov.[cite: 1, 2]
+
+---
+
+## 5. Navodila za razvijalce (Developer Quickstart & Workflow)
+
+### 5.1 Namestitev in prvi zagon (60 sekund)
+1. **Kloniraj repozitorij:**
+   ```powershell
+   git clone https://github.com/Anchevskiii/GameJam2026-WitchWay-.git
+   cd GameJam2026-WitchWay-
+   ```
+2. **Zaženi namestitev okolja:**
+   * Dvakrat klikni na `setup.bat` (ali v terminalu poženi `.\setup.ps1`).
+   * Skripta samodejno prenese in nastavi prenosno različico **Godot 4.3** v `.tools/godot/`.
+3. **Odpri projekt v Godot urejevalniku:**
+   * Dvakrat klikni na `open_project.bat`. Odpre se Godot urejevalnik neposredno v tem projektu.
+
+### 5.2 Hitro testiranje med razvojem
+- **F5:** Zaženi celotno igro (vstopna scena `scenes/main.tscn`).
+- **F6:** Zaženi samo trenutno odprto sceno (npr. testiranje samo igralca `player.tscn` ali posamezne sobe).
+- **Urejevalnik kode:** Lahko uporabljaš vgrajeni urejevalnik v Godotu ali katero koli zunanje orodje (Antigravity IDE, VS Code, Cursor).
+
+### 5.3 Pravila sodelovanja za ekipo (3 razvijalci)
+Zaradi narave Godot scen (`.tscn`), ki se ob sočasnem urejanju hitro zapletejo v Git konfliktih, dosledno upoštevamo:
+1. **Pravilo 1 razvijalec na 1 sceno:**
+   - **Dev 1 (Igralec & Sanity):** `scenes/actors/player.tscn` in `scripts/components/sanity_component.gd`.
+   - **Dev 2 (Generator sob & Bug mehanike):** `scenes/levels/dungeon_level.tscn` in `scripts/generators/`.
+   - **Dev 3 (UI, Zvok & Asseti):** `scenes/ui/hud.tscn`, zvoki v `_autoloads/audio_manager.gd`.
+2. **Git Feature Branches:**
+   ```powershell
+   git checkout main
+   git pull
+   git checkout -b feature/ime-funkcionalnosti
+   # ... razvijaj ...
+   git add .
+   git commit -m "Opis narejenega"
+   git push -u origin feature/ime-funkcionalnosti
+   ```

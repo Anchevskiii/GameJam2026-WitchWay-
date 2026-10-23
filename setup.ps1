@@ -64,16 +64,17 @@ if ($systemGodot) {
 
 # 2. Create open_project.bat convenience launcher in project root
 $launcherBat = Join-Path $PROJECT_ROOT "open_project.bat"
-$relativeExePath = if ($TARGET_GODOT -eq "godot") { "godot" } else { ".\.tools\godot\godot.exe" }
+$relativeExePath = if ($TARGET_GODOT -eq "godot") { "godot" } else { ".tools\godot\godot.exe" }
 
 $lines = @(
     "@echo off",
+    "setlocal",
     'cd /d "%~dp0"',
     "echo Launching Godot Editor...",
     "if exist `"$relativeExePath`" (",
-    "    start `"`" `"$relativeExePath`" -e --path `"%~dp0`"",
+    "    start `"`" `"$relativeExePath`" -e --path .",
     ") else (",
-    "    godot -e --path `"%~dp0`"",
+    "    start `"`" godot -e --path .",
     ")"
 )
 [System.IO.File]::WriteAllLines($launcherBat, $lines, [System.Text.Encoding]::ASCII)
