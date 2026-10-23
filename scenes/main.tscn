@@ -1,7 +1,41 @@
-[gd_scene load_steps=2 format=3 uid="uid://dfvx0kq62k03"]
+[gd_scene load_steps=5 format=3 uid="uid://dfvx0kq62k03"]
 
-[ext_resource type="PackedScene" path="res://scenes/levels/tutorial_room.tscn" id="1_tutorial_room"]
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="PackedScene" uid="uid://bvkmq8nx41e7q" path="res://scenes/ui/hud.tscn" id="2_hud"]
+[ext_resource type="PackedScene" uid="uid://c6nmq8nx41e7q" path="res://scenes/ui/game_over.tscn" id="3_game_over"]
+[ext_resource type="PackedScene" uid="uid://d3pmq8nx41e7q" path="res://scenes/ui/pause_menu.tscn" id="4_pause"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node"]
+script = ExtResource("1_main")
 
-[node name="CurrentLevel" parent="." instance=ExtResource("1_tutorial_room")]
+[node name="WorldContainer" type="SubViewportContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+
+[node name="World" type="SubViewport" parent="WorldContainer"]
+handle_input_locally = false
+canvas_item_default_texture_filter = 0
+size = Vector2i(1280, 720)
+render_target_update_mode = 4
+
+[node name="HUD" parent="." instance=ExtResource("2_hud")]
+
+[node name="GameOverScreen" parent="." instance=ExtResource("3_game_over")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("4_pause")]
+
+[node name="FadeLayer" type="CanvasLayer" parent="."]
+layer = 50
+
+[node name="FadeRect" type="ColorRect" parent="FadeLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)

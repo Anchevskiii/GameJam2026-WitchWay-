@@ -37,8 +37,8 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.85, 1)
 theme_override_font_sizes/font_size = 16
-text = "The terror was too overwhelming...
-You have been kicked out to the start of this chamber."
+text = "Your sanity reached 0%. Management has been notified.
+You will be escorted back to the Living Room. Please mind the puddle."
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="Panel/CenterContainer/VBoxContainer"]
@@ -46,7 +46,7 @@ custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
 [node name="RetryButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(180, 42)
+custom_minimum_size = Vector2(240, 42)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Try Again"
+text = "Back to the Living Room"

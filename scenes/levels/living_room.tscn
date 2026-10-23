@@ -1,0 +1,37 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/room_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://data/npcs/cardboard_ghost.tres" id="2_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/wardrobe.png" id="3_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/tv.png" id="4_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/couch.png" id="5_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/table.png" id="6_r"]
+
+[node name="LivingRoom" instance=ExtResource("1_base")]
+room_title = "The Living Room"
+objective = "Honk at the cardboard ghost (SPACE). Then take the door on the right."
+layout = "######################
+#....................#
+#..w.....v...........#
+#....................#
+#.......c............#
+#....................#
+#...............g....#
+#....................D
+#..P.................#
+#..........t.........#
+#....................#
+######################"
+npc_legend = {
+"g": ExtResource("2_r")
+}
+decor_legend = {
+"w": ExtResource("3_r"),
+"v": ExtResource("4_r"),
+"c": ExtResource("5_r"),
+"t": ExtResource("6_r")
+}
+next_room = "res://scenes/levels/dark_hallway.tscn"
+is_safe_room = true
+ambient_color = Color(1, 0.95, 0.88, 1)
+intro_lines = Array[String](["Welcome to the Haunted House! This is the Living Room. It's the only room with someone living in it. You.", "Move with WASD. Hold SHIFT to run. Press SPACE to honk your complimentary rubber chicken.", "Honk at the Cardboard Ghost. Scared monsters drop stuff, and stuff costs CPU. Watch the CPU bar.", "Out there, monsters glow red while winding up a scare. Honk first! Too late, and you lose Sanity.", "Sanity at 0% means... an accident. Stand still to calm down. The door on the right leads deeper in."])

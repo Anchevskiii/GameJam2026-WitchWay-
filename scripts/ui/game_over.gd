@@ -13,7 +13,11 @@ func _ready() -> void:
 	if retry_button:
 		retry_button.pressed.connect(_on_retry_pressed)
 
+## Seconds to wait so the puddle, sad trombone and narrator joke can land first.
+@export var show_delay: float = 2.0
+
 func _on_game_over() -> void:
+	await get_tree().create_timer(show_delay).timeout
 	visible = true
 
 func _on_retry_pressed() -> void:

@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="NpcData" load_steps=9 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/entities/vampire/Png_animation/Vampire1.png" id="1_bjsha"]
+[ext_resource type="Texture2D" path="res://assets/sprites/entities/vampire/Png_animation/Vampire2.png" id="2_s6nyt"]
+[ext_resource type="Texture2D" path="res://assets/sprites/entities/vampire/Png_animation/Vampire3.png" id="3_hrwnj"]
+[ext_resource type="Texture2D" path="res://assets/sprites/entities/vampire/Png_animation/Vampire4.png" id="4_53k21"]
+[ext_resource type="Script" path="res://scripts/resources/prop_data.gd" id="5_k8ykj"]
+[ext_resource type="Resource" path="res://data/props/fang.tres" id="6_eiwlc"]
+[ext_resource type="Resource" path="res://data/props/mug.tres" id="7_3l8fv"]
+[ext_resource type="Script" path="res://scripts/resources/npc_data.gd" id="8_plvyr"]
+
+[resource]
+script = ExtResource("8_plvyr")
+display_name = "Tired Vampire"
+frames = Array[Texture2D]([ExtResource("1_bjsha"), ExtResource("2_s6nyt"), ExtResource("3_hrwnj"), ExtResource("4_53k21")])
+anim_fps = 6.0
+tint = Color(1, 1, 1, 1)
+sprite_scale = 1.0
+can_move = true
+move_speed = 25.0
+wander_radius = 64.0
+afraid_of_player = false
+is_harmless = false
+notice_range = 120.0
+scare_range = 95.0
+windup_time = 2.6
+scare_damage = 25.0
+scare_cooldown = 2.5
+windup_text = "BLEH"
+scare_sound = "boo"
+after_scare = 1
+loot = Array[ExtResource("5_k8ykj")]([ExtResource("6_eiwlc"), ExtResource("6_eiwlc"), ExtResource("7_3l8fv")])
+panic_time = 2.5
+panic_speed = 150.0
+recover_time = 8.0

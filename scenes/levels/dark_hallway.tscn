@@ -1,0 +1,33 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/room_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://data/npcs/tired_vampire.tres" id="2_r"]
+[ext_resource type="Resource" path="res://data/npcs/bat.tres" id="3_r"]
+[ext_resource type="Resource" path="res://data/npcs/jack_o_lantern.tres" id="4_r"]
+[ext_resource type="Resource" path="res://data/npcs/ghost.tres" id="5_r"]
+[ext_resource type="Resource" path="res://data/npcs/werewolf.tres" id="6_r"]
+
+[node name="DarkHallway" instance=ExtResource("1_base")]
+room_title = "The Dark Hallway"
+objective = "Find the exit on the far right. Not every wall is a wall."
+layout = "##############################################
+#.....#.........#..........X.......#.........#
+#..P..#....v....#....b.....X...j...#.........#
+#.....F.........#..........F.......#....g....#
+#.....#.........#..........X.......#.........D
+#.....#.........####.#######......#####.######
+#.....#.........#................X...........#
+#................................F......w....#
+##############################################"
+npc_legend = {
+"v": ExtResource("2_r"),
+"b": ExtResource("3_r"),
+"j": ExtResource("4_r"),
+"g": ExtResource("5_r"),
+"w": ExtResource("6_r")
+}
+next_room = "res://scenes/levels/dining_room.tscn"
+flashlight_works = false
+ambient_color = Color(0.06, 0.05, 0.1, 1)
+npc_load_radius = 90.0
+intro_lines = Array[String](["The Dark Hallway. The lighting textures failed to load. Darkness is an immersive feature.", "Your flashlight's texture also failed to load. We thank you for your patience.", "Some walls are magenta. Some magenta walls are more of a suggestion. Collision detection: optional."])
