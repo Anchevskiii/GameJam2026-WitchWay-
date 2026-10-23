@@ -1,0 +1,118 @@
+[gd_scene load_steps=5 format=3 uid="uid://bvkmq8nx41e7q"]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_bg"]
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+bg_color = Color(0.06, 0.06, 0.1, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.4, 0.55, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sanity_fill"]
+bg_color = Color(0.95, 0.2, 0.35, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cpu_fill"]
+bg_color = Color(0.2, 0.8, 1, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="HUD" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_hud_script")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="Control"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 290.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_hud_bg")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/PanelContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SanityBox" type="VBoxContainer" parent="Control/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="HeaderBox" type="HBoxContainer" parent="Control/PanelContainer/VBoxContainer/SanityBox"]
+layout_mode = 2
+
+[node name="SanityTitle" type="Label" parent="Control/PanelContainer/VBoxContainer/SanityBox/HeaderBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 13
+text = "SANITY (FEAR)"
+
+[node name="SanityPercent" type="Label" parent="Control/PanelContainer/VBoxContainer/SanityBox/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.35, 0.5, 1)
+theme_override_font_sizes/font_size = 13
+text = "0%"
+
+[node name="SanityBar" type="ProgressBar" parent="Control/PanelContainer/VBoxContainer/SanityBox"]
+custom_minimum_size = Vector2(240, 14)
+layout_mode = 2
+theme_override_styles/fill = SubResource("StyleBoxFlat_sanity_fill")
+value = 0.0
+show_percentage = false
+
+[node name="CPUBox" type="VBoxContainer" parent="Control/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="HeaderBox" type="HBoxContainer" parent="Control/PanelContainer/VBoxContainer/CPUBox"]
+layout_mode = 2
+
+[node name="CPUTitle" type="Label" parent="Control/PanelContainer/VBoxContainer/CPUBox/HeaderBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "CPU OVERLOAD"
+
+[node name="CPUPercent" type="Label" parent="Control/PanelContainer/VBoxContainer/CPUBox/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "0%"
+
+[node name="CPUBar" type="ProgressBar" parent="Control/PanelContainer/VBoxContainer/CPUBox"]
+custom_minimum_size = Vector2(240, 10)
+layout_mode = 2
+theme_override_styles/fill = SubResource("StyleBoxFlat_cpu_fill")
+value = 0.0
+show_percentage = false
+
+[node name="KeyStatusLabel" type="Label" parent="Control/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.75, 0.85, 1)
+theme_override_font_sizes/font_size = 12
+text = "KEY: [MISSING]"
