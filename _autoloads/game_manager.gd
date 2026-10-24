@@ -12,12 +12,14 @@ var current_sanity: float = 0.0
 var current_cpu_overload: float = 0.0
 var is_glitch_mode: bool = false
 var is_game_over: bool = false
+var is_game_active: bool = false
 
 func _ready() -> void:
+	is_game_active = false
 	reset_level_state()
 
 func _process(delta: float) -> void:
-	if not is_game_over:
+	if not is_game_over and is_game_active:
 		_process_cpu_overload(delta)
 
 func _process_cpu_overload(delta: float) -> void:
@@ -55,6 +57,7 @@ func reset_level_state() -> void:
 	current_cpu_overload = 0.0
 	is_glitch_mode = false
 	is_game_over = false
+	is_game_active = true
 	EventBus.sanity_changed.emit(current_sanity, max_sanity)
 	EventBus.cpu_overload_changed.emit(current_cpu_overload, max_cpu_overload)
 	EventBus.glitch_mode_toggled.emit(false)
