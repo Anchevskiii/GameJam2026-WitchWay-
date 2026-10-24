@@ -32,7 +32,7 @@ const NPC_PATHS: Dictionary = {
 }
 const WANDERERS: String = "gmhwb"
 const OBJ: String = "res://assets/sprites/objects/%s.png"
-const HIDE_ITEMS: Dictionary = {"W": "cupboard", "K": "bookshelf", "C": "couch"}
+const HIDE_ITEMS: Dictionary = {"W": "cupboard", "S": "bookshelf", "C": "couch"}
 const DECOR_ITEMS: Dictionary = {"t": "table", "A": "armchair", "L": "lamp", "Q": "plant", "Z": "crate", "O": "clock", "V": "tv", "T": "dining_table"}
 const FLOOR_ITEMS: Dictionary = {"r": "rug", "o": "cobweb", "n": "bones", "u": "pumpkin"}
 const LIGHT_ITEMS: Dictionary = {"c": "candles"}
@@ -116,11 +116,11 @@ func _try_generate(tier: int, kind: Kind) -> Dictionary:
 			var rx: int = rng.randi_range(2, _w - rw - 3)
 			var ry: int = rng.randi_range(2, _h - rh - 3)
 			
-			# Check overlap with 1-tile gap
+			# Check overlap with 3-tile gap so 2-tile corridors fit cleanly
 			var overlaps := false
 			for other in _rooms:
-				if not (rx + rw + 2 < other.x or rx > other.x + other.w + 2 or
-						ry + rh + 2 < other.y or ry > other.y + other.h + 2):
+				if not (rx + rw + 3 < other.x or rx > other.x + other.w + 3 or
+						ry + rh + 3 < other.y or ry > other.y + other.h + 3):
 					overlaps = true
 					break
 			if not overlaps:
@@ -143,24 +143,14 @@ func _try_generate(tier: int, kind: Kind) -> Dictionary:
 				else:
 					_put(Vector2i(x, y), ".")
 
-	# 3. Connect rooms via organic corridors with walls
+	# 3. Connect rooms via organic 2-tile wide corridors with walls
 	for i in _rooms.size() - 1:
 		_connect_rooms(_rooms[i], _rooms[i + 1])
 	# Extra corridor to create authentic loop if more than 4 rooms
 	if _rooms.size() >= 5:
 		_connect_rooms(_rooms[1], _rooms[_rooms.size() - 2])
 
-	# 4. Turn doorway intersections into Interior Doors ('d')
-	for cell in _doorways:
-		if _cell_at(cell) == ".":
-			# Only place door if between two walls
-			var h_walls: bool = _cell_at(cell + Vector2i.LEFT) == "#" and _cell_at(cell + Vector2i.RIGHT) == "#"
-			var v_walls: bool = _cell_at(cell + Vector2i.UP) == "#" and _cell_at(cell + Vector2i.DOWN) == "#"
-			if h_walls or v_walls:
-				_put(cell, "d")
-				_reserve_around(cell)
-
-	# 5. Furnish the Safe Room (Room 0)
+	# 4. Furnish the Safe Room (Room 0) - GUARANTEED SAFE
 	var safe: Dictionary = _rooms[0]
 	var safe_start := Vector2i(safe.cx, safe.cy)
 	_put(safe_start, "P")
@@ -209,28 +199,34 @@ func _connect_rooms(r1: Dictionary, r2: Dictionary) -> void:
 	while cx != x2:
 		cx += 1 if x2 > cx else -1
 		pts.append(Vector2i(cx, cy))
+		pts.append(Vector2i(cx, cy + 1))
 	while cy != y2:
 		cy += 1 if y2 > cy else -1
 		pts.append(Vector2i(cx, cy))
+		pts.append(Vector2i(cx + 1, cy))
 
 	for pt in pts:
-		if _cell_at(pt) == "#":
-			_doorways.append(pt)
+		if pt.x < 1 or pt.x >= _w - 1 or pt.y < 1 or pt.y >= _h - 1:
+			continue
 		_put(pt, ".")
 		# Surround corridor with walls if blank
-		for dir in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1),
-					Vector2i(-1, -1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(1, 1)]:
-			var n: Vector2i = pt + dir
-			if n.x >= 0 and n.y >= 0 and n.x < _w and n.y < _h and _cell_at(n) == " ":
-				_put(n, "#")
+		for dy in [-1, 0, 1]:
+			for dx in [-1, 0, 1]:
+				var n := Vector2i(pt.x + dx, pt.y + dy)
+				if n.x >= 0 and n.y >= 0 and n.x < _w and n.y < _h and _cell_at(n) == " ":
+					_put(n, "#")
 
 
 # ---------------------------------------------------------------- exit & bug
 
 func _setup_exit_and_bug(exit_room: Dictionary, kind: Kind) -> bool:
-	var exit_pos := Vector2i(exit_room.cx, exit_room.cy)
+	var exit_pos := Vector2i(exit_room.cx, exit_room.y - 1)
 	_put(exit_pos, "D")
 	_reserve_around(exit_pos)
+	
+	var front_pos := Vector2i(exit_room.cx, exit_room.y)
+	_put(front_pos, ".")
+	_reserved[front_pos] = true
 
 	match kind:
 		Kind.PHASE_WALL:
@@ -242,18 +238,18 @@ func _setup_exit_and_bug(exit_room: Dictionary, kind: Kind) -> bool:
 					_put(Vector2i(x, seal_y), "F")
 				else:
 					_put(Vector2i(x, seal_y), "#")
-			_put(Vector2i(exit_room.cx, exit_room.y), "c")  # Eerie candle light in exit room
+			_put(Vector2i(exit_room.x, exit_room.y), "c")  # Eerie candle light in exit room
 
 		Kind.KEY_HUNT:
 			# Exit door is locked: place key 'K' in Bedroom or Library
 			var key_room: Dictionary = _rooms[1]
 			var key_pos := Vector2i(key_room.cx, key_room.cy)
 			_put(key_pos, "K")
-			_put(Vector2i(exit_room.cx, exit_room.y), "c")
+			_put(Vector2i(exit_room.x, exit_room.y), "c")
 
 		Kind.OVERLOAD:
 			# Exit door requires 100% CPU overload: decorate with candles
-			_put(Vector2i(exit_room.cx, exit_room.y), "c")
+			_put(Vector2i(exit_room.x, exit_room.y), "c")
 			
 	return true
 
@@ -270,8 +266,8 @@ func _furnish_themed_room(room: Dictionary, _tier: int) -> void:
 			_put_safe(Vector2i(room.x + room.w - 1, room.y + room.h - 1), "Z")  # Crate
 		"library":
 			# Bookshelves, Desk, Armchair, Candles
-			_put_safe(Vector2i(room.x, room.y), "K")  # Bookshelf
-			_put_safe(Vector2i(room.x + room.w - 1, room.y), "K")  # Bookshelf
+			_put_safe(Vector2i(room.x, room.y), "S")  # Bookshelf
+			_put_safe(Vector2i(room.x + room.w - 1, room.y), "S")  # Bookshelf
 			_put_safe(Vector2i(room.cx, room.cy), "t")  # Study desk
 			_put_safe(Vector2i(room.cx + 1, room.cy), "A")  # Armchair
 			_put_safe(Vector2i(room.cx, room.y), "c")  # Candles
@@ -385,15 +381,23 @@ func _is_valid(kind: Kind) -> bool:
 	if start.x < 0 or exit.x < 0:
 		return false
 
+	var exit_front: Vector2i = exit + Vector2i.DOWN
+
 	# Check reachable with fake walls open
 	var reach: Dictionary = _flood(start, true)
-	if not reach.has(exit):
+	if not reach.has(exit_front):
 		return false
 
-	# For Phase Wall levels: exit MUST NOT be reachable without phasing through 'F'!
+	# For Phase Wall levels: exit front MUST NOT be reachable without phasing through 'F'!
 	if kind == Kind.PHASE_WALL:
 		var reach_solid: Dictionary = _flood(start, false)
-		if reach_solid.has(exit):
+		if reach_solid.has(exit_front):
+			return false
+
+	# For Key Hunt levels: key 'K' must also be reachable
+	if kind == Kind.KEY_HUNT:
+		var key_pos: Vector2i = _find("K")
+		if key_pos.x >= 0 and not reach.has(key_pos):
 			return false
 
 	return true
@@ -420,7 +424,7 @@ func _flood(from: Vector2i, fake_open: bool) -> Dictionary:
 func _is_traversable(ch: String, fake_open: bool) -> bool:
 	if ch == "F":
 		return fake_open
-	if ch == "#" or ch == " " or ch == "B" or ch == "W" or ch == "K" or ch == "C" or ch == "t" or ch == "T" or ch == "Z" or ch == "V" or ch == "O":
+	if ch == "#" or ch == " " or ch == "a" or ch == "v" or ch == "D" or ch == "B" or ch == "W" or ch == "S" or ch == "C" or ch == "t" or ch == "T" or ch == "Z" or ch == "V" or ch == "O":
 		return false
 	return true
 

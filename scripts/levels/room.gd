@@ -152,19 +152,24 @@ func _build_from_layout() -> void:
 			var cell := Vector2i(x, y)
 			if ch == " ":
 				continue
-			if ch != "#" and ch != "X":
+			if ch != "#" and ch != "X" and ch != "a" and ch != "v" and ch != "D":
 				floor_layer.set_cell(cell, TILE_SOURCE, Vector2i(posmod(x, 2), posmod(y, 2)))
 			match ch:
 				"#", "X":
 					wall_layer.set_cell(cell, TILE_SOURCE, WALL_TILE)
 					_spawn_wall_occluder(cell)
+				"a", "v":
+					wall_layer.set_cell(cell, TILE_SOURCE, WALL_TILE)
+					_spawn_wall_occluder(cell)
+					_spawn_from_legend(ch, cell)
+				"D":
+					wall_layer.set_cell(cell, TILE_SOURCE, WALL_TILE)
+					_spawn_door(cell)
 				"F":
 					_spawn_phase_wall(cell)
 				"P":
 					player.global_position = cell_to_world(cell)
 					player.camera.reset_smoothing()
-				"D":
-					_spawn_door(cell)
 				"&":
 					var kid: Kid = KID_SCENE.instantiate()
 					kid.position = cell_to_world(cell)
@@ -180,12 +185,12 @@ func _spawn_wall_occluder(cell: Vector2i) -> void:
 	occluder.position = cell_to_world(cell)
 	occluder.occluder_light_mask = 1
 	var poly := OccluderPolygon2D.new()
-	poly.cull_mode = OccluderPolygon2D.CULL_DISABLED
+	poly.cull_mode = OccluderPolygon2D.CULL_CLOCKWISE
 	poly.polygon = PackedVector2Array([
-		Vector2(-16, -16),
-		Vector2(16, -16),
-		Vector2(16, 16),
-		Vector2(-16, 16)
+		Vector2(-12, -12),
+		Vector2(12, -12),
+		Vector2(12, 12),
+		Vector2(-12, 12)
 	])
 	occluder.occluder = poly
 	decor_root.add_child(occluder)
@@ -251,10 +256,6 @@ func _spawn_from_legend(ch: String, cell: Vector2i) -> void:
 		var lamp: WallLamp = LAMP_SCENE.instantiate()
 		lamp.position = cell_to_world(cell)
 		decor_root.add_child(lamp)
-	elif ch == "d":
-		var door: RoomDoor = ROOM_DOOR_SCENE.instantiate()
-		door.position = cell_to_world(cell)
-		decor_root.add_child(door)
 	elif ch == "B":
 		var bed: StaticBody2D = _spawn_decor(BED_TEX, cell)
 		bed.add_child(HideSpot.new())

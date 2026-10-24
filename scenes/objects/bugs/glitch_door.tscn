@@ -1,15 +1,16 @@
 [gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/glitch_door.gd" id="1_door"]
-[ext_resource type="Texture2D" path="res://assets/sprites/environment/door.png" id="2_door_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/environment/interior_door.png" id="2_door_tex"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
 size = Vector2(32, 32)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
-size = Vector2(44, 44)
+size = Vector2(40, 44)
 
 [node name="GlitchDoor" type="StaticBody2D"]
+z_index = 6
 collision_layer = 1
 collision_mask = 0
 script = ExtResource("1_door")
@@ -21,21 +22,19 @@ texture = ExtResource("2_door_tex")
 shape = SubResource("RectangleShape2D_door")
 
 [node name="ExitArea" type="Area2D" parent="."]
-collision_layer = 0
+position = Vector2(0, 20)
+collision_layer = 4
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ExitArea"]
 shape = SubResource("RectangleShape2D_exit")
 
 [node name="CountdownLabel" type="Label" parent="."]
-z_index = 20
-offset_left = -110.0
-offset_top = -50.0
-offset_right = 110.0
-offset_bottom = -22.0
-theme_override_colors/font_color = Color(1, 0.3, 0.9, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 18
-text = "RE-RENDERING IN 4"
+visible = false
+z_index = 80
+offset_left = -90.0
+offset_top = -28.0
+offset_right = 90.0
+offset_bottom = -10.0
 horizontal_alignment = 1
+text = "[E] Next Floor"
