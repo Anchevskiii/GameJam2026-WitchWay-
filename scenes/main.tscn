@@ -1,20 +1,29 @@
-[gd_scene load_steps=5 format=3 uid="uid://dfvx0kq62k03"]
+[gd_scene load_steps=8 format=3 uid="uid://dfvx0kq62k03"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" uid="uid://bvkmq8nx41e7q" path="res://scenes/ui/hud.tscn" id="2_hud"]
 [ext_resource type="PackedScene" uid="uid://c6nmq8nx41e7q" path="res://scenes/ui/game_over.tscn" id="3_game_over"]
 [ext_resource type="PackedScene" uid="uid://d3pmq8nx41e7q" path="res://scenes/ui/pause_menu.tscn" id="4_pause"]
+[ext_resource type="Shader" path="res://assets/shaders/glitch.gdshader" id="5_glitch"]
+[ext_resource type="Script" path="res://scripts/fx/glitch_fx.gd" id="6_glitch_fx"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_glitch"]
+shader = ExtResource("5_glitch")
+shader_parameter/intensity = 0.0
+shader_parameter/seed = 0.0
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
 
 [node name="WorldContainer" type="SubViewportContainer" parent="."]
+material = SubResource("ShaderMaterial_glitch")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 stretch = true
+script = ExtResource("6_glitch_fx")
 
 [node name="World" type="SubViewport" parent="WorldContainer"]
 handle_input_locally = false

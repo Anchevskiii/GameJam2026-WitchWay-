@@ -5,17 +5,17 @@ extends CharacterBody2D
 ## Attached to: CharacterBody2D root of scenes/actors/npc.tscn. Configure via `data` (NpcData).
 ##
 ## Stealth scare duel:
-##   IDLE     wanders and looks around. It SEES the player only inside its view cone
+##   IDLE     wanders and looks around. It SEES the player (or a kid) only inside its view cone
 ##            (yellow), with no walls/furniture in between, and never while they hide.
-##            Spotting the player -> WINDUP
-##   WINDUP   visible tell (grows, glows red, "BOO" bubble). If it completes while the
-##            player is in range and not hidden, the player loses sanity -> COOLDOWN
+##            Spotting the player or a trick-or-treating kid -> WINDUP
+##   WINDUP   visible tell (grows, glows red, "BOO" bubble) while CHASING the target. If it
+##            completes in range (and the player isn't hidden), the target gets scared -> COOLDOWN
 ##   HIDING   (hides_in_furniture) sits in a cupboard, head peeking out now and then.
 ##            Player gets close -> jumps out with a short wind-up. BOO the cupboard first
 ##            and the surprise is on it.
 ##   PANIC    the player surprised it (BOO from behind / jumped out of hiding)! Drops loot,
 ##            screams (nearby NPCs panic too) and runs around bumping into others
-##   DONE     fled / fainted / fell apart. Recovers after a while -> IDLE
+##   DONE     DISABLED: greyed out and glitching with a countdown. Recovers after a while -> IDLE
 ## A BOO it can see coming does nothing. Wind-ups pause while LagController.is_frozen.
 
 enum State { IDLE, WINDUP, COOLDOWN, PANIC, DONE, HIDING }
@@ -36,6 +36,8 @@ const CONE_ALERT_COLOR: Color = Color(1.0, 0.3, 0.25, 0.2)
 @export var wander_scale: float = 1.0
 ## Set by the Room: false keeps would-be hiders out of the furniture (seated dinner guests).
 @export var can_hide: bool = true
+## Set by the Room: false = it winds up where it stands instead of chasing (seated dinner guests).
+@export var can_chase: bool = true
 ## Difficulty, set by the Room: < 1 = faster wind-ups, > 1 = scarier scares.
 @export var windup_scale: float = 1.0
 @export var damage_scale: float = 1.0
@@ -68,6 +70,8 @@ var _hide_walk_time: float = 0.0
 var _time_since_hide: float = 0.0
 ## Shorter wind-up used right after jumping out of a hiding spot.
 var _ambush_windup: bool = false
+## Who the current wind-up is aimed at: the player or a Kid.
+var _target: Node2D = null
 
 
 func _ready() -> void:
@@ -112,6 +116,9 @@ func _physics_process(delta: float) -> void:
 			_process_panic(delta)
 		State.DONE:
 			velocity = Vector2.ZERO
+			bubble.text = "DISABLED %d" % ceili(data.recover_time - _state_time)
+			if data.after_scare != NpcData.AfterScare.FALL_APART:
+				sprite.visible = randf() > 0.08  # glitching while switched off
 			if _state_time >= data.recover_time:
 				_recover()
 		State.HIDING:
@@ -123,7 +130,8 @@ func _physics_process(delta: float) -> void:
 # ---------------------------------------------------------------- states
 
 func _process_idle(delta: float) -> void:
-	var sees_player: bool = can_see_player()
+	var target: Node2D = _find_visible_target()
+	var sees_player: bool = target != null and target == _player
 
 	if data.afraid_of_player and sees_player:
 		var away: Vector2 = (global_position - _player.global_position).normalized()
@@ -147,10 +155,11 @@ func _process_idle(delta: float) -> void:
 			_facing = -_facing
 			_look_timer = randf_range(data.look_around_min, data.look_around_max)
 
-	if sees_player and _can_start_windup():
+	if target != null and _can_start_windup():
 		_give_up_hiding_spot()
+		_target = target
 		_enter(State.WINDUP)
-	elif _wants_to_hide() and not sees_player:
+	elif _wants_to_hide() and target == null:
 		_hide_spot = _find_hiding_spot()
 		if _hide_spot:
 			_hide_spot.reserved_by = self
@@ -161,8 +170,14 @@ func _process_idle(delta: float) -> void:
 
 func _process_windup(delta: float) -> void:
 	velocity = Vector2.ZERO
-	if _player:
-		face_towards(_player.global_position)
+	if not is_instance_valid(_target) or (_target is Kid and not (_target as Kid).is_scareable()):
+		_enter(State.COOLDOWN)
+		return
+	face_towards(_target.global_position)
+	# Harder: it doesn't just stand there - it comes at you while winding up.
+	var to_target: Vector2 = _target.global_position - global_position
+	if data.can_move and can_chase and to_target.length() > 36.0 and not LagController.is_frozen:
+		velocity = to_target.normalized() * data.move_speed * 0.9
 	# Lag freeze = wind-up pauses. That's the dodge window.
 	if LagController.is_frozen:
 		_state_time -= delta
@@ -179,7 +194,7 @@ func _process_windup(delta: float) -> void:
 		bubble.text = "!"  # "spotted you" 
 	bubble.scale = Vector2.ONE * (0.8 + 0.6 * progress)
 
-	if _distance_to_player() > data.notice_range * 1.5:
+	if to_target.length() > _sight() * 1.5:
 		bubble.text = "aww"
 		_enter(State.COOLDOWN)
 		return
@@ -190,13 +205,16 @@ func _process_windup(delta: float) -> void:
 func _release_scare() -> void:
 	bubble.text = data.windup_text + "!"
 	bubble.scale = Vector2.ONE * 1.6
-	if _player and _player.get("is_hidden"):
+	if _target == _player and _player.get("is_hidden"):
 		bubble.text = "?"  # the player ducked into a hiding spot - miss!
 		_enter(State.COOLDOWN)
 		return
-	AudioManager.play(data.scare_sound)
-	if _distance_to_player() <= data.scare_range:
+	AudioManager.play(data.scare_sound, -4.0)
+	var in_range: bool = is_instance_valid(_target) and global_position.distance_to(_target.global_position) <= data.scare_range
+	if in_range and _target == _player:
 		GameManager.scare_player(data.scare_damage * damage_scale, data.display_name)
+	elif in_range and _target is Kid:
+		(_target as Kid).get_scared(global_position, "a " + data.display_name)
 	_enter(State.COOLDOWN)
 
 
@@ -212,6 +230,9 @@ func _process_panic(delta: float) -> void:
 	for other in get_tree().get_nodes_in_group("npcs"):
 		if other != self and global_position.distance_to(other.global_position) < BUMP_RADIUS:
 			(other as Npc).get_scared("a panicking " + data.display_name)
+	for kid in get_tree().get_nodes_in_group("kids"):
+		if global_position.distance_to((kid as Node2D).global_position) < BUMP_RADIUS:
+			(kid as Kid).get_scared(global_position, "a panicking " + data.display_name)
 
 	if _state_time >= data.panic_time:
 		_enter(State.DONE)
@@ -233,6 +254,10 @@ func get_scared(_by: String = "") -> bool:
 	bubble.text = "!!"
 	AudioManager.play("npc_yelp", -2.0, randf_range(0.85, 1.25))
 	_drop_loot()
+	var glitch: float = 0.0
+	for prop in data.loot:
+		glitch += prop.load_weight
+	FloatingText.spawn(self, global_position, "+%d GLITCH" % roundi(glitch * GameManager.cpu_load_multiplier), Color(1.0, 0.35, 0.9))
 	if data.scream_radius > 0.0:
 		# Who hears the scream is decided NOW (where it happened); they react a moment later.
 		get_tree().create_timer(data.scream_delay).timeout.connect(_scream.bind(_npcs_within(data.scream_radius)))
@@ -289,15 +314,36 @@ func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> v
 func can_see_player() -> bool:
 	if _player == null or _player.get("is_hidden"):
 		return false
-	var to_player: Vector2 = _player.global_position - global_position
-	var dist: float = to_player.length()
-	if dist > data.notice_range:
+	return can_see(_player)
+
+
+## True if `node` is inside the view cone, within sight range and not behind a wall/furniture.
+func can_see(node: Node2D) -> bool:
+	var to_node: Vector2 = node.global_position - global_position
+	var dist: float = to_node.length()
+	if dist > _sight():
 		return false
 	if dist > TOUCH_SENSE:
-		var angle: float = absf(rad_to_deg(Vector2(_facing, 0.0).angle_to(to_player)))
+		var angle: float = absf(rad_to_deg(Vector2(_facing, 0.0).angle_to(to_node)))
 		if angle > data.view_half_angle:
 			return false
-	return _has_line_of_sight(global_position, _player.global_position)
+	return _has_line_of_sight(global_position, node.global_position)
+
+
+## The player if it can see them, otherwise the nearest kid it can see (or null).
+func _find_visible_target() -> Node2D:
+	if can_see_player():
+		return _player
+	var best: Node2D = null
+	for kid in get_tree().get_nodes_in_group("kids"):
+		var k: Kid = kid as Kid
+		if k.is_scareable() and can_see(k) and (best == null or global_position.distance_to(k.global_position) < global_position.distance_to(best.global_position)):
+			best = k
+	return best
+
+
+func _sight() -> float:
+	return data.notice_range * GameManager.monster_sight_scale
 
 
 ## Turn to look at a point (used by tests and scripted moments).
@@ -316,7 +362,7 @@ func _has_line_of_sight(from: Vector2, to: Vector2) -> bool:
 # ---------------------------------------------------------------- helpers
 
 func _windup_time() -> float:
-	return (data.ambush_windup if _ambush_windup else data.windup_time) * windup_scale
+	return (data.ambush_windup if _ambush_windup else data.windup_time) * windup_scale * GameManager.monster_windup_scale
 
 
 func _can_start_windup() -> bool:
@@ -350,16 +396,18 @@ func _hide_bubble_if_calm() -> void:
 func _apply_after_scare() -> void:
 	match data.after_scare:
 		NpcData.AfterScare.FLEE:
-			bubble.text = "nope"
-			create_tween().tween_property(sprite, "modulate:a", 0.0, 0.6)
+			sprite.modulate.a = 0.4  # half "unloaded"
 		NpcData.AfterScare.FAINT:
-			bubble.text = "zzz"
 			stumble.enabled = false  # lie down instead of stumbling
 			sprite.rotation = PI / 2.0
-			sprite.modulate = data.tint.darkened(0.35)
 		NpcData.AfterScare.FALL_APART:
-			bubble.text = "*crumble*"
-			sprite.visible = false
+			# Fell apart into a heap of missing texture.
+			stumble.enabled = false
+			sprite.texture = MISSING_TEXTURE
+			sprite.region_enabled = true
+			sprite.region_rect = Rect2(0, 0, 24, 12)
+	# Disabled = greyed out (and flickering, see _physics_process).
+	sprite.modulate = Color(0.55, 0.55, 0.62, sprite.modulate.a)
 
 
 func _recover() -> void:
@@ -371,6 +419,7 @@ func _recover() -> void:
 func _reset_visuals() -> void:
 	stumble.enabled = true
 	sprite.visible = true
+	sprite.region_enabled = false
 	sprite.rotation = 0.0
 	sprite.scale = Vector2.ONE * data.sprite_scale
 	sprite.modulate = data.tint
@@ -488,6 +537,7 @@ func ambush() -> void:
 		return
 	_leave_hiding_spot(global_position.direction_to(_player.global_position) if _player else Vector2.DOWN)
 	_ambush_windup = true
+	_target = _player
 	_enter(State.WINDUP)
 	if _player:
 		face_towards(_player.global_position)
@@ -536,7 +586,7 @@ func _update_view_cone() -> void:
 	var points: PackedVector2Array = [Vector2.ZERO]
 	for i in CONE_RAYS + 1:
 		var angle: float = deg_to_rad(lerpf(-data.view_half_angle, data.view_half_angle, float(i) / CONE_RAYS))
-		var tip: Vector2 = global_position + Vector2(_facing, 0.0).rotated(angle * _facing) * data.notice_range
+		var tip: Vector2 = global_position + Vector2(_facing, 0.0).rotated(angle * _facing) * _sight()
 		var query := PhysicsRayQueryParameters2D.create(global_position, tip, 1)
 		query.exclude = [get_rid()]
 		var hit: Dictionary = space.intersect_ray(query)

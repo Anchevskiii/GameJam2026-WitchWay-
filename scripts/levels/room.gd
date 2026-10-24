@@ -9,6 +9,7 @@ extends Node2D
 ##   #  wall                    .  floor               (space) nothing
 ##   X  missing-texture wall    F  missing-texture FAKE wall (walk right through it!)
 ##   P  player start            D  exit door (put it in the outer wall)
+##   &  a trick-or-treating kid (kids that start close together form a group)
 ##   any other letter is looked up in the legends below, in this order:
 ##     npc_legend (NpcData)            hide_legend (furniture you can hide in)
 ##     decor_legend (solid furniture)  floor_decor_legend (walk-over clutter: rugs, bones...)
@@ -22,6 +23,9 @@ const MISSING_FAKE_TILE: Vector2i = Vector2i(4, 0)
 
 const NPC_SCENE: PackedScene = preload("res://scenes/actors/npc.tscn")
 const DOOR_SCENE: PackedScene = preload("res://scenes/objects/bugs/glitch_door.tscn")
+const KID_SCENE: PackedScene = preload("res://scenes/actors/kid.tscn")
+## Kids that start within this distance of each other form one group.
+const KID_GROUP_RANGE: float = 130.0
 const GLOW_TEXTURE: Texture2D = preload("res://assets/sprites/environment/light_radial.tres")
 
 ## Scene files visited this run, so revisits can use shorter narrator lines.
@@ -65,6 +69,8 @@ static var _visited_scenes: Dictionary = {}
 @export var npc_wander_scale: float = 1.0
 ## Monsters with hides_in_furniture may hide and ambush in this room (off for dinner parties).
 @export var npcs_hide: bool = true
+## Monsters chase their target while winding up (off for dinner parties: guests stay seated).
+@export var npcs_chase: bool = true
 ## Difficulty: multiplies NPC wind-up time (lower = faster scares) and scare damage.
 @export var npc_windup_scale: float = 1.0
 @export var npc_damage_scale: float = 1.0
@@ -95,9 +101,10 @@ func _ready() -> void:
 	GameManager.reset_cpu_load()
 	if is_safe_room:
 		GameManager.refill_sanity()
-		SaveManager.save_progress(GameManager.best_level)
+		SaveManager.save_progress(GameManager.current_level)  # this Living Room = checkpoint
 
 	_build_from_layout()
+	_group_kids()
 	player.set_flashlight_available(flashlight_works)
 
 	EventBus.room_entered.emit("Floor %d: %s" % [GameManager.current_level + 1, room_title], objective)
@@ -137,6 +144,10 @@ func _build_from_layout() -> void:
 					player.camera.reset_smoothing()
 				"D":
 					_spawn_door(cell)
+				"&":
+					var kid: Kid = KID_SCENE.instantiate()
+					kid.position = cell_to_world(cell)
+					actors_root.add_child(kid)
 				".":
 					pass
 				_:
@@ -150,6 +161,7 @@ func _spawn_from_legend(ch: String, cell: Vector2i) -> void:
 		npc.load_in_radius = npc_load_radius
 		npc.wander_scale = npc_wander_scale
 		npc.can_hide = npcs_hide
+		npc.can_chase = npcs_chase
 		npc.windup_scale = npc_windup_scale
 		npc.damage_scale = npc_damage_scale
 		npc.position = cell_to_world(cell)
@@ -203,6 +215,20 @@ func _spawn_door(cell: Vector2i) -> void:
 	door.rerender_delay = door_open_time
 	door.position = cell_to_world(cell)
 	decor_root.add_child(door)
+
+
+## The first kid of each cluster leads; the others follow it around.
+func _group_kids() -> void:
+	var kids: Array[Node] = get_tree().get_nodes_in_group("kids")
+	for kid in kids:
+		var k: Kid = kid as Kid
+		if k.leader != null:
+			continue
+		k.leader = k
+		for other in kids:
+			var o: Kid = other as Kid
+			if o.leader == null and o.global_position.distance_to(k.global_position) <= KID_GROUP_RANGE:
+				o.leader = k
 
 
 static func cell_to_world(cell: Vector2i) -> Vector2:
