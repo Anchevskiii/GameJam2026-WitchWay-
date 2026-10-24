@@ -75,7 +75,12 @@ func _on_cpu_overload_changed(current: float, max_val: float) -> void:
 
 func _on_room_entered(room_title: String, objective: String) -> void:
 	room_label.text = room_title.to_upper()
-	objective_label.text = objective
+	if GameManager.has_exit_key:
+		objective_label.text = "[KEY FOUND!] Unlock the Exit Door."
+		objective_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
+	else:
+		objective_label.text = objective
+		objective_label.add_theme_color_override("font_color", Color(0.85, 0.9, 0.95, 1))
 	objective_label.visible = not objective.is_empty()
 
 

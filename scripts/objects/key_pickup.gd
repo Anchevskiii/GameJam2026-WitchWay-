@@ -18,6 +18,13 @@ func _ready() -> void:
 	if light:
 		light.range_item_cull_mask = 3
 		light.shadow_item_cull_mask = 1
+		light.energy = 1.1
+		light.texture_scale = 0.6
+
+
+func _process(_delta: float) -> void:
+	if sprite:
+		sprite.position.y = sin(Time.get_ticks_msec() * 0.005) * 3.5
 
 
 func _on_body_entered(body: Node2D) -> void:

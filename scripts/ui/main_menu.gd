@@ -174,7 +174,15 @@ func _setup_buttons() -> void:
 
 func _check_save_state() -> void:
 	if continue_button:
-		continue_button.disabled = not SaveManager.has_save_file()
+		var has_save: bool = SaveManager.has_save_file()
+		if has_save:
+			var progress: Dictionary = SaveManager.load_progress()
+			var lvl: int = int(progress.get("current_level", progress.get("highest_level", 0)))
+			continue_button.disabled = false
+			continue_button.text = "CONTINUE (FLOOR %d)" % (lvl + 1)
+		else:
+			continue_button.disabled = true
+			continue_button.text = "CONTINUE"
 
 func _on_new_game_pressed() -> void:
 	GameManager.start_new_run()
@@ -185,8 +193,8 @@ func _on_new_game_pressed() -> void:
 
 func _on_continue_pressed() -> void:
 	var progress: Dictionary = SaveManager.load_progress()
-	# The save holds the last Living Room reached; Main starts at GameManager's checkpoint.
-	GameManager.start_from_checkpoint(int(progress.get("highest_level", 0)))
+	var resume_lvl: int = int(progress.get("current_level", progress.get("highest_level", 0)))
+	GameManager.start_from_checkpoint(resume_lvl)
 	if start_level_scene:
 		get_tree().change_scene_to_packed(start_level_scene)
 	else:

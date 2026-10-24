@@ -5,20 +5,18 @@ extends RefCounted
 ## dedicated Safe Rooms, interior doors, wall air vents, furniture, and intentional bug mechanics.
 ##
 ## Floor structure:
-##   - Room 0: SAFE ROOM (Player start 'P', warm lamp 'l', rug 'r', door 'd', GUARANTEED 0 monsters).
-##   - Themed Rooms: Master Bedroom ('B', 'W'), Grand Library ('K', 't'), Dining Hall ('T'),
+##   - Room 0: SAFE ROOM (Player start 'P', warm lamp 'l', rug 'r', GUARANTEED 0 monsters).
+##   - Themed Rooms: Master Bedroom ('B', 'W'), Grand Library ('S', 't'), Dining Hall ('T'),
 ##                   Parlor ('C', 'A'), and Wine Cellar ('Z', 'o', 'n').
-##   - Corridors: 1-tile wide organic halls connecting rooms with Interior Doors ('d').
+##   - Interconnected architecture: Rooms share interior walls with 2-tile wide open archways.
 ##   - Wall Hazards: Air Vents ('a') mounted on corridor walls blowing air into hallways.
 ##   - Level Bugs (alternating per floor):
-##       1. PHASE_WALL: Exit sealed behind brick wall; exactly one tile is 'F' (flickering, no shadow).
-##       2. KEY_HUNT: Exit door locked; Antique Brass Key ('K') hidden in a spooky room.
-##       3. OVERLOAD: Exit door glitch; push GLITCH meter to 100% to un-render the exit.
+##       1. KEY_HUNT (Floor 1): Exit door locked; Golden Skeleton Key ('K') hidden in the Library/Study.
+##       2. PHASE_WALL (Floor 2): Exit sealed behind brick wall; exactly one tile is 'F' (flickering, no shadow).
+##       3. OVERLOAD (Floor 3): Exit door glitch; push GLITCH meter to 100% to un-render the exit.
 
 enum Kind { PHASE_WALL, KEY_HUNT, OVERLOAD }
 
-const MIN_ROOM_W: int = 5
-const MIN_ROOM_H: int = 4
 const MAX_ATTEMPTS: int = 50
 
 const NPC_PATHS: Dictionary = {
@@ -56,18 +54,20 @@ var _w: int
 var _h: int
 var _grid: Array = []              # _grid[y][x] -> single character
 var _rooms: Array[Dictionary] = [] # dict with x, y, w, h, cx, cy, type
-var _doorways: Array[Vector2i] = []
 var _reserved: Dictionary = {}
 
 
 ## Generates and returns Room properties dictionary for the given floor level.
 func generate(level: int, seed_value: int) -> Dictionary:
+	# Level 0 is the meticulously crafted Victorian Ground Floor
+	if level == 0:
+		return _build_ground_floor()
+
 	var tier: int = level / 3
-	# Alternate bugs per level: Phase Wall -> Key Hunt -> CPU Overload
 	var bug_cycle: int = level % 3
-	var kind: Kind = Kind.PHASE_WALL
+	var kind: Kind = Kind.KEY_HUNT
 	if bug_cycle == 1:
-		kind = Kind.KEY_HUNT
+		kind = Kind.PHASE_WALL
 	elif bug_cycle == 2:
 		kind = Kind.OVERLOAD
 
@@ -82,139 +82,170 @@ func generate(level: int, seed_value: int) -> Dictionary:
 
 
 func _try_generate(tier: int, kind: Kind) -> Dictionary:
-	_w = 36 + mini(tier, 4) * 4
-	_h = 24 + mini(tier, 4) * 3
+	var cols: int = 3
+	var rows: int = 2 if tier < 2 else 3
+	var room_w: int = 9 + mini(tier, 2)
+	var room_h: int = 7 + mini(tier, 2)
+	_w = cols * room_w + (cols + 1)
+	_h = rows * room_h + (rows + 1)
 	_grid.clear()
 	_rooms.clear()
-	_doorways.clear()
 	_reserved.clear()
 
-	# Initialize empty dark void outside the mansion
+	# Initialize solid mansion walls
 	for y in _h:
 		var row: Array = []
 		for x in _w:
-			row.append(" ")
+			row.append("#")
 		_grid.append(row)
 
-	# 1. Place organic rooms across the mansion
-	var room_count: int = clampi(4 + tier, 4, 7)
+	# 1. Carve adjacent rooms that share walls
 	var room_types: Array[String] = ["safe", "bedroom", "library", "dining", "parlor", "cellar", "exit"]
-	
-	for i in room_count:
-		var r_type: String = "safe" if i == 0 else ("exit" if i == room_count - 1 else room_types[clampi(i, 1, 5)])
-		var rw: int = rng.randi_range(5, 7)
-		var rh: int = rng.randi_range(4, 6)
-		if r_type == "safe":
-			rw = 5
-			rh = 4
-		elif r_type == "dining":
-			rw = 7
-			rh = 6
-
-		var placed: bool = false
-		for attempt in 60:
-			var rx: int = rng.randi_range(2, _w - rw - 3)
-			var ry: int = rng.randi_range(2, _h - rh - 3)
+	var room_idx: int = 0
+	for r in rows:
+		for c in cols:
+			var rx: int = 1 + c * (room_w + 1)
+			var ry: int = 1 + r * (room_h + 1)
+			for y in range(ry, ry + room_h):
+				for x in range(rx, rx + room_w):
+					_grid[y][x] = "."
+			var r_type: String = "parlor"
+			if r == rows - 1 and c == 1:
+				r_type = "safe" # South center = Entrance Foyer (Safe Room)
+			elif r == 0 and c == 1:
+				r_type = "exit" # North center = Exit Sanctuary
+			else:
+				r_type = room_types[clampi(1 + (room_idx % 5), 1, 5)]
 			
-			# Check overlap with 3-tile gap so 2-tile corridors fit cleanly
-			var overlaps := false
-			for other in _rooms:
-				if not (rx + rw + 3 < other.x or rx > other.x + other.w + 3 or
-						ry + rh + 3 < other.y or ry > other.y + other.h + 3):
-					overlaps = true
-					break
-			if not overlaps:
-				_rooms.append({
-					"x": rx, "y": ry, "w": rw, "h": rh,
-					"cx": rx + rw / 2, "cy": ry + rh / 2,
-					"type": r_type
-				})
-				placed = true
-				break
-		if not placed:
-			return {}
+			_rooms.append({
+				"c": c, "r": r,
+				"x": rx, "y": ry,
+				"w": room_w, "h": room_h,
+				"cx": rx + room_w / 2, "cy": ry + room_h / 2,
+				"type": r_type
+			})
+			room_idx += 1
 
-	# 2. Carve rooms into the grid with 1-tile thin walls
-	for r in _rooms:
-		for y in range(r.y - 1, r.y + r.h + 1):
-			for x in range(r.x - 1, r.x + r.w + 1):
-				if x == r.x - 1 or x == r.x + r.w or y == r.y - 1 or y == r.y + r.h:
-					_put(Vector2i(x, y), "#")
-				else:
-					_put(Vector2i(x, y), ".")
+	# Order rooms so Safe Room is index 0 and Exit Room is last
+	var safe_room: Dictionary = {}
+	var exit_room: Dictionary = {}
+	var other_rooms: Array[Dictionary] = []
+	for rm in _rooms:
+		if rm.type == "safe":
+			safe_room = rm
+		elif rm.type == "exit":
+			exit_room = rm
+		else:
+			other_rooms.append(rm)
+	_rooms.clear()
+	_rooms.append(safe_room)
+	_rooms.append_array(other_rooms)
+	_rooms.append(exit_room)
 
-	# 3. Connect rooms via organic 2-tile wide corridors with walls
-	for i in _rooms.size() - 1:
-		_connect_rooms(_rooms[i], _rooms[i + 1])
-	# Extra corridor to create authentic loop if more than 4 rooms
-	if _rooms.size() >= 5:
-		_connect_rooms(_rooms[1], _rooms[_rooms.size() - 2])
+	# 2. Carve 2-tile wide open archways between horizontal neighbors
+	for r in rows:
+		for c in range(cols - 1):
+			var wall_x: int = 1 + c * (room_w + 1) + room_w
+			var mid_y: int = 1 + r * (room_h + 1) + room_h / 2
+			_put(Vector2i(wall_x, mid_y), ".")
+			_put(Vector2i(wall_x, mid_y + 1), ".")
 
-	# 4. Furnish the Safe Room (Room 0) - GUARANTEED SAFE
-	var safe: Dictionary = _rooms[0]
-	var safe_start := Vector2i(safe.cx, safe.cy)
+	# 3. Carve 2-tile wide open archways between vertical neighbors
+	for c in cols:
+		for r in range(rows - 1):
+			var wall_y: int = 1 + r * (room_h + 1) + room_h
+			var mid_x: int = 1 + c * (room_w + 1) + room_w / 2
+			_put(Vector2i(mid_x, wall_y), ".")
+			_put(Vector2i(mid_x + 1, wall_y), ".")
+
+	# 4. Furnish the Safe Room (Entrance Foyer)
+	var safe_start := Vector2i(safe_room.cx, safe_room.cy)
 	_put(safe_start, "P")
 	_reserve_around(safe_start)
-	_put(Vector2i(safe.cx, safe.y), "l")  # Warm wall lamp on top wall
-	_put(Vector2i(safe.cx, safe.cy + 1), "r")  # Floor rug
+	_put(Vector2i(safe_room.cx, safe_room.y), "l")
+	_put(Vector2i(safe_room.cx, safe_room.cy + 1), "r")
 
-	# 6. Place Exit and Level Bug in the Exit Room
-	var exit_room: Dictionary = _rooms[_rooms.size() - 1]
+	# 5. Setup Exit Door on North Wall and Bug
 	var exit_placed: bool = _setup_exit_and_bug(exit_room, kind)
 	if not exit_placed:
 		return {}
 
-	# 7. Furnish all other themed rooms (beds, bookshelves, tables, wardrobes)
+	# 6. Furnish other rooms
 	for i in range(1, _rooms.size() - 1):
 		_furnish_themed_room(_rooms[i], tier)
 
-	# 8. Place wall-mounted Air Vents in corridors
+	# 7. Place wall-mounted air vents
 	_place_wall_air_vents(tier)
 
-	# 9. Place spooky monsters (NEVER in safe room)
-	var monster_count: int = 2 + mini(tier, 3)
+	# 8. Place monsters in non-safe rooms
+	var monster_count: int = 2 + mini(tier, 4)
 	_place_monsters(monster_count, tier, kind)
 
-	# 10. Place Trick-or-Treaters & Disguise Masks
+	# 9. Place masks & kids
 	if tier >= 1:
 		_place_kids()
 	_place_masks()
 
-	# 11. Validate layout via flood fill
+	# 10. Validate reachability
 	if not _is_valid(kind):
 		return {}
 
 	return _build_settings(tier, kind)
 
 
-# ---------------------------------------------------------------- corridors
+# ---------------------------------------------------------------- Level 0 Ground Floor
 
-func _connect_rooms(r1: Dictionary, r2: Dictionary) -> void:
-	var cx: int = r1.cx
-	var cy: int = r1.cy
-	var x2: int = r2.cx
-	var y2: int = r2.cy
-
-	var pts: Array[Vector2i] = []
-	while cx != x2:
-		cx += 1 if x2 > cx else -1
-		pts.append(Vector2i(cx, cy))
-		pts.append(Vector2i(cx, cy + 1))
-	while cy != y2:
-		cy += 1 if y2 > cy else -1
-		pts.append(Vector2i(cx, cy))
-		pts.append(Vector2i(cx + 1, cy))
-
-	for pt in pts:
-		if pt.x < 1 or pt.x >= _w - 1 or pt.y < 1 or pt.y >= _h - 1:
-			continue
-		_put(pt, ".")
-		# Surround corridor with walls if blank
-		for dy in [-1, 0, 1]:
-			for dx in [-1, 0, 1]:
-				var n := Vector2i(pt.x + dx, pt.y + dy)
-				if n.x >= 0 and n.y >= 0 and n.x < _w and n.y < _h and _cell_at(n) == " ":
-					_put(n, "#")
+func _build_ground_floor() -> Dictionary:
+	var rows: Array[String] = [
+		"###############D################",
+		"#o..Z..o#............#o..l....o#",
+		"#.......#....c...c...#.........#",
+		"#...Z...#............#....T....#",
+		"#a......F............#...A.A...#",
+		"#...n...#............#.........#",
+		"#.......#....c...c...#....c....#",
+		"#o.....o#............#o.......o#",
+		"####..########..##########..####",
+		"#..............................#",
+		"#..C...t......O...V.....u......#",
+		"#..A...........................#",
+		"#........g...r.......g.........#",
+		"#..............................#",
+		"####..########..##########..####",
+		"#o.....o#o....l.....o#o...S...o#",
+		"#..B....#............#..S...S..#",
+		"#.......#.....r......#....K....#",
+		"#..W....#............#....t..A.#",
+		"#.......#.....P......#.........#",
+		"#o.....o#o..........o#o...c...o#",
+		"################################"
+	]
+	return {
+		"room_title": "The Haunted Manor: Ground Floor",
+		"objective": "Search the dark manor rooms for the Golden Key to unlock the North Exit Door.",
+		"layout": "\n".join(rows),
+		"npc_legend": _load_all(NPC_PATHS, ""),
+		"hide_legend": _load_all(HIDE_ITEMS, OBJ),
+		"decor_legend": _load_all(DECOR_ITEMS, OBJ),
+		"floor_decor_legend": _load_all(FLOOR_ITEMS, OBJ),
+		"light_legend": _load_all(LIGHT_ITEMS, OBJ),
+		"exit_requires_cpu_overload": false,
+		"exit_requires_key": true,
+		"door_open_time": 6.0,
+		"flashlight_works": true,
+		"ambient_color": Color(0.025, 0.025, 0.04),
+		"npc_load_radius": 100.0,
+		"npc_wander_scale": 0.65,
+		"npcs_hide": true,
+		"npcs_chase": true,
+		"npc_windup_scale": 0.95,
+		"npc_damage_scale": 1.0,
+		"cpu_load_multiplier": 1.0,
+		"intro_lines": [
+			"Floor 1: The Haunted Manor Ground Floor. You start safely in the entrance foyer.",
+			"Explore the dark rooms with your flashlight [F]. Locate the Golden Skeleton Key in the Library to unlock the Exit Door."
+		]
+	}
 
 
 # ---------------------------------------------------------------- exit & bug
@@ -231,25 +262,25 @@ func _setup_exit_and_bug(exit_room: Dictionary, kind: Kind) -> bool:
 	match kind:
 		Kind.PHASE_WALL:
 			# Seal the exit door behind a brick wall partition; exactly ONE tile is 'F' (phasable)
-			var seal_y: int = exit_room.y + 1
+			var seal_y: int = exit_room.y + 2
 			var fake_x: int = exit_room.cx
 			for x in range(exit_room.x, exit_room.x + exit_room.w):
 				if x == fake_x:
 					_put(Vector2i(x, seal_y), "F")
 				else:
 					_put(Vector2i(x, seal_y), "#")
-			_put(Vector2i(exit_room.x, exit_room.y), "c")  # Eerie candle light in exit room
+			_put(Vector2i(exit_room.x + 1, exit_room.y), "c")
 
 		Kind.KEY_HUNT:
 			# Exit door is locked: place key 'K' in Bedroom or Library
 			var key_room: Dictionary = _rooms[1]
 			var key_pos := Vector2i(key_room.cx, key_room.cy)
 			_put(key_pos, "K")
-			_put(Vector2i(exit_room.x, exit_room.y), "c")
+			_put(Vector2i(exit_room.x + 1, exit_room.y), "c")
 
 		Kind.OVERLOAD:
 			# Exit door requires 100% CPU overload: decorate with candles
-			_put(Vector2i(exit_room.x, exit_room.y), "c")
+			_put(Vector2i(exit_room.x + 1, exit_room.y), "c")
 			
 	return true
 
@@ -260,38 +291,38 @@ func _furnish_themed_room(room: Dictionary, _tier: int) -> void:
 	match room.type:
 		"bedroom":
 			# Bed, Wardrobe (hide spot), Crate, Rug
-			_put_safe(Vector2i(room.x, room.y), "B")  # Victorian Bed
-			_put_safe(Vector2i(room.x + room.w - 1, room.y), "W")  # Wardrobe
-			_put_safe(Vector2i(room.x + 1, room.y + room.h - 1), "r")  # Rug
-			_put_safe(Vector2i(room.x + room.w - 1, room.y + room.h - 1), "Z")  # Crate
+			_put_safe(Vector2i(room.x + 1, room.y + 1), "B")  # Victorian Bed
+			_put_safe(Vector2i(room.x + room.w - 2, room.y + 1), "W")  # Wardrobe
+			_put_safe(Vector2i(room.cx, room.cy), "r")  # Rug
+			_put_safe(Vector2i(room.x + room.w - 2, room.y + room.h - 2), "Z")  # Crate
 		"library":
 			# Bookshelves, Desk, Armchair, Candles
-			_put_safe(Vector2i(room.x, room.y), "S")  # Bookshelf
-			_put_safe(Vector2i(room.x + room.w - 1, room.y), "S")  # Bookshelf
+			_put_safe(Vector2i(room.x + 1, room.y + 1), "S")  # Bookshelf
+			_put_safe(Vector2i(room.x + room.w - 2, room.y + 1), "S")  # Bookshelf
 			_put_safe(Vector2i(room.cx, room.cy), "t")  # Study desk
 			_put_safe(Vector2i(room.cx + 1, room.cy), "A")  # Armchair
-			_put_safe(Vector2i(room.cx, room.y), "c")  # Candles
+			_put_safe(Vector2i(room.x + 1, room.y + room.h - 2), "c")  # Candles
 		"dining":
 			# Dining Table, Chairs, Candelabra, Wall Lamp
 			_put_safe(Vector2i(room.cx, room.cy), "T")  # Dining table
 			_put_safe(Vector2i(room.cx - 1, room.cy), "A")
 			_put_safe(Vector2i(room.cx + 1, room.cy), "A")
 			_put_safe(Vector2i(room.cx, room.y), "l")  # Wall Lamp
-			_put_safe(Vector2i(room.x, room.y + room.h - 1), "c")
+			_put_safe(Vector2i(room.x + 1, room.y + room.h - 2), "c")
 		"parlor":
 			# Couch, TV, Grandfather Clock, Armchair
-			_put_safe(Vector2i(room.x, room.y), "C")  # Couch
-			_put_safe(Vector2i(room.x + room.w - 1, room.y), "O")  # Clock
+			_put_safe(Vector2i(room.x + 1, room.y + 1), "C")  # Couch
+			_put_safe(Vector2i(room.x + room.w - 2, room.y + 1), "O")  # Clock
 			_put_safe(Vector2i(room.cx, room.cy), "V")  # TV
-			_put_safe(Vector2i(room.x + 1, room.y + room.h - 1), "r")  # Rug
+			_put_safe(Vector2i(room.cx, room.cy + 1), "r")  # Rug
 		"cellar":
 			# Crates, Cobwebs, Bones
-			_put_safe(Vector2i(room.x, room.y), "o")  # Cobweb
-			_put_safe(Vector2i(room.x + room.w - 1, room.y), "o")
-			_put_safe(Vector2i(room.x, room.y + room.h - 1), "Z")  # Crate
+			_put_safe(Vector2i(room.x + 1, room.y + 1), "o")  # Cobweb
+			_put_safe(Vector2i(room.x + room.w - 2, room.y + 1), "o")
+			_put_safe(Vector2i(room.x + 1, room.y + room.h - 2), "Z")  # Crate
 			_put_safe(Vector2i(room.cx, room.cy), "n")  # Bones
 		_:
-			_put_safe(Vector2i(room.x, room.y), "W")
+			_put_safe(Vector2i(room.x + 1, room.y + 1), "W")
 
 
 func _put_safe(pos: Vector2i, ch: String) -> void:
@@ -306,7 +337,7 @@ func _place_wall_air_vents(tier: int) -> void:
 	var vent_count: int = 1 + mini(tier, 2)
 	var placed: int = 0
 	
-	# Search for corridor wall tiles directly adjacent to open corridor floor
+	# Search for interior wall tiles directly adjacent to open floor
 	for y in range(2, _h - 2):
 		if placed >= vent_count:
 			break
@@ -315,7 +346,7 @@ func _place_wall_air_vents(tier: int) -> void:
 				break
 			var cell := Vector2i(x, y)
 			if _cell_at(cell) == "#" and not _reserved.has(cell):
-				# Check if adjacent to a walkable corridor cell
+				# Must be adjacent to walkable floor
 				for dir in [Vector2i.DOWN, Vector2i.UP, Vector2i.RIGHT, Vector2i.LEFT]:
 					var neighbor: Vector2i = cell + dir
 					if _cell_at(neighbor) == "." and not _reserved.has(neighbor):
@@ -327,7 +358,7 @@ func _place_wall_air_vents(tier: int) -> void:
 
 # ---------------------------------------------------------------- monsters
 
-func _place_monsters(count: int, tier: int, kind: Kind) -> void:
+func _place_monsters(count: int, tier: int, _kind: Kind) -> void:
 	# Rooms 1..N-1 (NEVER in Room 0: Safe Room!)
 	var candidate_rooms: Array[Dictionary] = []
 	for i in range(1, _rooms.size()):
@@ -488,11 +519,11 @@ func _build_settings(tier: int, kind: Kind) -> Dictionary:
 
 		Kind.KEY_HUNT:
 			title = TITLES_KEY[rng.randi_range(0, TITLES_KEY.size() - 1)]
-			objective = "Search the dark rooms for the Antique Brass Key to unlock the Exit Door."
+			objective = "Search the dark rooms for the Golden Key to unlock the Exit Door."
 			exit_req_key = true
 			intro = [
 				"%s. Heavy doors lock the way forward." % title,
-				"Explore with your flashlight to locate the Antique Brass Key, then unlock the Exit Door."
+				"Explore with your flashlight to locate the Golden Key, then unlock the Exit Door."
 			]
 
 		Kind.OVERLOAD:

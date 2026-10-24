@@ -9,9 +9,15 @@ const SETTINGS_PATH: String = "user://settings.json"
 func has_save_file() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 
-func save_progress(highest_level: int) -> bool:
+func save_progress(level: int) -> bool:
+	var prev_highest: int = 0
+	if has_save_file():
+		var old_data: Dictionary = load_progress()
+		prev_highest = int(old_data.get("highest_level", 0))
+	var highest: int = maxi(level, prev_highest)
 	var save_data: Dictionary = {
-		"highest_level": highest_level,
+		"current_level": level,
+		"highest_level": highest,
 		"saved_at": Time.get_datetime_string_from_system()
 	}
 	var json_string: String = JSON.stringify(save_data, "\t")
@@ -25,21 +31,26 @@ func save_progress(highest_level: int) -> bool:
 	return true
 
 func load_progress() -> Dictionary:
+	var default_res: Dictionary = {"current_level": 0, "highest_level": 0}
 	if not FileAccess.file_exists(SAVE_PATH):
-		return {"highest_level": 1}
+		return default_res
 	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if not file:
-		return {"highest_level": 1}
+		return default_res
 	var content: String = file.get_as_text()
 	file.close()
 	var json: JSON = JSON.new()
 	var parse_result: Error = json.parse(content)
 	if parse_result != OK:
 		push_error("SaveManager: JSON parse error in save file.")
-		return {"highest_level": 1}
+		return default_res
 	if json.data is Dictionary:
 		return json.data as Dictionary
-	return {"highest_level": 1}
+	return default_res
+
+func clear_save() -> void:
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(SAVE_PATH)
 
 func save_settings(settings: Dictionary) -> bool:
 	var json_string: String = JSON.stringify(settings, "\t")

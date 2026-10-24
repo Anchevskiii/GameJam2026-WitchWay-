@@ -163,18 +163,19 @@ func difficulty_tier(level: int = current_level) -> int:
 	return level / LIVING_ROOM_EVERY
 
 
-## New Game: start the endless run from floor 1.
+## New Game: start the run from floor 1 (level 0).
 func start_new_run() -> void:
-	start_from_checkpoint(0)
 	stats_npcs_scared = 0
 	stats_props_spawned = 0
 	stats_times_peed = 0
 	stats_kids_peed = 0
+	start_from_checkpoint(0)
+	SaveManager.save_progress(0)
 
 
-## Continue: resume at a saved Living Room (any level is rounded down to the last Living Room).
+## Continue: resume at the exact floor reached.
 func start_from_checkpoint(level: int) -> void:
-	checkpoint_level = maxi(level - level % LIVING_ROOM_EVERY, 0)
+	checkpoint_level = maxi(level, 0)
 	current_level = checkpoint_level
 	best_level = maxi(best_level, checkpoint_level)
 	reset_level_state()
@@ -184,8 +185,8 @@ func start_from_checkpoint(level: int) -> void:
 func advance_level() -> void:
 	current_level += 1
 	best_level = maxi(best_level, current_level)
-	if is_safe_level(current_level):
-		checkpoint_level = current_level
+	checkpoint_level = current_level
+	SaveManager.save_progress(current_level)
 
 
 ## Only clears the CPU meter (used when walking into a new room; sanity carries over).
