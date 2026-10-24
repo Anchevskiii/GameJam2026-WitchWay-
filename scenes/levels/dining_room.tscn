@@ -1,0 +1,73 @@
+[gd_scene load_steps=20 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/room_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://data/npcs/bat.tres" id="2_r"]
+[ext_resource type="Resource" path="res://data/npcs/witch.tres" id="3_r"]
+[ext_resource type="Resource" path="res://data/npcs/big_jack.tres" id="4_r"]
+[ext_resource type="Resource" path="res://data/npcs/werewolf.tres" id="5_r"]
+[ext_resource type="Resource" path="res://data/npcs/tired_vampire.tres" id="6_r"]
+[ext_resource type="Resource" path="res://data/npcs/ghost.tres" id="7_r"]
+[ext_resource type="Resource" path="res://data/npcs/jack_o_lantern.tres" id="8_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/cupboard.png" id="9_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/bookshelf.png" id="10_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/dining_table.png" id="11_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/lamp.png" id="12_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/clock.png" id="13_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/plant.png" id="14_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/cobweb.png" id="15_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/rug.png" id="16_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/pumpkin.png" id="17_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/bones.png" id="18_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/candles.png" id="19_r"]
+
+[node name="DiningRoom" instance=ExtResource("1_base")]
+room_title = "The Dining Room"
+objective = "Push the CPU to 100% so the exit door (top right) fails to render. Then RUN through it."
+layout = "################################
+#o...K...L...O...W.#.W........o#
+#..................#.....j.....D
+#..................#...........#
+#...b.............Q#L..........#
+#.....h..w...v.....#.....j.....#
+#W.....T.c..T..G...#...........#
+#......g...b.......#####.#######
+#.............................u#
+#.............c..W.#...........#
+#..................#.....j.....#
+#o.P....r.....Q....#..n.......Q#
+################################"
+npc_legend = {
+"b": ExtResource("2_r"),
+"h": ExtResource("3_r"),
+"G": ExtResource("4_r"),
+"w": ExtResource("5_r"),
+"v": ExtResource("6_r"),
+"g": ExtResource("7_r"),
+"j": ExtResource("8_r")
+}
+hide_legend = {
+"W": ExtResource("9_r"),
+"K": ExtResource("10_r")
+}
+decor_legend = {
+"T": ExtResource("11_r"),
+"L": ExtResource("12_r"),
+"O": ExtResource("13_r"),
+"Q": ExtResource("14_r")
+}
+floor_decor_legend = {
+"o": ExtResource("15_r"),
+"r": ExtResource("16_r"),
+"u": ExtResource("17_r"),
+"n": ExtResource("18_r")
+}
+light_legend = {
+"c": ExtResource("19_r")
+}
+exit_requires_cpu_overload = true
+door_open_time = 6.0
+cpu_load_multiplier = 1.5
+npc_wander_scale = 0.0
+npcs_hide = false
+ambient_color = Color(0.82, 0.76, 0.88, 1)
+intro_lines = Array[String](["The Dining Room. Built in one weekend. Completely unoptimized.", "The exit door only renders when the CPU has nothing better to do. Give it something better to do.", "Surprise one dinner guest while nobody's looking, or jump out of a cupboard. Panicking guests scare each other, and every dropped prop costs CPU."])

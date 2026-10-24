@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="NpcData" load_steps=6 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/ghost.png" id="1_oj73o"]
+[ext_resource type="Script" path="res://scripts/resources/prop_data.gd" id="5_08hm4"]
+[ext_resource type="Resource" path="res://data/props/ghost_sheet.tres" id="6_wt5jd"]
+[ext_resource type="Resource" path="res://data/props/sock.tres" id="7_45osf"]
+[ext_resource type="Script" path="res://scripts/resources/npc_data.gd" id="8_u85l6"]
+
+[resource]
+script = ExtResource("8_u85l6")
+display_name = "Ghost"
+frames = Array[Texture2D]([ExtResource("1_oj73o")])
+anim_fps = 6.0
+tint = Color(1, 1, 1, 1)
+sprite_scale = 1.0
+can_move = true
+move_speed = 55.0
+wander_radius = 80.0
+afraid_of_player = true
+is_harmless = false
+notice_range = 110.0
+view_half_angle = 50.0
+look_around_min = 2.0
+look_around_max = 4.5
+scare_range = 95.0
+windup_time = 1.6
+scare_damage = 20.0
+scare_cooldown = 2.5
+windup_text = "BOO"
+scare_sound = "boo"
+hides_in_furniture = true
+ambush_range = 70.0
+ambush_windup = 0.4
+hide_time = 12.0
+hide_cooldown = 6.0
+hide_search_radius = 260.0
+after_scare = 0
+loot = Array[ExtResource("5_08hm4")]([ExtResource("6_wt5jd"), ExtResource("7_45osf")])
+scream_radius = 100.0
+scream_delay = 0.35
+panic_time = 2.5
+panic_speed = 150.0
+recover_time = 8.0

@@ -1,0 +1,63 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/room_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://data/npcs/cardboard_ghost.tres" id="2_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/cupboard.png" id="3_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/couch.png" id="4_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/bookshelf.png" id="5_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/tv.png" id="6_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/table.png" id="7_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/lamp.png" id="8_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/clock.png" id="9_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/armchair.png" id="10_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/plant.png" id="11_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/crate.png" id="12_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/cobweb.png" id="13_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/rug.png" id="14_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/pumpkin.png" id="15_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/candles.png" id="16_r"]
+
+[node name="LivingRoom" instance=ExtResource("1_base")]
+room_title = "The Living Room"
+objective = "Sneak up BEHIND the cardboard ghost and BOO it (SPACE). Or hide in the cupboard (E) and jump out (SPACE)."
+layout = "######################
+#o..................o#
+#..w..K..v..L.....O..#
+#....................#
+#.......c...A........#
+#.................Z..#
+#........r......g....#
+#....................D
+#..P.................#
+#...Q......t..c....Q.#
+#o.....u.............#
+######################"
+npc_legend = {
+"g": ExtResource("2_r")
+}
+hide_legend = {
+"w": ExtResource("3_r"),
+"c": ExtResource("4_r"),
+"K": ExtResource("5_r")
+}
+decor_legend = {
+"v": ExtResource("6_r"),
+"t": ExtResource("7_r"),
+"L": ExtResource("8_r"),
+"O": ExtResource("9_r"),
+"A": ExtResource("10_r"),
+"Q": ExtResource("11_r"),
+"Z": ExtResource("12_r")
+}
+floor_decor_legend = {
+"o": ExtResource("13_r"),
+"r": ExtResource("14_r"),
+"u": ExtResource("15_r")
+}
+light_legend = {
+"c": ExtResource("16_r")
+}
+is_safe_room = true
+ambient_color = Color(1, 0.95, 0.88, 1)
+intro_lines = Array[String](["Welcome to the Haunted House! This is the Living Room. It's the only room with someone living in it. You.", "Move with WASD, run with SHIFT. You are wearing our complimentary Very Scary Mask.", "Monsters only get scared if they don't see you coming. The yellow cone is where they're looking.", "Sneak up behind the Cardboard Ghost and press SPACE. Or hide in the cupboard or behind the couch (E) and jump out with SPACE.", "If a monster spots you, it winds up a scare. Duck into a hiding spot and it misses. Hiding also calms you down."])
+revisit_lines = Array[String](["Welcome back to the Living Room. Your progress has been saved. Your dignity has not.", "Sanity restored. Every third floor is a Living Room. Management is very generous."])

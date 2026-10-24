@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="PropData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/prop_data.gd" id="1_h6b6r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/candelabra.png" id="2_twess"]
+
+[resource]
+script = ExtResource("1_h6b6r")
+prop_name = "Flaming Candelabra"
+texture = ExtResource("2_twess")
+load_weight = 9.0
+sprite_scale = 2.0
+mass = 3.0
