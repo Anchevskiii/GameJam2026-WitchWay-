@@ -4,6 +4,7 @@
 
 # Local tools & portable runtimes (downloaded via setup.ps1)
 .tools/
+*.zip
 
 # Exported game builds
 /build/

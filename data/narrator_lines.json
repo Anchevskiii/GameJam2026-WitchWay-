@@ -1,0 +1,63 @@
+{
+	"_readme": "Narrator lines by event. Narrator.say_event(key) picks one at random. {placeholders} get filled in by the game.",
+	"heavy_prop": [
+		"A {prop}? That one is worth {weight}% glitch. Management is sweating.",
+		"{prop} spawned. Our servers felt that.",
+		"Please do not drop the {prop}. It is not optimized.",
+		"The {prop} was modelled with 4 million polygons. For realism."
+	],
+	"low_sanity": [
+		"Your sanity is at 25%. Please enjoy the complimentary panic.",
+		"Sanity low. Have you tried standing still and thinking about puppies?",
+		"Management recommends hiding. Hiding is a feature."
+	],
+	"death": [
+		"Please contact management for a refund of dignity.",
+		"That puddle is a texture. We are almost sure it is a texture.",
+		"Bladder.exe has stopped responding.",
+		"Don't worry, the floor is waterproof. It's a feature."
+	],
+	"door_flicker": [
+		"The door is flickering. That is ambiance.",
+		"Door rendering at reduced priority. Thank you for your patience."
+	],
+	"door_missing_texture": [
+		"Texture not found? That's called minimalism.",
+		"The door is now magenta. Magenta is very in this season."
+	],
+	"door_jitter": [
+		"The door is vibrating with excitement.",
+		"Door is z-fighting. Door is winning."
+	],
+	"door_gone": [
+		"Door not found. Please enjoy the open-concept floor plan.",
+		"Door failed to render. Walk through it before we notice."
+	],
+	"door_back": [
+		"Door re-rendered. Sorry about that. Everything is fine.",
+		"We fixed the door. Please do not break it again."
+	],
+	"npc_scared": [
+		"You scared a monster. That is... not how this works.",
+		"Monster.exe is running away.",
+		"HR will hear about this."
+	],
+	"lag_start": [
+		"Lag is an immersive feature. We thank you for your patience.",
+		"The frame rate is being artisanal."
+	],
+	"boo_seen": [
+		"They saw you coming. Surprises work better as a surprise.",
+		"Nice try. Masks are scarier from behind.",
+		"The monster has seen that mask before. It was on sale."
+	],
+	"kid_peed": [
+		"A child has peed. Management did not see anything.",
+		"Three scares. Sorry, Timmy.",
+		"That kid is going home early. Their candy is not."
+	],
+	"glitch_crash": [
+		"House.exe has crashed. Please enjoy the free-roam mode.",
+		"Fatal glitch. Everything is fine."
+	]
+}

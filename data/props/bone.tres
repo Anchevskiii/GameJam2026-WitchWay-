@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="PropData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/prop_data.gd" id="1_a3xr0"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/bone.png" id="2_a1wel"]
+
+[resource]
+script = ExtResource("1_a3xr0")
+prop_name = "Chew Bone"
+texture = ExtResource("2_a1wel")
+load_weight = 1.5
+sprite_scale = 2.0
+mass = 0.5

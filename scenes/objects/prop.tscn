@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/prop.gd" id="1_prop"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_prop"]
+bounce = 0.45
+
+[node name="Prop" type="RigidBody2D"]
+collision_layer = 8
+collision_mask = 15
+physics_material_override = SubResource("PhysicsMaterial_prop")
+gravity_scale = 0.0
+contact_monitor = true
+max_contacts_reported = 2
+linear_damp = 2.2
+angular_damp = 3.0
+script = ExtResource("1_prop")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]

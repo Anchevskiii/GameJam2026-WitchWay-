@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="PropData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/prop_data.gd" id="1_h8i5d"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/fur_tuft.png" id="2_twp1m"]
+
+[resource]
+script = ExtResource("1_h8i5d")
+prop_name = "Fur Tuft"
+texture = ExtResource("2_twp1m")
+load_weight = 1.0
+sprite_scale = 2.0
+mass = 0.3
