@@ -32,8 +32,15 @@ func _ready() -> void:
 	EventBus.cpu_overload_changed.connect(_on_cpu_overload_changed)
 	EventBus.room_entered.connect(_on_room_entered)
 	EventBus.narrator_line_changed.connect(_on_narrator_line_changed)
+	EventBus.key_collected.connect(_on_key_collected)
 	_on_sanity_changed(GameManager.current_sanity, GameManager.max_sanity)
 	_on_cpu_overload_changed(GameManager.current_cpu_overload, GameManager.max_cpu_overload)
+
+
+func _on_key_collected() -> void:
+	if objective_label:
+		objective_label.text = "[KEY FOUND!] Unlock the Exit Door."
+		objective_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
 
 
 func _on_sanity_changed(current: float, max_val: float) -> void:

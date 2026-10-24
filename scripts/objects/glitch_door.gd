@@ -17,6 +17,7 @@ const DOOR_TEXTURE: Texture2D = preload("res://assets/sprites/environment/door.p
 const MISSING_TEXTURE: Texture2D = preload("res://assets/sprites/environment/missing_texture.png")
 
 @export var requires_cpu_overload: bool = true
+@export var requires_key: bool = false
 @export var flicker_at: float = 50.0
 @export var missing_texture_at: float = 75.0
 @export var jitter_at: float = 90.0
@@ -36,12 +37,17 @@ var _used: bool = false
 
 
 func _ready() -> void:
-	countdown_label.visible = false
+	if countdown_label:
+		countdown_label.visible = false
+		var unshaded := CanvasItemMaterial.new()
+		unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		countdown_label.material = unshaded
+		countdown_label.add_theme_font_size_override("font_size", 12)
+		countdown_label.add_theme_color_override("font_outline_color", Color.BLACK)
+		countdown_label.add_theme_constant_override("outline_size", 4)
 	exit_area.body_entered.connect(_on_exit_area_body_entered)
-	# React to the moment load HITS 100% (an event). Polling the value would miss it,
-	# because GameManager starts decaying it again in the very same frame.
 	EventBus.glitch_mode_toggled.connect(_on_glitch_mode_toggled)
-	if not requires_cpu_overload:
+	if not requires_cpu_overload and not requires_key:
 		_show_as_open_doorway()
 
 
@@ -140,11 +146,19 @@ func _show_as_open_doorway() -> void:
 
 
 func is_passable() -> bool:
+	if requires_key and not GameManager.has_exit_key:
+		return false
 	return not requires_cpu_overload or stage == Stage.GONE
 
 
 func _on_exit_area_body_entered(body: Node2D) -> void:
-	if _used or not body.is_in_group("player") or not is_passable():
+	if _used or not body.is_in_group("player"):
+		return
+	if requires_key and not GameManager.has_exit_key:
+		FloatingText.spawn(self, global_position, "LOCKED - KEY REQUIRED", Color(1.0, 0.4, 0.4), 14)
+		AudioManager.play("flicker", 3.0, 0.6)
+		return
+	if not is_passable():
 		return
 	_used = true
 	EventBus.level_completed.emit()

@@ -27,9 +27,13 @@ const KID_SCENE: PackedScene = preload("res://scenes/actors/kid.tscn")
 const LAMP_SCENE: PackedScene = preload("res://scenes/objects/wall_lamp.tscn")
 const VENT_SCENE: PackedScene = preload("res://scenes/objects/traps_scares/air_vent.tscn")
 const MASK_SCENE: PackedScene = preload("res://scenes/objects/mask_pickup.tscn")
+const ROOM_DOOR_SCENE: PackedScene = preload("res://scenes/objects/interactables/room_door.tscn")
+const KEY_SCENE: PackedScene = preload("res://scenes/objects/interactables/key_pickup.tscn")
+const BED_TEX: Texture2D = preload("res://assets/sprites/objects/bed.png")
 ## Kids that start within this distance of each other form one group.
 const KID_GROUP_RANGE: float = 130.0
 const GLOW_TEXTURE: Texture2D = preload("res://assets/sprites/environment/light_radial.tres")
+const HOUSE_TILES_TEX: Texture2D = preload("res://assets/sprites/environment/house_tiles.png")
 
 ## Scene files visited this run, so revisits can use shorter narrator lines.
 static var _visited_scenes: Dictionary = {}
@@ -55,6 +59,7 @@ static var _visited_scenes: Dictionary = {}
 @export_group("Exit")
 ## true = the door only disappears when CPU load hits 100%.
 @export var exit_requires_cpu_overload: bool = false
+@export var exit_requires_key: bool = false
 ## Seconds the overloaded door stays gone before it re-renders.
 @export var door_open_time: float = 4.0
 
@@ -64,8 +69,8 @@ static var _visited_scenes: Dictionary = {}
 ## Multiplies prop CPU weights in this room.
 @export var cpu_load_multiplier: float = 1.0
 @export var flashlight_works: bool = true
-## CanvasModulate colour. White = normal lighting, near-black = darkness room.
-@export var ambient_color: Color = Color(1, 1, 1)
+## CanvasModulate colour. Near-black so rooms are dark and walls block vision into other rooms.
+@export var ambient_color: Color = Color(0.025, 0.025, 0.04, 1)
 ## > 0: NPCs are invisible/missing-texture until the player is this close (pixels).
 @export var npc_load_radius: float = 0.0
 ## Multiplies every NPC's wander radius. 0 = everyone stays in their spot (dinner party).
@@ -97,6 +102,8 @@ func _ready() -> void:
 		_apply_generated(HouseGenerator.new().generate(GameManager.current_level, randi()))
 
 	props_root.add_to_group("prop_layer")
+	if ambient_color.r > 0.1 or ambient_color.g > 0.1:
+		ambient_color = Color(0.025, 0.025, 0.04, 1)
 	canvas_modulate.color = ambient_color
 
 	GameManager.is_safe_room = is_safe_room
@@ -108,7 +115,7 @@ func _ready() -> void:
 
 	_build_from_layout()
 	_group_kids()
-	player.set_flashlight_available(flashlight_works)
+	player.set_flashlight_available(true)
 
 	EventBus.room_entered.emit("Floor %d: %s" % [GameManager.current_level + 1, room_title], objective)
 	Narrator.clear()
@@ -124,10 +131,22 @@ func _apply_generated(settings: Dictionary) -> void:
 		set(key, settings[key])
 
 
+var _layout_rows: PackedStringArray = []
+
+
+func _get_layout_char(cell: Vector2i) -> String:
+	if cell.y < 0 or cell.y >= _layout_rows.size():
+		return " "
+	var row: String = _layout_rows[cell.y]
+	if cell.x < 0 or cell.x >= row.length():
+		return " "
+	return row[cell.x]
+
+
 func _build_from_layout() -> void:
-	var rows: PackedStringArray = layout.split("\n")
-	for y in rows.size():
-		var row: String = rows[y]
+	_layout_rows = layout.split("\n")
+	for y in _layout_rows.size():
+		var row: String = _layout_rows[y]
 		for x in row.length():
 			var ch: String = row[x]
 			var cell := Vector2i(x, y)
@@ -136,12 +155,11 @@ func _build_from_layout() -> void:
 			if ch != "#" and ch != "X":
 				floor_layer.set_cell(cell, TILE_SOURCE, Vector2i(posmod(x, 2), posmod(y, 2)))
 			match ch:
-				"#":
+				"#", "X":
 					wall_layer.set_cell(cell, TILE_SOURCE, WALL_TILE)
-				"X":
-					wall_layer.set_cell(cell, TILE_SOURCE, MISSING_SOLID_TILE)
+					_spawn_wall_occluder(cell)
 				"F":
-					wall_layer.set_cell(cell, TILE_SOURCE, MISSING_FAKE_TILE)
+					_spawn_phase_wall(cell)
 				"P":
 					player.global_position = cell_to_world(cell)
 					player.camera.reset_smoothing()
@@ -155,6 +173,49 @@ func _build_from_layout() -> void:
 					pass
 				_:
 					_spawn_from_legend(ch, cell)
+
+
+func _spawn_wall_occluder(cell: Vector2i) -> void:
+	var occluder := LightOccluder2D.new()
+	occluder.position = cell_to_world(cell)
+	occluder.occluder_light_mask = 1
+	var poly := OccluderPolygon2D.new()
+	poly.cull_mode = OccluderPolygon2D.CULL_DISABLED
+	poly.polygon = PackedVector2Array([
+		Vector2(-16, -16),
+		Vector2(16, -16),
+		Vector2(16, 16),
+		Vector2(-16, 16)
+	])
+	occluder.occluder = poly
+	decor_root.add_child(occluder)
+
+
+## Spawns a bugged wall ("F") that looks identical to a normal brick wall,
+## has NO collision (player can phase through it), NO shadow occluder,
+## and subtly flickers so the observant player knows they can walk through it!
+func _spawn_phase_wall(cell: Vector2i) -> void:
+	var sprite := Sprite2D.new()
+	sprite.texture = HOUSE_TILES_TEX
+	sprite.region_enabled = true
+	sprite.region_rect = Rect2(64, 0, 32, 32)  # exact normal wall brick tile (2:0)
+	sprite.position = cell_to_world(cell)
+	sprite.z_index = 5
+	sprite.light_mask = 2
+	decor_root.add_child(sprite)
+
+	var glitch_timer := Timer.new()
+	glitch_timer.wait_time = randf_range(1.5, 3.2)
+	glitch_timer.autostart = true
+	sprite.add_child(glitch_timer)
+	glitch_timer.timeout.connect(func() -> void:
+		var tw: Tween = sprite.create_tween()
+		tw.tween_property(sprite, "modulate:a", 0.45, 0.08)
+		tw.parallel().tween_property(sprite, "position:x", sprite.position.x + randf_range(-1.5, 1.5), 0.08)
+		tw.tween_property(sprite, "modulate:a", 1.0, 0.12)
+		tw.parallel().tween_property(sprite, "position:x", cell_to_world(cell).x, 0.12)
+		glitch_timer.wait_time = randf_range(2.0, 4.5)
+	)
 
 
 func _spawn_from_legend(ch: String, cell: Vector2i) -> void:
@@ -179,17 +240,40 @@ func _spawn_from_legend(ch: String, cell: Vector2i) -> void:
 	elif light_legend.has(ch):
 		var glow := PointLight2D.new()
 		glow.texture = GLOW_TEXTURE
-		glow.texture_scale = 0.5
-		glow.energy = 0.9
+		glow.texture_scale = 0.45
+		glow.energy = 0.75
 		glow.color = Color(1.0, 0.75, 0.4)
+		glow.range_item_cull_mask = 3
+		glow.shadow_item_cull_mask = 1
+		glow.shadow_enabled = true
 		_spawn_floor_decor(light_legend[ch], cell).add_child(glow)
 	elif ch == "l":
 		var lamp: WallLamp = LAMP_SCENE.instantiate()
 		lamp.position = cell_to_world(cell)
 		decor_root.add_child(lamp)
+	elif ch == "d":
+		var door: RoomDoor = ROOM_DOOR_SCENE.instantiate()
+		door.position = cell_to_world(cell)
+		decor_root.add_child(door)
+	elif ch == "B":
+		var bed: StaticBody2D = _spawn_decor(BED_TEX, cell)
+		bed.add_child(HideSpot.new())
+	elif ch == "K":
+		var key_item: KeyPickup = KEY_SCENE.instantiate()
+		key_item.position = cell_to_world(cell)
+		decor_root.add_child(key_item)
 	elif ch == "v" or ch == "a":
 		var vent: AirVent = VENT_SCENE.instantiate()
 		vent.position = cell_to_world(cell)
+		# Orient vent towards adjacent open floor tile
+		var best_dir: Vector2 = Vector2.DOWN
+		for dir in [Vector2i.DOWN, Vector2i.UP, Vector2i.LEFT, Vector2i.RIGHT]:
+			var neighbor: Vector2i = cell + dir
+			var ch_n: String = _get_layout_char(neighbor)
+			if ch_n == "." or ch_n == "P" or ch_n == "r":
+				best_dir = Vector2(dir)
+				break
+		vent.vent_direction = best_dir
 		decor_root.add_child(vent)
 	elif ch == "M":
 		var mask_item: MaskPickup = MASK_SCENE.instantiate()
@@ -201,12 +285,15 @@ func _spawn_from_legend(ch: String, cell: Vector2i) -> void:
 
 func _spawn_decor(texture: Texture2D, cell: Vector2i) -> StaticBody2D:
 	var body := StaticBody2D.new()
+	body.collision_layer = 1
+	body.collision_mask = 0
 	body.position = cell_to_world(cell)
 	var sprite := Sprite2D.new()
 	sprite.texture = texture
 	body.add_child(sprite)
 	var shape := RectangleShape2D.new()
-	shape.size = texture.get_size() * 0.85
+	# Tighter collision so players don't snag on furniture edges
+	shape.size = texture.get_size() * 0.75
 	var collision := CollisionShape2D.new()
 	collision.shape = shape
 	body.add_child(collision)
@@ -227,6 +314,7 @@ func _spawn_floor_decor(texture: Texture2D, cell: Vector2i) -> Sprite2D:
 func _spawn_door(cell: Vector2i) -> void:
 	var door: GlitchDoor = DOOR_SCENE.instantiate()
 	door.requires_cpu_overload = exit_requires_cpu_overload
+	door.requires_key = exit_requires_key
 	door.rerender_delay = door_open_time
 	door.position = cell_to_world(cell)
 	decor_root.add_child(door)

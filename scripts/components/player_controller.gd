@@ -176,7 +176,21 @@ func is_facing_target(target_pos: Vector2) -> bool:
 	if not _is_flashlight_on or not _flashlight_available:
 		return false
 	var dir_to_target: Vector2 = (target_pos - global_position).normalized()
-	return _facing_direction.dot(dir_to_target) > 0.45
+	return _facing_direction.dot(dir_to_target) > 0.48
+
+
+## Returns true if the target position is illuminated by the player's flashlight beam
+## or right next to the player's personal glow.
+func is_illuminating(target_pos: Vector2) -> bool:
+	var dist: float = global_position.distance_to(target_pos)
+	if dist <= 40.0:
+		return true
+	if not _is_flashlight_on or not _flashlight_available or dist > 205.0:
+		return false
+	if _is_flickering and flashlight_beam and flashlight_beam.energy <= 0.05:
+		return false
+	var dir_to_target: Vector2 = (target_pos - global_position).normalized()
+	return _facing_direction.dot(dir_to_target) > 0.52
 
 
 func _handle_movement(delta: float) -> void:
@@ -260,18 +274,7 @@ func _put_on_mask() -> void:
 
 
 func _spawn_boo_text() -> void:
-	var label := Label.new()
-	label.text = "BOO!"
-	label.add_theme_font_size_override("font_size", 26)
-	label.add_theme_color_override("font_outline_color", Color.BLACK)
-	label.add_theme_constant_override("outline_size", 6)
-	label.position = global_position + Vector2(-32, -64)
-	label.z_index = 30
-	get_parent().add_child(label)
-	var tween: Tween = label.create_tween()
-	tween.tween_property(label, "position:y", label.position.y - 18.0, 0.5)
-	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.5).set_delay(0.2)
-	tween.tween_callback(label.queue_free)
+	FloatingText.spawn(self, global_position + Vector2(0, -16), "BOO!", Color(1.0, 0.95, 0.4), 16)
 
 
 # ---------------------------------------------------------------- hiding
@@ -314,7 +317,7 @@ func _unhide() -> void:
 	is_hidden = false
 	_hide_spot.set_occupied(false)
 	player_sprite.visible = true
-	glow_light.energy = 0.9
+	glow_light.energy = 0.6
 	_update_flashlight_state()
 	collision_shape.set_deferred("disabled", false)
 	global_position = _pre_hide_position

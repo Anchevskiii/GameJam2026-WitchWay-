@@ -4,9 +4,9 @@ extends Node2D
 ## Wall lamp / room light that provides atmosphere.
 ## Supports subtle or aggressive flickering and temporary blackouts so rooms aren't always evenly lit.
 
-@export var light_energy: float = 1.1
-@export var light_color: Color = Color(1.0, 0.85, 0.55)
-@export var light_scale: float = 1.2
+@export var light_energy: float = 0.85
+@export var light_color: Color = Color(1.0, 0.8, 0.5)
+@export var light_scale: float = 0.85
 @export var flicker_enabled: bool = true
 @export var flicker_interval_min: float = 2.5
 @export var flicker_interval_max: float = 8.0

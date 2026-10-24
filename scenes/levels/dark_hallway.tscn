@@ -15,16 +15,16 @@
 
 [node name="DarkHallway" instance=ExtResource("1_base")]
 room_title = "The Dark Hallway"
-objective = "Find the exit on the far right. Not every wall is a wall."
-layout = "##############################################
-#o..l.#..Z....W.#o....u....X.....W.#.o..l..W.#
-#..P..#..&.v....#....b.....X...j...#.........#
-#.....F...&.....#..........F.......#....g....#
-#....c#..M..n..Z#..c....W..X.n....Z#....c....D
-#.....#.........####a#######......#####a######
-#.W...#.........#...n............X..........u#
-#.......c.................c......F......w....#
-##############################################"
+objective = "Shine your flashlight (F) to spot lurking entities. Hide in wardrobes (E) and find the bugged wall (no hitbox) to reach the exit."
+layout = "######################################
+#o..l.#..Z....W.#o....u....#o..l..W..#
+#..P..#.........#..........#.........#
+#.....a....v....#....g.....F.c.......#
+#.....#.........#..........#........D
+#.....#..M..n..Z#.....W....#####a#####
+#.W...#.........####a#######........u#
+#o......c..................F.c..w....#
+######################################"
 npc_legend = {
 "v": ExtResource("2_r"),
 "b": ExtResource("3_r"),
@@ -46,7 +46,7 @@ floor_decor_legend = {
 light_legend = {
 "c": ExtResource("12_r")
 }
-flashlight_works = false
-ambient_color = Color(0.06, 0.05, 0.1, 1)
+flashlight_works = true
+ambient_color = Color(0.025, 0.025, 0.04, 1)
 npc_load_radius = 90.0
-intro_lines = Array[String](["The Dark Hallway. The lighting textures failed to load. Darkness is an immersive feature.", "Your flashlight's texture also failed to load. We thank you for your patience.", "Some walls are magenta. Some magenta walls are more of a suggestion. Collision detection: optional.", "Good news: in the dark, nobody sees you coming either. Cupboards are excellent hiding spots."])
+intro_lines = Array[String](["The Dark Hallway. Entities remain completely invisible in the darkness unless your flashlight beam hits them directly.", "If an entity spots you up close, it will lunge immediately. Duck into a Wardrobe [E] or grab a Disguise Mask [M] to stay safe.", "Look for faint light leaking through solid walls—one brick has no collision hitbox and leads to the exit."])

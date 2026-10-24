@@ -25,8 +25,8 @@ const MISSING_TEXTURE: Texture2D = preload("res://assets/sprites/environment/mis
 const BUMP_RADIUS: float = 34.0
 ## The NPC notices a player bumping right into it, even from behind.
 const TOUCH_SENSE: float = 20.0
-const CONE_COLOR: Color = Color(1.0, 0.95, 0.5, 0.13)
-const CONE_ALERT_COLOR: Color = Color(1.0, 0.3, 0.25, 0.2)
+const CONE_COLOR: Color = Color(1.0, 0.9, 0.5, 0.08)
+const CONE_ALERT_COLOR: Color = Color(1.0, 0.25, 0.2, 0.16)
 
 @export var data: NpcData
 ## Darkness rooms: > 0 means the NPC is "not loaded" (invisible, then a missing-texture
@@ -81,7 +81,15 @@ func _ready() -> void:
 	add_to_group("npcs")
 	_home = global_position
 	_wander_target = _home
-	bubble.visible = false
+	if bubble:
+		bubble.visible = false
+		var unshaded := CanvasItemMaterial.new()
+		unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		bubble.material = unshaded
+		bubble.add_theme_font_size_override("font_size", 14)
+		bubble.add_theme_color_override("font_outline_color", Color(0.02, 0.02, 0.05))
+		bubble.add_theme_constant_override("outline_size", 4)
+		bubble.z_index = 80
 	windup_light.enabled = false
 	if data == null:
 		push_error("Npc %s has no NpcData." % name)
@@ -123,9 +131,9 @@ func _physics_process(delta: float) -> void:
 			_process_panic(delta)
 		State.DONE:
 			velocity = Vector2.ZERO
-			bubble.text = "DISABLED %d" % ceili(data.recover_time - _state_time)
+			bubble.visible = false
 			if data.after_scare != NpcData.AfterScare.FALL_APART:
-				sprite.visible = randf() > 0.08  # glitching while switched off
+				sprite.visible = false
 			if _state_time >= data.recover_time:
 				_recover()
 		State.HIDING:
@@ -162,7 +170,7 @@ func _process_idle(delta: float) -> void:
 		_wander_time -= delta
 		if global_position.distance_to(_wander_target) < 6.0 or _wander_time <= 0.0:
 			_pick_wander_target()
-		velocity = global_position.direction_to(_wander_target) * data.move_speed * 0.6
+		velocity = global_position.direction_to(_wander_target) * data.move_speed * 0.35
 	else:
 		velocity = Vector2.ZERO
 
@@ -209,43 +217,37 @@ func _process_windup(delta: float) -> void:
 		_enter(State.COOLDOWN)
 		return
 	face_towards(_target.global_position)
-	# Harder: it doesn't just stand there - it rushes at you while winding up.
+	# It rushes straight at you from the dark and triggers the scare immediately on contact.
 	var to_target: Vector2 = _target.global_position - global_position
-	var chase_speed: float = data.rush_speed if data.rush_speed > 0.0 else data.move_speed * 1.3
-	if data.can_move and can_chase and to_target.length() > 32.0 and not LagController.is_frozen:
+	var chase_speed: float = data.rush_speed if data.rush_speed > 0.0 else data.move_speed * 1.45
+	if data.can_move and can_chase and to_target.length() > 28.0 and not LagController.is_frozen:
 		velocity = to_target.normalized() * chase_speed
-	# Lag freeze = wind-up pauses. That's the dodge window.
 	if LagController.is_frozen:
 		_state_time -= delta
 	var progress: float = clampf(_state_time / _windup_time(), 0.0, 1.0)
 
-	# The tell: puff up, glow red, and a growing "BOOOO" bubble.
-	sprite.scale = Vector2.ONE * data.sprite_scale * (1.0 + 0.35 * progress)
-	sprite.modulate = data.tint.lerp(Color(1.0, 0.45, 0.45), progress)
-	windup_light.energy = 0.4 + 1.6 * progress
-	# "B" -> "BO" -> "BOO" -> "BOO!" -> "BOO!!!" as the scare charges up.
-	var letters: int = maxi(1, ceili(minf(progress / 0.7, 1.0) * data.windup_text.length()))
-	bubble.text = data.windup_text.left(letters) + "!".repeat(int(maxf(progress - 0.7, 0.0) / 0.1))
-	if _state_time < 0.25:
-		bubble.text = "!"  # "spotted you" 
-	bubble.scale = Vector2.ONE * (0.8 + 0.6 * progress)
+	sprite.scale = Vector2.ONE * data.sprite_scale * (1.0 + 0.3 * progress)
+	sprite.modulate = data.tint.lerp(Color(1.0, 0.35, 0.35), progress)
+	windup_light.energy = 0.5 + 1.5 * progress
+	bubble.text = "!"
+	bubble.scale = Vector2.ONE * (0.9 + 0.4 * progress)
 
-	if to_target.length() > _sight() * 1.5:
-		bubble.text = "aww"
+	if to_target.length() > _sight() * 1.35:
+		bubble.visible = false
 		_enter(State.COOLDOWN)
 		return
-	if progress >= 1.0 or (can_chase and to_target.length() <= 34.0):
+	if progress >= 1.0 or to_target.length() <= 48.0:
 		_release_scare()
 
 
 func _release_scare() -> void:
 	bubble.text = data.windup_text + "!"
-	bubble.scale = Vector2.ONE * 1.6
+	bubble.scale = Vector2.ONE * 1.35
 	if _target == _player and (_player.get("is_hidden") or _player.get("is_masked")):
-		bubble.text = "?"  # the player ducked into a hiding spot or put on a mask - miss!
+		bubble.visible = false
 		_enter(State.COOLDOWN)
 		return
-	AudioManager.play(data.scare_sound, -4.0)
+	AudioManager.play(data.scare_sound, -3.0)
 	var in_range: bool = is_instance_valid(_target) and global_position.distance_to(_target.global_position) <= data.scare_range
 	if in_range and _target == _player:
 		var is_ambush: bool = _ambush_windup
@@ -253,6 +255,14 @@ func _release_scare() -> void:
 			is_ambush = false
 		var dmg: float = (data.ambush_damage if is_ambush else data.scare_damage) * damage_scale
 		GameManager.scare_player(dmg, data.display_name, is_ambush)
+		# After terrifying the player, the entity flees back into the darkness!
+		if _player != null:
+			_panic_dir = (global_position - _player.global_position).normalized()
+			if _panic_dir == Vector2.ZERO:
+				_panic_dir = Vector2.RIGHT.rotated(randf() * TAU)
+			_panic_turn_time = 0.8
+			_enter(State.PANIC)
+			return
 	elif in_range and _target is Kid:
 		(_target as Kid).get_scared(global_position, "a " + data.display_name)
 	_enter(State.COOLDOWN)
@@ -293,11 +303,11 @@ func get_scared(_by: String = "") -> bool:
 	bubble.visible = true
 	bubble.text = "!!"
 	AudioManager.play("npc_yelp", -2.0, randf_range(0.85, 1.25))
-	_drop_loot()
-	var glitch: float = 0.0
-	for prop in data.loot:
-		glitch += prop.load_weight
-	FloatingText.spawn(self, global_position, "+%d GLITCH" % roundi(glitch * GameManager.cpu_load_multiplier), Color(1.0, 0.35, 0.9))
+	var prop_load: float = _drop_loot()
+	var bonus_glitch: float = 45.0
+	GameManager.add_cpu_load(bonus_glitch)
+	var total_glitch: int = roundi((prop_load + bonus_glitch) * GameManager.cpu_load_multiplier)
+	FloatingText.spawn(self, global_position, "+%d%% GLITCH" % total_glitch, Color(1.0, 0.35, 0.9))
 	if data.scream_radius > 0.0:
 		# Who hears the scream is decided NOW (where it happened); they react a moment later.
 		get_tree().create_timer(data.scream_delay).timeout.connect(_scream.bind(_npcs_within(data.scream_radius)))
@@ -322,10 +332,14 @@ func _npcs_within(radius: float) -> Array[Npc]:
 	return found
 
 
-func _drop_loot() -> void:
-	for prop_data in data.loot:
-		var dir: Vector2 = Vector2.RIGHT.rotated(randf() * TAU)
-		Prop.spawn(prop_data, global_position + dir * 10.0, dir * randf_range(120.0, 260.0), get_tree())
+func _drop_loot() -> float:
+	if data.loot.is_empty():
+		return 0.0
+	# Drop at most 1 item to avoid chaotic clutter while still letting the player pick it up.
+	var prop_data: PropData = data.loot[0]
+	var dir: Vector2 = Vector2.RIGHT.rotated(randf() * TAU)
+	Prop.spawn(prop_data, global_position + dir * 10.0, dir * randf_range(90.0, 150.0), get_tree())
+	return prop_data.load_weight
 
 
 func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> void:
@@ -342,9 +356,6 @@ func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> v
 	# The whole trick: a scare only works as a SURPRISE. Jumping out of hiding or wearing the 6s Mask Pickup always works!
 	var player_masked: bool = _player != null and _player.get("is_masked")
 	if not from_hiding and not player_masked and (state == State.WINDUP or can_see_player()):
-		bubble.visible = true
-		bubble.text = "nice try"
-		get_tree().create_timer(0.9).timeout.connect(_hide_bubble_if_calm)
 		Narrator.say_event("boo_seen")
 		return
 	get_scared("a masked stranger")
@@ -479,7 +490,7 @@ func _reset_visuals() -> void:
 
 func _pick_wander_target() -> void:
 	_wander_target = _home + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(0.0, data.wander_radius * wander_scale)
-	_wander_time = randf_range(1.5, 3.5)
+	_wander_time = randf_range(2.5, 5.0)
 
 
 func _animate(delta: float) -> void:
@@ -501,23 +512,23 @@ func _animate(delta: float) -> void:
 			sprite.texture = data.frames[_frame]
 
 
-## Darkness rooms: far = invisible, closer = magenta placeholder, close = real sprite.
+## Entities remain completely hidden in the dark unless the player shines the flashlight
+## directly on them (with clear line of sight) or they are lunging at the player.
 func _update_loaded_look() -> void:
-	if load_in_radius <= 0.0 or state == State.DONE or state == State.HIDING:
+	if state == State.DONE or state == State.HIDING:
 		return
-	var dist: float = _distance_to_player()
-	if dist <= load_in_radius or state == State.WINDUP:
+	var lit_by_player: bool = false
+	if _player != null and _player.has_method("is_illuminating"):
+		lit_by_player = _player.call("is_illuminating", global_position) and _has_line_of_sight(_player.global_position, global_position)
+	if lit_by_player or state == State.WINDUP or state == State.PANIC or (data.is_harmless and _distance_to_player() < 115.0):
 		sprite.visible = true
 		if sprite.texture == MISSING_TEXTURE and not data.frames.is_empty():
 			sprite.texture = data.frames[_frame]
 			sprite.region_enabled = false
-	elif dist <= load_in_radius * 2.0:
-		sprite.visible = randf() > 0.15  # flickers while "streaming in"
-		sprite.texture = MISSING_TEXTURE
-		sprite.region_enabled = true
-		sprite.region_rect = Rect2(0, 0, 16, 28)
 	else:
 		sprite.visible = false
+		if state != State.WINDUP:
+			bubble.visible = false
 
 
 func _distance_to_player() -> float:

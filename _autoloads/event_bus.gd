@@ -34,5 +34,6 @@ signal room_change_requested(scene_path: String)
 
 # Item and progression signals
 signal item_collected(item_name: String)
+signal key_collected()
 signal level_completed()
 signal checkpoint_saved()

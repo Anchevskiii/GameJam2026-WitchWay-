@@ -23,12 +23,19 @@ func _ready() -> void:
 
 func _setup_prompt_label() -> void:
 	_prompt_label = Label.new()
+	var unshaded := CanvasItemMaterial.new()
+	unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	_prompt_label.material = unshaded
 	_prompt_label.text = prompt_message
 	_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt_label.position = Vector2(-75, -40)
 	_prompt_label.custom_minimum_size = Vector2(150, 20)
+	_prompt_label.add_theme_font_size_override("font_size", 12)
+	_prompt_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.85))
+	_prompt_label.add_theme_color_override("font_outline_color", Color(0.02, 0.02, 0.05))
+	_prompt_label.add_theme_constant_override("outline_size", 4)
 	_prompt_label.visible = false
-	_prompt_label.z_index = 50
+	_prompt_label.z_index = 80
 	add_child(_prompt_label)
 
 func _unhandled_input(event: InputEvent) -> void:

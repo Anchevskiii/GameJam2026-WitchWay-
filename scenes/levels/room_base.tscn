@@ -11,10 +11,12 @@ script = ExtResource("1_room")
 
 [node name="Floor" type="TileMapLayer" parent="."]
 z_index = -10
+light_mask = 1
 tile_set = ExtResource("2_tiles")
 
 [node name="Walls" type="TileMapLayer" parent="."]
-z_index = -5
+z_index = 5
+light_mask = 2
 tile_set = ExtResource("2_tiles")
 
 [node name="Decor" type="Node2D" parent="."]

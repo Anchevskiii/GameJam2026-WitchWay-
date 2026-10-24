@@ -52,7 +52,15 @@ func _ready() -> void:
 	add_to_group("kids")
 	if not costumes.is_empty():
 		sprite.texture = costumes.pick_random()
-	bubble.visible = false
+	if bubble:
+		bubble.visible = false
+		var unshaded := CanvasItemMaterial.new()
+		unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		bubble.material = unshaded
+		bubble.add_theme_font_size_override("font_size", 14)
+		bubble.add_theme_color_override("font_outline_color", Color(0.02, 0.02, 0.05))
+		bubble.add_theme_constant_override("outline_size", 4)
+		bubble.z_index = 80
 	_wander_target = global_position
 	_follow_offset = Vector2(randf_range(-28.0, 28.0), randf_range(18.0, 34.0))
 	EventBus.player_booed.connect(_on_player_booed)
@@ -169,9 +177,17 @@ func _on_player_booed(origin: Vector2, boo_range: float, _from_hiding: bool) -> 
 
 
 func _drop_candy(count: int) -> void:
+	var space := get_world_2d().direct_space_state
 	for i in count:
-		var dir: Vector2 = Vector2.RIGHT.rotated(randf() * TAU)
-		Prop.spawn(CANDY, global_position + dir * 8.0, dir * randf_range(80.0, 170.0), get_tree())
+		var best_dir := Vector2.RIGHT.rotated(randf() * TAU)
+		# Pick a direction leading to open floor, away from obstacles and walls
+		for attempt in 6:
+			var test_dir := Vector2.RIGHT.rotated(randf() * TAU)
+			var query := PhysicsRayQueryParameters2D.create(global_position, global_position + test_dir * 50.0, 1)
+			if space.intersect_ray(query).is_empty():
+				best_dir = test_dir
+				break
+		Prop.spawn(CANDY, global_position + best_dir * 10.0, best_dir * randf_range(60.0, 120.0), get_tree())
 
 
 func _nearest_active_monster() -> Node2D:

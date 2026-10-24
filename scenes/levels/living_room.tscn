@@ -19,25 +19,23 @@
 
 [node name="LivingRoom" instance=ExtResource("1_base")]
 room_title = "The Living Room"
-objective = "BOO the cardboard ghost from BEHIND (SPACE), or hide (E) and jump out. Try scaring the kid too."
-layout = "######################
-#o..................o#
-#..w..K..v..L.....O..#
-#....................#
-#.......c...A........#
-#.................Z..#
-#........r......g....#
-#....................D
-#..P..&..............#
-#...Q......t..c....Q.#
-#o.....u.............#
-######################"
+objective = "1. Toggle Flashlight (F)  |  2. Hide in Wardrobe (E) & Ambush Ghost (SPACE)  |  3. Find the Bugged Wall with no hitbox"
+layout = "##############################
+#o..l...#o.........o#o......o#
+#.......#..K.....O..#........#
+#..P....#...........#........#
+#.......#.....w.....#........#
+#........a....g.....F.c.....D
+#.......#...........#........#
+#..C..t.#.....M.....#...Z....#
+#o.....Q#o.........u#o......Q#
+##############################"
 npc_legend = {
 "g": ExtResource("2_r")
 }
 hide_legend = {
 "w": ExtResource("3_r"),
-"c": ExtResource("4_r"),
+"C": ExtResource("4_r"),
 "K": ExtResource("5_r")
 }
 decor_legend = {
@@ -58,6 +56,6 @@ light_legend = {
 "c": ExtResource("16_r")
 }
 is_safe_room = true
-ambient_color = Color(1, 0.95, 0.88, 1)
-intro_lines = Array[String](["Welcome to the Haunted House! This is the Living Room. It's the only room with someone living in it. You.", "Move with WASD, run with SHIFT. You are wearing our complimentary Very Scary Mask.", "Monsters only get scared if they don't see you coming. The yellow cone is where they're looking.", "Sneak up behind the Cardboard Ghost and press SPACE. Or hide in the cupboard (E) and jump out with SPACE.", "Every scare makes the house GLITCH. Glitch it all the way and it crashes - exits stop rendering.", "Other kids are trick-or-treating here too. Scare one three times and... well. Their candy restores your sanity.", "Monsters that spot you chase you. Duck into a hiding spot and their scare misses."])
-revisit_lines = Array[String](["Welcome back to the Living Room. Your progress has been saved. Your dignity has not.", "Sanity restored. Every third floor is a Living Room. Management is very generous."])
+ambient_color = Color(0.025, 0.025, 0.04, 1)
+intro_lines = Array[String](["Welcome to the Living Room. Toggle your flashlight with [F] and aim it with your mouse. Entities hide in the dark until your beam hits them.", "Enter the next room. Hide inside the central Wardrobe with [E], then press [SPACE] to jump out and scare the Ghost (+Sanity & +Glitch).", "Notice there is NO door to the 3rd room—only a faint sliver of light leaking through the eastern wall. One wall brick has no collision hitbox. Walk straight through the bug to reach the exit!"])
+revisit_lines = Array[String](["Safe Room reached. Progress saved and Sanity restored.", "Hide in the wardrobe [E] to practice ambushing, or phase through the bugged eastern wall to continue."])

@@ -1,37 +1,40 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/air_vent.gd" id="1_vent"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/crate.png" id="2_crate"]
+[ext_resource type="Texture2D" path="res://assets/sprites/objects/air_vent.png" id="2_vent_tex"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_vent"]
-size = Vector2(40, 64)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_trigger"]
+size = Vector2(44, 36)
 
-[node name="AirVent" type="Area2D"]
-collision_layer = 4
-collision_mask = 2
+[node name="AirVent" type="Node2D"]
 script = ExtResource("1_vent")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_vent")
-
 [node name="VentSprite" type="Sprite2D" parent="."]
-modulate = Color(0.4, 0.45, 0.5, 1)
-scale = Vector2(0.5, 0.5)
-texture = ExtResource("2_crate")
+z_index = 6
+texture = ExtResource("2_vent_tex")
+
+[node name="TriggerArea" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TriggerArea"]
+position = Vector2(0, 28)
+shape = SubResource("RectangleShape2D_trigger")
 
 [node name="Particles" type="CPUParticles2D" parent="."]
+position = Vector2(0, 12)
 emitting = false
-amount = 25
-lifetime = 0.45
+amount = 35
+lifetime = 0.5
 one_shot = true
 explosiveness = 0.95
 emission_shape = 3
-emission_rect_extents = Vector2(8, 4)
+emission_rect_extents = Vector2(10, 3)
 direction = Vector2(0, 1)
-spread = 30.0
-gravity = Vector2(0, 50)
-initial_velocity_min = 140.0
-initial_velocity_max = 240.0
-scale_amount_min = 2.0
-scale_amount_max = 4.5
-color = Color(0.9, 0.95, 1, 0.75)
+spread = 22.0
+gravity = Vector2(0, 40)
+initial_velocity_min = 180.0
+initial_velocity_max = 280.0
+scale_amount_min = 2.5
+scale_amount_max = 5.0
+color = Color(0.92, 0.96, 1, 0.85)

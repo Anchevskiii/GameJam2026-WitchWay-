@@ -8,13 +8,13 @@ extends SubViewportContainer
 
 const MISSING_TEXTURE: Texture2D = preload("res://assets/sprites/environment/missing_texture.png")
 
-## Glitch shown at 0% meter (a little) and at 100% (a lot).
-@export var calm_intensity: float = 0.04
-@export var max_intensity: float = 0.42
+## Glitch shown at 0% meter (none) and at 100% (subtle atmospheric glitch).
+@export var calm_intensity: float = 0.0
+@export var max_intensity: float = 0.14
 ## Seconds between random bursts when calm, and at 100% meter.
-@export var burst_interval_calm: float = 7.0
-@export var burst_interval_max: float = 0.8
-@export var burst_strength: float = 0.6
+@export var burst_interval_calm: float = 30.0
+@export var burst_interval_max: float = 3.0
+@export var burst_strength: float = 0.18
 
 @onready var world: SubViewport = $World
 
@@ -33,12 +33,13 @@ func _process(delta: float) -> void:
 	var meter: float = clampf(GameManager.current_cpu_overload / GameManager.max_cpu_overload, 0.0, 1.0)
 	var intensity: float = lerpf(calm_intensity, max_intensity, meter * meter)
 
-	_next_burst -= delta
-	if _next_burst <= 0.0:
-		_start_burst(meter)
+	if meter > 0.35:
+		_next_burst -= delta
+		if _next_burst <= 0.0:
+			_start_burst(meter)
 	if _burst_left > 0.0:
 		_burst_left -= delta
-		intensity = maxf(intensity, burst_strength)
+		intensity = maxf(intensity, burst_strength * meter)
 
 	_material.set_shader_parameter("intensity", intensity)
 

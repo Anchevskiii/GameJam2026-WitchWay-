@@ -13,15 +13,15 @@ extends Node
 @export var max_sanity: float = 100.0
 @export var max_cpu_overload: float = 100.0
 ## How fast the glitch meter drains per second once it starts draining.
-@export var cpu_decay_rate: float = 6.0
+@export var cpu_decay_rate: float = 3.0
 ## Seconds the meter holds after the last gain before it starts draining.
-@export var glitch_hold_time: float = 2.5
+@export var glitch_hold_time: float = 6.0
 
 @export_group("Difficulty")
 ## Every monster's wind-up is multiplied by this (lower = they scare you faster).
-@export var monster_windup_scale: float = 0.7
-## Every monster sees this much further than its NpcData says.
-@export var monster_sight_scale: float = 1.25
+@export var monster_windup_scale: float = 0.35
+## Every monster sees this much further than its NpcData says (shorter, tighter FOV).
+@export var monster_sight_scale: float = 0.72
 
 ## Endless run: level 0, 3, 6, ... are the Living Room (safe room + checkpoint).
 ## Levels 1 and 2 are the hand-made Dark Hallway and Dining Room; every other level is generated.
@@ -42,6 +42,7 @@ var current_cpu_overload: float = 0.0
 var is_glitch_mode: bool = false
 var is_game_over: bool = false
 var is_game_active: bool = false
+var has_exit_key: bool = false
 
 ## Set by the current Room. Safe rooms (Living Room) ignore scares and keep sanity full.
 var is_safe_room: bool = false
@@ -142,20 +143,19 @@ func reset_level_state() -> void:
 	is_glitch_mode = false
 	is_game_over = false
 	is_game_active = true
+	has_exit_key = false
 	_low_sanity_warned = false
 	EventBus.sanity_changed.emit(current_sanity, max_sanity)
 	EventBus.cpu_overload_changed.emit(current_cpu_overload, max_cpu_overload)
 	EventBus.glitch_mode_toggled.emit(false)
 
 
-func is_safe_level(level: int) -> bool:
-	return level % LIVING_ROOM_EVERY == 0
+func is_safe_level(_level: int) -> bool:
+	return false
 
 
-func scene_for_level(level: int) -> String:
-	if is_safe_level(level):
-		return LIVING_ROOM_SCENE
-	return HANDMADE_LEVELS.get(level, GENERATED_SCENE)
+func scene_for_level(_level: int) -> String:
+	return GENERATED_SCENE
 
 
 ## 0 for the first loop, then 1, 2, 3... Generated rooms get bigger and meaner with it.

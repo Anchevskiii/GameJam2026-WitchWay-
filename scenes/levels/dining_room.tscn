@@ -21,20 +21,19 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/objects/candles.png" id="19_r"]
 
 [node name="DiningRoom" instance=ExtResource("1_base")]
-room_title = "The Dining Room"
-objective = "Scares make the house GLITCH. Crash it (100%) and the exit door (top right) fails to render. Then RUN."
+room_title = "The Abandoned Dining Hall"
+objective = "Ambush 2 entities (from Wardrobes [E] or using a Mask [M]) to reach 100% GLITCH and un-render the Exit Door!"
 layout = "################################
-#o...K...L...O..lW.#.W...l....o#
-#..................#.....j.....D
-#..M...............#...........#
-#...b.............Q#L..........#
-#.....h..w...v.....#.....j.....#
-#W.....T.c..T..G...#...........#
-#......g...b.......#####a#######
-#.............................u#
-#...&.........c..W.#...........#
-#....&....M........#.....j.....#
-#o.P....r.....Q....#..n.......Q#
+#o..K...L....W..#o..W...l.....o#
+#...............#..............D
+#..M............#.......w......#
+#......v........a..............#
+#...............#...T...c...T..#
+#####a###########..............#
+#o..............#.......h......#
+#......W........a..............#
+#..P............#...M.......W..#
+#o.....r.....Q..#o......n.....Q#
 ################################"
 npc_legend = {
 "b": ExtResource("2_r"),
@@ -65,10 +64,10 @@ light_legend = {
 "c": ExtResource("19_r")
 }
 exit_requires_cpu_overload = true
-door_open_time = 6.0
-cpu_load_multiplier = 1.5
-npc_wander_scale = 0.0
-npcs_hide = false
-npcs_chase = false
-ambient_color = Color(0.82, 0.76, 0.88, 1)
-intro_lines = Array[String](["The Dining Room. Built in one weekend. Completely unoptimized.", "Every scare makes the house glitch. Glitch it to 100% and it crashes - the exit door stops rendering.", "Surprise one dinner guest while nobody's looking, or jump out of a cupboard. Panicking guests scare each other, and every dropped prop costs CPU."])
+door_open_time = 7.0
+cpu_load_multiplier = 1.15
+npc_wander_scale = 0.65
+npcs_hide = true
+npcs_chase = true
+ambient_color = Color(0.025, 0.025, 0.04, 1)
+intro_lines = Array[String](["The Abandoned Dining Hall. The exit door in the northeast is locked by the engine.", "Ambush 2 entities—by jumping out of a Wardrobe [E -> SPACE] or wearing a Disguise Mask [M]—to overload the Glitch Bar to 100%.", "At 100% Glitch, the Exit Door's collision and texture fail to render so you can escape!"])

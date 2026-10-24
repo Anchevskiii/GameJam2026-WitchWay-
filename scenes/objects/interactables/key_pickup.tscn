@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/key_pickup.gd" id="1_key"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/key.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/environment/light_radial.tres" id="3_glow"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_key"]
+radius = 16.0
+
+[node name="KeyPickup" type="Area2D"]
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("1_key")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+z_index = 2
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("2_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_key")
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+color = Color(1, 0.85, 0.3, 1)
+energy = 0.6
+range_item_cull_mask = 3
+shadow_item_cull_mask = 1
+texture = ExtResource("3_glow")
+texture_scale = 0.35

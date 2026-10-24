@@ -11,13 +11,13 @@ extends Node
 ## Main registers the world viewport with `register_viewport()`.
 
 ## CPU % where stutter begins.
-@export var lag_start_load: float = 50.0
+@export var lag_start_load: float = 85.0
 ## Freeze length range in seconds (scaled by load). Never longer than max.
-@export var min_freeze: float = 0.05
-@export var max_freeze: float = 0.15
+@export var min_freeze: float = 0.03
+@export var max_freeze: float = 0.07
 ## Time between freezes: long at lag_start_load, short at 100%.
-@export var interval_at_start: float = 1.6
-@export var interval_at_max: float = 0.35
+@export var interval_at_start: float = 2.5
+@export var interval_at_max: float = 0.9
 
 var is_frozen: bool = false
 
