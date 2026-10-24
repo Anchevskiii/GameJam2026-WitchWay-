@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://tree_wind_mat_right"]
+
+[ext_resource type="Shader" path="res://assets/shaders/tree_wind.gdshader" id="1_shader"]
+
+[resource]
+shader = ExtResource("1_shader")
+shader_parameter/speed = 1.25
+shader_parameter/wind_strength = 11.0
+shader_parameter/detail_flutter = 3.0
+shader_parameter/sway_phase = 1.9

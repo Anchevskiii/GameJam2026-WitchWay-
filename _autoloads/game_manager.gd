@@ -31,6 +31,7 @@ var current_sanity: float = 100.0
 var current_cpu_overload: float = 0.0
 var is_glitch_mode: bool = false
 var is_game_over: bool = false
+var is_game_active: bool = false
 
 ## Set by the current Room. Safe rooms (Living Room) ignore scares and keep sanity full.
 var is_safe_room: bool = false
@@ -46,11 +47,12 @@ var _low_sanity_warned: bool = false
 
 
 func _ready() -> void:
+	is_game_active = false
 	reset_level_state()
 
 
 func _process(delta: float) -> void:
-	if is_game_over:
+	if is_game_over or not is_game_active:
 		return
 	if current_cpu_overload > 0.0:
 		_set_cpu_load(current_cpu_overload - cpu_decay_rate * delta)
@@ -114,6 +116,7 @@ func reset_level_state() -> void:
 	current_cpu_overload = 0.0
 	is_glitch_mode = false
 	is_game_over = false
+	is_game_active = true
 	_low_sanity_warned = false
 	EventBus.sanity_changed.emit(current_sanity, max_sanity)
 	EventBus.cpu_overload_changed.emit(current_cpu_overload, max_cpu_overload)

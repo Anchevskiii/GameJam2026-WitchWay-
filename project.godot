@@ -10,9 +10,10 @@ config_version=5
 
 [application]
 
-config/name="It's a Feature, Not a Bug: Halloween Edition"
-run/main_scene="res://scenes/main.tscn"
+config/name="Witch Way?"
+run/main_scene="res://scenes/ui/main_menu.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
+run/max_fps=0
 
 [autoload]
 
@@ -28,6 +29,7 @@ LagController="*res://_autoloads/lag_controller.gd"
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
+window/vsync/vsync_mode=1
 
 [input]
 
