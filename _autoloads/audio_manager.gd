@@ -9,12 +9,12 @@ const SFX_POOL_SIZE: int = 8
 
 func _ready() -> void:
 	_music_player = AudioStreamPlayer.new()
-	_music_player.bus = "Master"
+	_music_player.bus = "Music"
 	add_child(_music_player)
 	
 	for i in range(SFX_POOL_SIZE):
 		var player := AudioStreamPlayer.new()
-		player.bus = "Master"
+		player.bus = "SFX"
 		add_child(player)
 		_sfx_players.append(player)
 

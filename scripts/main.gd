@@ -5,9 +5,8 @@ extends Node
 ##
 ## The world lives in a SubViewport so LagController can freeze ONLY the game picture
 ## (fake lag) while the HUD and the narrator keep updating normally.
-## Chunky pixels: the SubViewport renders at 1/3 resolution (WorldContainer.stretch_shrink = 3)
-## and is scaled up with nearest-neighbour filtering. size_2d_override keeps world coordinates
-## at 1280x720, so gameplay numbers don't change. The HUD stays crisp outside it.
+## WorldContainer also carries the glitch shader (scripts/fx/glitch_fx.gd), so screen
+## glitches distort only the world - the HUD stays readable.
 
 @export var fade_time: float = 0.3
 

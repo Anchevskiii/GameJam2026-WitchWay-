@@ -101,7 +101,7 @@ func _ready() -> void:
 	GameManager.reset_cpu_load()
 	if is_safe_room:
 		GameManager.refill_sanity()
-		SaveManager.save_progress(GameManager.best_level)
+		SaveManager.save_progress(GameManager.current_level)  # this Living Room = checkpoint
 
 	_build_from_layout()
 	_group_kids()

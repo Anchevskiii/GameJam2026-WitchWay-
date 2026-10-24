@@ -41,6 +41,7 @@ var current_sanity: float = 100.0
 var current_cpu_overload: float = 0.0
 var is_glitch_mode: bool = false
 var is_game_over: bool = false
+var is_game_active: bool = false
 
 ## Set by the current Room. Safe rooms (Living Room) ignore scares and keep sanity full.
 var is_safe_room: bool = false
@@ -59,11 +60,12 @@ var _low_sanity_warned: bool = false
 
 
 func _ready() -> void:
+	is_game_active = false
 	reset_level_state()
 
 
 func _process(delta: float) -> void:
-	if is_game_over:
+	if is_game_over or not is_game_active:
 		return
 	_time_since_glitch_gain += delta
 	if current_cpu_overload > 0.0 and _time_since_glitch_gain >= glitch_hold_time:
@@ -131,6 +133,7 @@ func reset_level_state() -> void:
 	current_cpu_overload = 0.0
 	is_glitch_mode = false
 	is_game_over = false
+	is_game_active = true
 	_low_sanity_warned = false
 	EventBus.sanity_changed.emit(current_sanity, max_sanity)
 	EventBus.cpu_overload_changed.emit(current_cpu_overload, max_cpu_overload)
@@ -150,6 +153,23 @@ func scene_for_level(level: int) -> String:
 ## 0 for the first loop, then 1, 2, 3... Generated rooms get bigger and meaner with it.
 func difficulty_tier(level: int = current_level) -> int:
 	return level / LIVING_ROOM_EVERY
+
+
+## New Game: start the endless run from floor 1.
+func start_new_run() -> void:
+	start_from_checkpoint(0)
+	stats_npcs_scared = 0
+	stats_props_spawned = 0
+	stats_times_peed = 0
+	stats_kids_peed = 0
+
+
+## Continue: resume at a saved Living Room (any level is rounded down to the last Living Room).
+func start_from_checkpoint(level: int) -> void:
+	checkpoint_level = maxi(level - level % LIVING_ROOM_EVERY, 0)
+	current_level = checkpoint_level
+	best_level = maxi(best_level, checkpoint_level)
+	reset_level_state()
 
 
 ## Called when the player walks out of a room's exit door.
