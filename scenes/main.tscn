@@ -9,17 +9,23 @@
 script = ExtResource("1_main")
 
 [node name="WorldContainer" type="SubViewportContainer" parent="."]
+texture_filter = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 stretch = true
+stretch_shrink = 3
 
 [node name="World" type="SubViewport" parent="WorldContainer"]
 handle_input_locally = false
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
 canvas_item_default_texture_filter = 0
-size = Vector2i(1280, 720)
+size = Vector2i(426, 240)
+size_2d_override = Vector2i(1280, 720)
+size_2d_override_stretch = true
 render_target_update_mode = 4
 
 [node name="HUD" parent="." instance=ExtResource("2_hud")]

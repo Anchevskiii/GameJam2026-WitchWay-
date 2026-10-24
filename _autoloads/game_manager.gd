@@ -13,7 +13,20 @@ extends Node
 ## How fast CPU load drains per second when nothing is happening.
 @export var cpu_decay_rate: float = 3.5
 
-var current_level: int = 1
+## Endless run: level 0, 3, 6, ... are the Living Room (safe room + checkpoint).
+## Levels 1 and 2 are the hand-made Dark Hallway and Dining Room; every other level is generated.
+const LIVING_ROOM_EVERY: int = 3
+const LIVING_ROOM_SCENE: String = "res://scenes/levels/living_room.tscn"
+const HANDMADE_LEVELS: Dictionary = {
+	1: "res://scenes/levels/dark_hallway.tscn",
+	2: "res://scenes/levels/dining_room.tscn",
+}
+const GENERATED_SCENE: String = "res://scenes/levels/generated_room.tscn"
+
+var current_level: int = 0
+## The last Living Room reached. Dying sends the player back here.
+var checkpoint_level: int = 0
+var best_level: int = 0
 var current_sanity: float = 100.0
 var current_cpu_overload: float = 0.0
 var is_glitch_mode: bool = false
@@ -24,7 +37,7 @@ var is_safe_room: bool = false
 ## Set by the current Room. Multiplies every prop's load weight ("this room is unoptimized").
 var cpu_load_multiplier: float = 1.0
 
-# Run statistics, shown on the ending screen.
+# Run statistics, shown on the game over screen.
 var stats_npcs_scared: int = 0
 var stats_props_spawned: int = 0
 var stats_times_peed: int = 0
@@ -105,6 +118,29 @@ func reset_level_state() -> void:
 	EventBus.sanity_changed.emit(current_sanity, max_sanity)
 	EventBus.cpu_overload_changed.emit(current_cpu_overload, max_cpu_overload)
 	EventBus.glitch_mode_toggled.emit(false)
+
+
+func is_safe_level(level: int) -> bool:
+	return level % LIVING_ROOM_EVERY == 0
+
+
+func scene_for_level(level: int) -> String:
+	if is_safe_level(level):
+		return LIVING_ROOM_SCENE
+	return HANDMADE_LEVELS.get(level, GENERATED_SCENE)
+
+
+## 0 for the first loop, then 1, 2, 3... Generated rooms get bigger and meaner with it.
+func difficulty_tier(level: int = current_level) -> int:
+	return level / LIVING_ROOM_EVERY
+
+
+## Called when the player walks out of a room's exit door.
+func advance_level() -> void:
+	current_level += 1
+	best_level = maxi(best_level, current_level)
+	if is_safe_level(current_level):
+		checkpoint_level = current_level
 
 
 ## Only clears the CPU meter (used when walking into a new room; sanity carries over).

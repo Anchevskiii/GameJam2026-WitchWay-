@@ -1,9 +1,6 @@
-[gd_resource type="Resource" script_class="NpcData" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="NpcData" load_steps=8 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/jack_o_lantern/Png_animation/Jack o latern1.png" id="1_31ab8"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/jack_o_lantern/Png_animation/Jack o latern2.png" id="2_lpnnd"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/jack_o_lantern/Png_animation/Jack o latern3.png" id="3_go07q"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/jack_o_lantern/Png_animation/Jack o latern4.png" id="4_c8h0b"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/jack_o_lantern.png" id="1_rr0sq"]
 [ext_resource type="Script" path="res://scripts/resources/prop_data.gd" id="5_tl023"]
 [ext_resource type="Resource" path="res://data/props/chandelier.tres" id="6_57i4b"]
 [ext_resource type="Resource" path="res://data/props/bowling_ball.tres" id="7_6ob1h"]
@@ -14,10 +11,10 @@
 [resource]
 script = ExtResource("10_owba2")
 display_name = "Big Jack"
-frames = Array[Texture2D]([ExtResource("1_31ab8"), ExtResource("2_lpnnd"), ExtResource("3_go07q"), ExtResource("4_c8h0b")])
+frames = Array[Texture2D]([ExtResource("1_rr0sq")])
 anim_fps = 6.0
 tint = Color(1, 0.85, 0.7, 1)
-sprite_scale = 2.2
+sprite_scale = 2.0
 can_move = false
 move_speed = 40.0
 wander_radius = 64.0
@@ -32,6 +29,8 @@ windup_text = "HA"
 scare_sound = "cackle"
 after_scare = 2
 loot = Array[ExtResource("5_tl023")]([ExtResource("6_57i4b"), ExtResource("7_6ob1h"), ExtResource("8_0mjho"), ExtResource("9_exxi4"), ExtResource("9_exxi4"), ExtResource("9_exxi4")])
+scream_radius = 100.0
+scream_delay = 0.35
 panic_time = 0.8
 panic_speed = 0.0
 recover_time = 15.0

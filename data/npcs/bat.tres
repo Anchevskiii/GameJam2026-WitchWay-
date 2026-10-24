@@ -1,9 +1,6 @@
-[gd_resource type="Resource" script_class="NpcData" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="NpcData" load_steps=5 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/bat/Png_animation/Bat1.png" id="1_gb88e"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/bat/Png_animation/Bat2.png" id="2_o57yj"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/bat/Png_animation/Bat3.png" id="3_gkce5"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/bat/Png_animation/Bat4.png" id="4_2hd3x"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/bat.png" id="1_d76do"]
 [ext_resource type="Script" path="res://scripts/resources/prop_data.gd" id="5_djlx4"]
 [ext_resource type="Resource" path="res://data/props/sock.tres" id="6_ml05e"]
 [ext_resource type="Script" path="res://scripts/resources/npc_data.gd" id="7_68hiu"]
@@ -11,10 +8,10 @@
 [resource]
 script = ExtResource("7_68hiu")
 display_name = "Bat"
-frames = Array[Texture2D]([ExtResource("1_gb88e"), ExtResource("2_o57yj"), ExtResource("3_gkce5"), ExtResource("4_2hd3x")])
+frames = Array[Texture2D]([ExtResource("1_d76do")])
 anim_fps = 10.0
 tint = Color(1, 1, 1, 1)
-sprite_scale = 0.8
+sprite_scale = 1.0
 can_move = true
 move_speed = 75.0
 wander_radius = 110.0
@@ -29,6 +26,8 @@ windup_text = "EEK"
 scare_sound = "boo"
 after_scare = 0
 loot = Array[ExtResource("5_djlx4")]([ExtResource("6_ml05e")])
+scream_radius = 100.0
+scream_delay = 0.35
 panic_time = 4.0
 panic_speed = 230.0
 recover_time = 8.0

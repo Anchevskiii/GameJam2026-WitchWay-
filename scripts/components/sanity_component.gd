@@ -9,6 +9,8 @@ extends Node
 
 ## Sanity restored per second while standing still.
 @export var still_regen_rate: float = 2.0
+## Regeneration multiplier while hiding in a cupboard.
+@export var hidden_regen_multiplier: float = 2.0
 ## Seconds the player must stand still before regeneration starts.
 @export var still_delay: float = 0.6
 ## Below this speed the player counts as "standing still".
@@ -25,7 +27,8 @@ func _process(delta: float) -> void:
 	if _body.velocity.length() < still_speed_threshold:
 		_still_time += delta
 		if _still_time >= still_delay and GameManager.current_sanity < GameManager.max_sanity:
-			GameManager.restore_sanity(still_regen_rate * delta)
+			var rate: float = still_regen_rate * (hidden_regen_multiplier if _body.get("is_hidden") else 1.0)
+			GameManager.restore_sanity(rate * delta)
 	else:
 		_still_time = 0.0
 

@@ -4,22 +4,29 @@ extends CharacterBody2D
 ## A haunted-house resident that tries to scare the player - and can be scared first.
 ## Attached to: CharacterBody2D root of scenes/actors/npc.tscn. Configure via `data` (NpcData).
 ##
-## The scare duel:
-##   IDLE     wanders around. When the player comes close -> WINDUP
-##   WINDUP   visible tell (grows, glows red, "BOOOO" bubble). If it completes while the
-##            player is in range, the player loses sanity -> COOLDOWN
-##   PANIC    the player honked first! Drops loot, screams (nearby NPCs panic too) and
-##            runs around scaring other NPCs it bumps into
+## Stealth scare duel:
+##   IDLE     wanders and looks around. It SEES the player only inside its view cone
+##            (yellow), with no walls/furniture in between, and never while they hide.
+##            Spotting the player -> WINDUP
+##   WINDUP   visible tell (grows, glows red, "BOO" bubble). If it completes while the
+##            player is in range and not hidden, the player loses sanity -> COOLDOWN
+##   HIDING   (hides_in_furniture) sits in a cupboard, head peeking out now and then.
+##            Player gets close -> jumps out with a short wind-up. BOO the cupboard first
+##            and the surprise is on it.
+##   PANIC    the player surprised it (BOO from behind / jumped out of hiding)! Drops loot,
+##            screams (nearby NPCs panic too) and runs around bumping into others
 ##   DONE     fled / fainted / fell apart. Recovers after a while -> IDLE
-## Wind-ups pause while LagController.is_frozen (lag is a feature: dodge window).
+## A BOO it can see coming does nothing. Wind-ups pause while LagController.is_frozen.
 
-enum State { IDLE, WINDUP, COOLDOWN, PANIC, DONE }
+enum State { IDLE, WINDUP, COOLDOWN, PANIC, DONE, HIDING }
 
 const MISSING_TEXTURE: Texture2D = preload("res://assets/sprites/environment/missing_texture.png")
 ## Panicking NPCs scare other NPCs within this distance.
 const BUMP_RADIUS: float = 34.0
-## A honk always hits NPCs this close, even outside the cone.
-const POINT_BLANK: float = 40.0
+## The NPC notices a player bumping right into it, even from behind.
+const TOUCH_SENSE: float = 20.0
+const CONE_COLOR: Color = Color(1.0, 0.95, 0.5, 0.13)
+const CONE_ALERT_COLOR: Color = Color(1.0, 0.3, 0.25, 0.2)
 
 @export var data: NpcData
 ## Darkness rooms: > 0 means the NPC is "not loaded" (invisible, then a missing-texture
@@ -27,10 +34,17 @@ const POINT_BLANK: float = 40.0
 @export var load_in_radius: float = 0.0
 ## Multiplies data.wander_radius. 0 = stays in its spot (seated dinner guests). Set by the Room.
 @export var wander_scale: float = 1.0
+## Set by the Room: false keeps would-be hiders out of the furniture (seated dinner guests).
+@export var can_hide: bool = true
+## Difficulty, set by the Room: < 1 = faster wind-ups, > 1 = scarier scares.
+@export var windup_scale: float = 1.0
+@export var damage_scale: float = 1.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var bubble: Label = $Bubble
 @onready var windup_light: PointLight2D = $WindupLight
+@onready var stumble: StumbleAnimator = $StumbleAnimator
+@onready var body_shape: CollisionShape2D = $CollisionShape2D
 
 var state: State = State.IDLE
 
@@ -43,6 +57,17 @@ var _panic_dir: Vector2 = Vector2.RIGHT
 var _panic_turn_time: float = 0.0
 var _anim_time: float = 0.0
 var _frame: int = 0
+## Which way it looks: 1 = right, -1 = left. The sprites face the camera, so the
+## view cone is what shows the player where it's looking.
+var _facing: float = 1.0
+var _look_timer: float = 0.0
+var _view_cone: Polygon2D
+## Hiding: the spot it walks to / sits in, and time since it last hid.
+var _hide_spot: HideSpot = null
+var _hide_walk_time: float = 0.0
+var _time_since_hide: float = 0.0
+## Shorter wind-up used right after jumping out of a hiding spot.
+var _ambush_windup: bool = false
 
 
 func _ready() -> void:
@@ -56,7 +81,10 @@ func _ready() -> void:
 		set_physics_process(false)
 		return
 	_reset_visuals()
-	EventBus.player_honked.connect(_on_player_honked)
+	_facing = 1.0 if randf() > 0.5 else -1.0
+	_look_timer = randf_range(data.look_around_min, data.look_around_max)
+	_build_view_cone()
+	EventBus.player_booed.connect(_on_player_booed)
 
 
 func _physics_process(delta: float) -> void:
@@ -68,7 +96,9 @@ func _physics_process(delta: float) -> void:
 
 	_animate(delta)
 	_update_loaded_look()
+	_update_view_cone()
 	_state_time += delta
+	_time_since_hide += delta
 	match state:
 		State.IDLE:
 			_process_idle(delta)
@@ -84,17 +114,22 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 			if _state_time >= data.recover_time:
 				_recover()
+		State.HIDING:
+			_process_hiding()
+			return  # sitting still inside the furniture: no physics movement
 	move_and_slide()
 
 
 # ---------------------------------------------------------------- states
 
 func _process_idle(delta: float) -> void:
-	var dist: float = _distance_to_player()
+	var sees_player: bool = can_see_player()
 
-	if data.afraid_of_player and dist < data.notice_range:
+	if data.afraid_of_player and sees_player:
 		var away: Vector2 = (global_position - _player.global_position).normalized()
 		velocity = away * data.move_speed * 1.4
+	elif _hide_spot != null:
+		_walk_to_hiding_spot(delta)
 	elif data.can_move:
 		_wander_time -= delta
 		if global_position.distance_to(_wander_target) < 6.0 or _wander_time <= 0.0:
@@ -103,16 +138,35 @@ func _process_idle(delta: float) -> void:
 	else:
 		velocity = Vector2.ZERO
 
-	if _can_start_windup(dist):
+	# Face where it walks; when standing still, glance the other way now and then.
+	if absf(velocity.x) > 5.0:
+		_facing = signf(velocity.x)
+	else:
+		_look_timer -= delta
+		if _look_timer <= 0.0:
+			_facing = -_facing
+			_look_timer = randf_range(data.look_around_min, data.look_around_max)
+
+	if sees_player and _can_start_windup():
+		_give_up_hiding_spot()
 		_enter(State.WINDUP)
+	elif _wants_to_hide() and not sees_player:
+		_hide_spot = _find_hiding_spot()
+		if _hide_spot:
+			_hide_spot.reserved_by = self
+			_hide_walk_time = 0.0
+		else:
+			_time_since_hide = 0.0  # nothing free nearby: look again after the cooldown
 
 
 func _process_windup(delta: float) -> void:
 	velocity = Vector2.ZERO
+	if _player:
+		face_towards(_player.global_position)
 	# Lag freeze = wind-up pauses. That's the dodge window.
 	if LagController.is_frozen:
 		_state_time -= delta
-	var progress: float = clampf(_state_time / data.windup_time, 0.0, 1.0)
+	var progress: float = clampf(_state_time / _windup_time(), 0.0, 1.0)
 
 	# The tell: puff up, glow red, and a growing "BOOOO" bubble.
 	sprite.scale = Vector2.ONE * data.sprite_scale * (1.0 + 0.35 * progress)
@@ -121,6 +175,8 @@ func _process_windup(delta: float) -> void:
 	# "B" -> "BO" -> "BOO" -> "BOO!" -> "BOO!!!" as the scare charges up.
 	var letters: int = maxi(1, ceili(minf(progress / 0.7, 1.0) * data.windup_text.length()))
 	bubble.text = data.windup_text.left(letters) + "!".repeat(int(maxf(progress - 0.7, 0.0) / 0.1))
+	if _state_time < 0.3:
+		bubble.text = "!"  # "spotted you" 
 	bubble.scale = Vector2.ONE * (0.8 + 0.6 * progress)
 
 	if _distance_to_player() > data.notice_range * 1.5:
@@ -134,9 +190,13 @@ func _process_windup(delta: float) -> void:
 func _release_scare() -> void:
 	bubble.text = data.windup_text + "!"
 	bubble.scale = Vector2.ONE * 1.6
+	if _player and _player.get("is_hidden"):
+		bubble.text = "?"  # the player ducked into a hiding spot - miss!
+		_enter(State.COOLDOWN)
+		return
 	AudioManager.play(data.scare_sound)
 	if _distance_to_player() <= data.scare_range:
-		GameManager.scare_player(data.scare_damage, data.display_name)
+		GameManager.scare_player(data.scare_damage * damage_scale, data.display_name)
 	_enter(State.COOLDOWN)
 
 
@@ -146,7 +206,7 @@ func _process_panic(delta: float) -> void:
 		_panic_dir = Vector2.RIGHT.rotated(randf() * TAU)
 		_panic_turn_time = randf_range(0.25, 0.5)
 	velocity = _panic_dir * data.panic_speed
-	sprite.flip_h = velocity.x < 0.0
+	_facing = signf(velocity.x) if velocity.x != 0.0 else _facing
 
 	# Chain reaction: bump into other NPCs and scare them too.
 	for other in get_tree().get_nodes_in_group("npcs"):
@@ -160,10 +220,13 @@ func _process_panic(delta: float) -> void:
 
 # ---------------------------------------------------------------- scare duel API
 
-## Scare this NPC (player honk, flying prop, panicking friend). Returns true if it worked.
+## Scare this NPC (player's BOO, flying prop, panicking friend). Returns true if it worked.
 func get_scared(_by: String = "") -> bool:
 	if state == State.PANIC or state == State.DONE:
 		return false
+	if state == State.HIDING:
+		_leave_hiding_spot(Vector2.RIGHT.rotated(randf() * TAU))
+	_give_up_hiding_spot()
 	_enter(State.PANIC)
 	_reset_visuals()
 	bubble.visible = true
@@ -200,21 +263,64 @@ func _drop_loot() -> void:
 		Prop.spawn(prop_data, global_position + dir * 10.0, dir * randf_range(120.0, 260.0), get_tree())
 
 
-func _on_player_honked(origin: Vector2, direction: Vector2, honk_range: float, half_angle_deg: float) -> void:
-	var to_me: Vector2 = global_position - origin
-	var dist: float = to_me.length()
-	if dist > honk_range:
+func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> void:
+	if state == State.PANIC or state == State.DONE:
 		return
-	if dist > POINT_BLANK and absf(rad_to_deg(direction.angle_to(to_me))) > half_angle_deg:
+	# You spotted the peeking head and BOO'd the cupboard: the ambusher gets ambushed.
+	if state == State.HIDING:
+		if global_position.distance_to(origin) <= boo_range + 16.0:
+			_leave_hiding_spot(origin.direction_to(global_position))
+			get_scared("someone who saw its head peeking out")
 		return
-	get_scared("a rubber chicken")
+	if global_position.distance_to(origin) > boo_range or not _has_line_of_sight(origin, global_position):
+		return
+	# The whole trick: a scare only works as a SURPRISE. Jumping out of hiding always is one.
+	if not from_hiding and (state == State.WINDUP or can_see_player()):
+		bubble.visible = true
+		bubble.text = "nice try"
+		get_tree().create_timer(0.9).timeout.connect(_hide_bubble_if_calm)
+		Narrator.say_event("boo_seen")
+		return
+	get_scared("a masked stranger")
+
+
+## True if the player is inside this NPC's view cone, in range, not hidden, and
+## not behind a wall or furniture.
+func can_see_player() -> bool:
+	if _player == null or _player.get("is_hidden"):
+		return false
+	var to_player: Vector2 = _player.global_position - global_position
+	var dist: float = to_player.length()
+	if dist > data.notice_range:
+		return false
+	if dist > TOUCH_SENSE:
+		var angle: float = absf(rad_to_deg(Vector2(_facing, 0.0).angle_to(to_player)))
+		if angle > data.view_half_angle:
+			return false
+	return _has_line_of_sight(global_position, _player.global_position)
+
+
+## Turn to look at a point (used by tests and scripted moments).
+func face_towards(point: Vector2) -> void:
+	_facing = -1.0 if point.x < global_position.x else 1.0
+	_look_timer = randf_range(data.look_around_min, data.look_around_max)
+
+
+## Walls, furniture and doors (collision layer 1) block sight. Fake walls don't. ;)
+func _has_line_of_sight(from: Vector2, to: Vector2) -> bool:
+	var query := PhysicsRayQueryParameters2D.create(from, to, 1)
+	query.exclude = [get_rid()]
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
 
 # ---------------------------------------------------------------- helpers
 
-func _can_start_windup(dist: float) -> bool:
-	return (not data.is_harmless and not data.afraid_of_player and not GameManager.is_safe_room
-		and dist <= data.notice_range)
+func _windup_time() -> float:
+	return (data.ambush_windup if _ambush_windup else data.windup_time) * windup_scale
+
+
+func _can_start_windup() -> bool:
+	return not data.is_harmless and not data.afraid_of_player and not GameManager.is_safe_room
 
 
 func _enter(new_state: State) -> void:
@@ -223,11 +329,13 @@ func _enter(new_state: State) -> void:
 	match new_state:
 		State.IDLE:
 			bubble.visible = false
+			_ambush_windup = false
 			_reset_visuals()
 		State.WINDUP:
 			bubble.visible = true
 			windup_light.enabled = true
 		State.COOLDOWN:
+			_ambush_windup = false
 			windup_light.enabled = false
 			sprite.scale = Vector2.ONE * data.sprite_scale
 			sprite.modulate = data.tint
@@ -246,6 +354,7 @@ func _apply_after_scare() -> void:
 			create_tween().tween_property(sprite, "modulate:a", 0.0, 0.6)
 		NpcData.AfterScare.FAINT:
 			bubble.text = "zzz"
+			stumble.enabled = false  # lie down instead of stumbling
 			sprite.rotation = PI / 2.0
 			sprite.modulate = data.tint.darkened(0.35)
 		NpcData.AfterScare.FALL_APART:
@@ -260,6 +369,7 @@ func _recover() -> void:
 
 
 func _reset_visuals() -> void:
+	stumble.enabled = true
 	sprite.visible = true
 	sprite.rotation = 0.0
 	sprite.scale = Vector2.ONE * data.sprite_scale
@@ -275,7 +385,11 @@ func _pick_wander_target() -> void:
 
 
 func _animate(delta: float) -> void:
-	if data.frames.size() < 2 or data.anim_fps <= 0.0 or state == State.DONE:
+	if state == State.DONE:
+		return
+	sprite.flip_h = _facing < 0.0
+	# Frame animation is optional: single-sprite NPCs are animated by StumbleAnimator alone.
+	if data.frames.size() < 2 or data.anim_fps <= 0.0:
 		return
 	# Choppy animation under load: frame rate drops as the CPU meter rises.
 	var fps: float = data.anim_fps * (1.0 - 0.7 * LagController.lag_amount())
@@ -287,13 +401,11 @@ func _animate(delta: float) -> void:
 		_frame = (_frame + 1) % data.frames.size()
 		if sprite.texture != MISSING_TEXTURE:
 			sprite.texture = data.frames[_frame]
-	if velocity.x != 0.0 and state != State.PANIC:
-		sprite.flip_h = velocity.x < 0.0
 
 
 ## Darkness rooms: far = invisible, closer = magenta placeholder, close = real sprite.
 func _update_loaded_look() -> void:
-	if load_in_radius <= 0.0 or state == State.DONE:
+	if load_in_radius <= 0.0 or state == State.DONE or state == State.HIDING:
 		return
 	var dist: float = _distance_to_player()
 	if dist <= load_in_radius or state == State.WINDUP:
@@ -314,3 +426,119 @@ func _distance_to_player() -> float:
 	if _player == null:
 		return INF
 	return global_position.distance_to(_player.global_position)
+
+
+# ---------------------------------------------------------------- hiding & ambush
+
+func _wants_to_hide() -> bool:
+	return (data.hides_in_furniture and can_hide and _hide_spot == null and _time_since_hide >= data.hide_cooldown
+		and not GameManager.is_safe_room)
+
+
+func _find_hiding_spot() -> HideSpot:
+	var best: HideSpot = null
+	var best_dist: float = data.hide_search_radius
+	for node in get_tree().get_nodes_in_group("hide_spots"):
+		var spot: HideSpot = node as HideSpot
+		var dist: float = global_position.distance_to(spot.global_position)
+		# Don't climb into a cupboard right in front of the player.
+		var too_close_to_player: bool = _player != null and spot.global_position.distance_to(_player.global_position) < 140.0
+		if dist < best_dist and spot.is_free_for(self) and not too_close_to_player:
+			best = spot
+			best_dist = dist
+	return best
+
+
+func _walk_to_hiding_spot(delta: float) -> void:
+	_hide_walk_time += delta
+	if not is_instance_valid(_hide_spot) or not _hide_spot.is_free_for(self) or _hide_walk_time > 6.0:
+		_give_up_hiding_spot()  # taken, or stuck behind furniture: try again later
+		return
+	velocity = global_position.direction_to(_hide_spot.global_position) * data.move_speed
+	if global_position.distance_to(_hide_spot.global_position) < _hide_spot.reach * 0.6:
+		_enter_hiding_spot()
+
+
+func _enter_hiding_spot() -> void:
+	_enter(State.HIDING)
+	_hide_spot.set_occupied(true, self)
+	velocity = Vector2.ZERO
+	sprite.visible = false
+	bubble.visible = false
+	# Off right now (not deferred): it's about to sit inside the furniture's collision box,
+	# and physics would push it straight back out this very frame.
+	body_shape.disabled = true
+	global_position = _hide_spot.global_position
+
+
+func _process_hiding() -> void:
+	velocity = Vector2.ZERO
+	var player_hidden: bool = _player != null and _player.get("is_hidden")
+	if not player_hidden and _distance_to_player() <= data.ambush_range:
+		ambush()
+	elif _state_time >= data.hide_time:
+		_leave_hiding_spot(Vector2.RIGHT.rotated(randf() * TAU))
+		_enter(State.IDLE)
+
+
+## Jump out at the player with a short wind-up. Also called when the player tries to
+## climb into this monster's cupboard.
+func ambush() -> void:
+	if state != State.HIDING:
+		return
+	_leave_hiding_spot(global_position.direction_to(_player.global_position) if _player else Vector2.DOWN)
+	_ambush_windup = true
+	_enter(State.WINDUP)
+	if _player:
+		face_towards(_player.global_position)
+
+
+func _leave_hiding_spot(direction: Vector2) -> void:
+	if is_instance_valid(_hide_spot):
+		_hide_spot.set_occupied(false)
+		global_position = _hide_spot.global_position + direction.normalized() * (_hide_spot.reach * 0.7)
+	_hide_spot = null
+	_time_since_hide = 0.0
+	sprite.visible = true
+	body_shape.set_deferred("disabled", false)
+
+
+## Drop a reservation for a spot it was walking to (not used while actually hiding).
+func _give_up_hiding_spot() -> void:
+	if state == State.HIDING:
+		return
+	if is_instance_valid(_hide_spot) and _hide_spot.reserved_by == self:
+		_hide_spot.reserved_by = null
+	_hide_spot = null
+	_time_since_hide = 0.0
+
+
+# ---------------------------------------------------------------- view cone
+
+const CONE_RAYS: int = 12
+
+
+func _build_view_cone() -> void:
+	_view_cone = Polygon2D.new()
+	_view_cone.color = CONE_COLOR
+	_view_cone.z_index = -1
+	add_child(_view_cone)
+
+
+## The cone shows exactly what the NPC can see: each edge ray stops at the first wall,
+## so the player can trust it when sneaking around corners.
+func _update_view_cone() -> void:
+	_view_cone.visible = sprite.visible and (state == State.IDLE or state == State.WINDUP)
+	if not _view_cone.visible:
+		return
+	_view_cone.color = CONE_ALERT_COLOR if state == State.WINDUP else CONE_COLOR
+	var space: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
+	var points: PackedVector2Array = [Vector2.ZERO]
+	for i in CONE_RAYS + 1:
+		var angle: float = deg_to_rad(lerpf(-data.view_half_angle, data.view_half_angle, float(i) / CONE_RAYS))
+		var tip: Vector2 = global_position + Vector2(_facing, 0.0).rotated(angle * _facing) * data.notice_range
+		var query := PhysicsRayQueryParameters2D.create(global_position, tip, 1)
+		query.exclude = [get_rid()]
+		var hit: Dictionary = space.intersect_ray(query)
+		points.append(to_local(hit.position if not hit.is_empty() else tip))
+	_view_cone.polygon = points

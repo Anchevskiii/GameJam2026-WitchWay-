@@ -1,9 +1,6 @@
-[gd_resource type="Resource" script_class="NpcData" load_steps=10 format=3]
+[gd_resource type="Resource" script_class="NpcData" load_steps=7 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/witch/Png_animation/Witch1.png" id="1_22n2d"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/witch/Png_animation/Witch2.png" id="2_bna8a"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/witch/Png_animation/Witch3.png" id="3_usexo"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/witch/Png_animation/Witch4.png" id="4_sh6yj"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/witch.png" id="1_wf8k7"]
 [ext_resource type="Script" path="res://scripts/resources/prop_data.gd" id="5_npeu8"]
 [ext_resource type="Resource" path="res://data/props/cauldron.tres" id="6_kjwyv"]
 [ext_resource type="Resource" path="res://data/props/slipper.tres" id="7_6erq4"]
@@ -13,7 +10,7 @@
 [resource]
 script = ExtResource("9_co3x8")
 display_name = "Witch"
-frames = Array[Texture2D]([ExtResource("1_22n2d"), ExtResource("2_bna8a"), ExtResource("3_usexo"), ExtResource("4_sh6yj")])
+frames = Array[Texture2D]([ExtResource("1_wf8k7")])
 anim_fps = 6.0
 tint = Color(1, 1, 1, 1)
 sprite_scale = 1.0
@@ -23,14 +20,25 @@ wander_radius = 64.0
 afraid_of_player = false
 is_harmless = false
 notice_range = 120.0
+view_half_angle = 50.0
+look_around_min = 2.0
+look_around_max = 4.5
 scare_range = 95.0
 windup_time = 1.8
 scare_damage = 20.0
 scare_cooldown = 2.5
 windup_text = "HEX"
 scare_sound = "boo"
+hides_in_furniture = true
+ambush_range = 70.0
+ambush_windup = 0.4
+hide_time = 12.0
+hide_cooldown = 6.0
+hide_search_radius = 260.0
 after_scare = 0
 loot = Array[ExtResource("5_npeu8")]([ExtResource("6_kjwyv"), ExtResource("7_6erq4"), ExtResource("8_74s5j")])
+scream_radius = 100.0
+scream_delay = 0.35
 panic_time = 2.5
 panic_speed = 150.0
 recover_time = 8.0

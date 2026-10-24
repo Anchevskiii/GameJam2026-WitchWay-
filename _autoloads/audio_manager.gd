@@ -48,7 +48,7 @@ func play_sfx(stream: AudioStream, volume_db: float = 0.0, pitch_scale: float = 
 const SFX_DIR: String = "res://assets/audio/sfx/%s.wav"
 var _sfx_cache: Dictionary = {}
 
-## Play a sound by file name from assets/audio/sfx/, e.g. AudioManager.play("honk").
+## Play a sound by file name from assets/audio/sfx/, e.g. AudioManager.play("whoosh").
 func play(sfx_name: String, volume_db: float = 0.0, pitch_scale: float = 1.0) -> void:
 	if not _sfx_cache.has(sfx_name):
 		var path: String = SFX_DIR % sfx_name

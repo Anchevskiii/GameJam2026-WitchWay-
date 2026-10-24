@@ -3,12 +3,16 @@ extends Node2D
 
 ## One room of the haunted house, built from an ASCII layout you edit in the Inspector.
 ## Attached to: the root Node2D of every scene in scenes/levels/ (living_room, dark_hallway, ...)
+## With `procedural` on, HouseGenerator writes the layout and all settings below instead.
 ##
 ## Layout legend (one character = one 32x32 tile):
 ##   #  wall                    .  floor               (space) nothing
 ##   X  missing-texture wall    F  missing-texture FAKE wall (walk right through it!)
 ##   P  player start            D  exit door (put it in the outer wall)
-##   any other letter: looked up in npc_legend (NpcData) or decor_legend (Texture2D)
+##   any other letter is looked up in the legends below, in this order:
+##     npc_legend (NpcData)            hide_legend (furniture you can hide in)
+##     decor_legend (solid furniture)  floor_decor_legend (walk-over clutter: rugs, bones...)
+##     light_legend (walk-over clutter that glows: candles)
 
 const TILE_SIZE: int = 32
 const TILE_SOURCE: int = 0
@@ -18,17 +22,30 @@ const MISSING_FAKE_TILE: Vector2i = Vector2i(4, 0)
 
 const NPC_SCENE: PackedScene = preload("res://scenes/actors/npc.tscn")
 const DOOR_SCENE: PackedScene = preload("res://scenes/objects/bugs/glitch_door.tscn")
+const GLOW_TEXTURE: Texture2D = preload("res://assets/sprites/environment/light_radial.tres")
+
+## Scene files visited this run, so revisits can use shorter narrator lines.
+static var _visited_scenes: Dictionary = {}
 
 @export var room_title: String = "Room"
 @export_multiline var objective: String = ""
 @export_multiline var layout: String = ""
 ## Letter -> NpcData resource, e.g. {"g": ghost.tres}
 @export var npc_legend: Dictionary = {}
+## Letter -> Texture2D for furniture the player (and sneaky monsters) can hide in.
+@export var hide_legend: Dictionary = {}
 ## Letter -> Texture2D for solid furniture, e.g. {"t": table.png}
 @export var decor_legend: Dictionary = {}
+## Letter -> Texture2D for clutter you walk over (rug, cobweb, bones). No collision.
+@export var floor_decor_legend: Dictionary = {}
+## Letter -> Texture2D for walk-over clutter that also gives off light (candles).
+@export var light_legend: Dictionary = {}
+
+@export_group("Generation")
+## Build this room with HouseGenerator (endless levels) instead of the layout above.
+@export var procedural: bool = false
 
 @export_group("Exit")
-@export_file("*.tscn") var next_room: String = ""
 ## true = the door only disappears when CPU load hits 100%.
 @export var exit_requires_cpu_overload: bool = false
 ## Seconds the overloaded door stays gone before it re-renders.
@@ -46,9 +63,16 @@ const DOOR_SCENE: PackedScene = preload("res://scenes/objects/bugs/glitch_door.t
 @export var npc_load_radius: float = 0.0
 ## Multiplies every NPC's wander radius. 0 = everyone stays in their spot (dinner party).
 @export var npc_wander_scale: float = 1.0
+## Monsters with hides_in_furniture may hide and ambush in this room (off for dinner parties).
+@export var npcs_hide: bool = true
+## Difficulty: multiplies NPC wind-up time (lower = faster scares) and scare damage.
+@export var npc_windup_scale: float = 1.0
+@export var npc_damage_scale: float = 1.0
 
 @export_group("Narrator")
 @export var intro_lines: Array[String] = []
+## Used instead of intro_lines when coming back to this room later in the run.
+@export var revisit_lines: Array[String] = []
 
 @onready var canvas_modulate: CanvasModulate = $CanvasModulate
 @onready var floor_layer: TileMapLayer = $Floor
@@ -60,6 +84,9 @@ const DOOR_SCENE: PackedScene = preload("res://scenes/objects/bugs/glitch_door.t
 
 
 func _ready() -> void:
+	if procedural:
+		_apply_generated(HouseGenerator.new().generate(GameManager.current_level, randi()))
+
 	props_root.add_to_group("prop_layer")
 	canvas_modulate.color = ambient_color
 
@@ -68,15 +95,23 @@ func _ready() -> void:
 	GameManager.reset_cpu_load()
 	if is_safe_room:
 		GameManager.refill_sanity()
-		SaveManager.save_progress(GameManager.current_level)
+		SaveManager.save_progress(GameManager.best_level)
 
 	_build_from_layout()
 	player.set_flashlight_available(flashlight_works)
 
-	EventBus.room_entered.emit(room_title, objective)
+	EventBus.room_entered.emit("Floor %d: %s" % [GameManager.current_level + 1, room_title], objective)
 	Narrator.clear()
-	for line in intro_lines:
+	var revisit: bool = _visited_scenes.has(scene_file_path) and not revisit_lines.is_empty()
+	for line in (revisit_lines if revisit else intro_lines):
 		Narrator.say(line)
+	_visited_scenes[scene_file_path] = true
+
+
+## Copies HouseGenerator's output (property name -> value) onto this room.
+func _apply_generated(settings: Dictionary) -> void:
+	for key in settings:
+		set(key, settings[key])
 
 
 func _build_from_layout() -> void:
@@ -114,15 +149,30 @@ func _spawn_from_legend(ch: String, cell: Vector2i) -> void:
 		npc.data = npc_legend[ch]
 		npc.load_in_radius = npc_load_radius
 		npc.wander_scale = npc_wander_scale
+		npc.can_hide = npcs_hide
+		npc.windup_scale = npc_windup_scale
+		npc.damage_scale = npc_damage_scale
 		npc.position = cell_to_world(cell)
 		actors_root.add_child(npc)
+	elif hide_legend.has(ch):
+		var furniture: StaticBody2D = _spawn_decor(hide_legend[ch], cell)
+		furniture.add_child(HideSpot.new())
 	elif decor_legend.has(ch):
 		_spawn_decor(decor_legend[ch], cell)
+	elif floor_decor_legend.has(ch):
+		_spawn_floor_decor(floor_decor_legend[ch], cell)
+	elif light_legend.has(ch):
+		var glow := PointLight2D.new()
+		glow.texture = GLOW_TEXTURE
+		glow.texture_scale = 0.5
+		glow.energy = 0.9
+		glow.color = Color(1.0, 0.75, 0.4)
+		_spawn_floor_decor(light_legend[ch], cell).add_child(glow)
 	else:
 		push_warning("Room '%s': unknown layout character '%s' at %s" % [room_title, ch, cell])
 
 
-func _spawn_decor(texture: Texture2D, cell: Vector2i) -> void:
+func _spawn_decor(texture: Texture2D, cell: Vector2i) -> StaticBody2D:
 	var body := StaticBody2D.new()
 	body.position = cell_to_world(cell)
 	var sprite := Sprite2D.new()
@@ -134,12 +184,22 @@ func _spawn_decor(texture: Texture2D, cell: Vector2i) -> void:
 	collision.shape = shape
 	body.add_child(collision)
 	decor_root.add_child(body)
+	return body
+
+
+## Walk-over clutter: drawn on the floor, under everyone, no collision.
+func _spawn_floor_decor(texture: Texture2D, cell: Vector2i) -> Sprite2D:
+	var sprite := Sprite2D.new()
+	sprite.texture = texture
+	sprite.position = cell_to_world(cell)
+	sprite.z_index = -8
+	decor_root.add_child(sprite)
+	return sprite
 
 
 func _spawn_door(cell: Vector2i) -> void:
 	var door: GlitchDoor = DOOR_SCENE.instantiate()
 	door.requires_cpu_overload = exit_requires_cpu_overload
-	door.next_room = next_room
 	door.rerender_delay = door_open_time
 	door.position = cell_to_world(cell)
 	decor_root.add_child(door)

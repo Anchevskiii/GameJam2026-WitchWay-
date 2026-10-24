@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3 uid="uid://c5q2t4x96lmpe"]
+[gd_scene load_steps=8 format=3 uid="uid://c5q2t4x96lmpe"]
 
 [ext_resource type="Script" path="res://scripts/components/player_controller.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://c6mhppjfby5mk" path="res://assets/sprites/player/player_simple.png" id="2_player_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/player_guy.png" id="2_player_tex"]
 [ext_resource type="Texture2D" uid="uid://bmj8xjpv1ohul" path="res://assets/sprites/environment/flashlight_beam.png" id="3_beam_tex"]
 [ext_resource type="Script" path="res://scripts/components/sanity_component.gd" id="4_sanity"]
 [ext_resource type="Texture2D" uid="uid://ri7t5neseeaj" path="res://assets/sprites/environment/light_radial.tres" id="5_glow"]
+[ext_resource type="Script" path="res://scripts/components/stumble_animator.gd" id="6_stumble"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_player"]
 radius = 14.0
@@ -43,3 +44,7 @@ position_smoothing_speed = 8.0
 
 [node name="SanityComponent" type="Node" parent="."]
 script = ExtResource("4_sanity")
+
+[node name="StumbleAnimator" type="Node" parent="."]
+script = ExtResource("6_stumble")
+sprite_path = NodePath("../PlayerSprite")

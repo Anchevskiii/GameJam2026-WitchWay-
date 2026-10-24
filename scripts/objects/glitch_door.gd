@@ -1,7 +1,7 @@
 class_name GlitchDoor
 extends StaticBody2D
 
-## Exit door of a room. Walking into the open doorway loads `next_room`.
+## Exit door of a room. Walking into the open doorway finishes the level (EventBus.level_completed).
 ## Attached to: StaticBody2D root of scenes/objects/bugs/glitch_door.tscn
 ##
 ## requires_cpu_overload = false: a normal open doorway.
@@ -17,7 +17,6 @@ const DOOR_TEXTURE: Texture2D = preload("res://assets/sprites/environment/door.p
 const MISSING_TEXTURE: Texture2D = preload("res://assets/sprites/environment/missing_texture.png")
 
 @export var requires_cpu_overload: bool = true
-@export_file("*.tscn") var next_room: String = ""
 @export var flicker_at: float = 50.0
 @export var missing_texture_at: float = 75.0
 @export var jitter_at: float = 90.0
@@ -147,8 +146,5 @@ func is_passable() -> bool:
 func _on_exit_area_body_entered(body: Node2D) -> void:
 	if _used or not body.is_in_group("player") or not is_passable():
 		return
-	if next_room.is_empty():
-		push_warning("GlitchDoor: next_room is not set.")
-		return
 	_used = true
-	EventBus.room_change_requested.emit(next_room)
+	EventBus.level_completed.emit()

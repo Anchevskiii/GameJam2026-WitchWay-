@@ -29,11 +29,17 @@ enum AfterScare {
 @export_group("Scare duel")
 ## Harmless NPCs never wind up (training dummies).
 @export var is_harmless: bool = false
-## Starts winding up a scare when the player gets this close.
+## How far the NPC can see (pixels). It only notices the player inside its view cone,
+## with no walls/furniture in between, and never while the player is hidden.
 @export var notice_range: float = 120.0
+## Half-width of the view cone in degrees (50 = 100 degree cone in the direction it faces).
+@export var view_half_angle: float = 50.0
+## While standing around, it turns to look the other way every min..max seconds.
+@export var look_around_min: float = 2.0
+@export var look_around_max: float = 4.5
 ## When the wind-up finishes, the player loses sanity if still within this range.
 @export var scare_range: float = 95.0
-## Seconds of visible wind-up. This is the player's window to honk first.
+## Seconds of visible wind-up. The player's window to hide or get out of range.
 @export var windup_time: float = 1.6
 @export var scare_damage: float = 20.0
 @export var scare_cooldown: float = 2.5
@@ -41,6 +47,21 @@ enum AfterScare {
 @export var windup_text: String = "BOO"
 ## Sound name in assets/audio/sfx/ played when the scare lands.
 @export var scare_sound: String = "boo"
+
+@export_group("Hiding & ambush")
+## Sneaks into free cupboards/couches and jumps out at a player who comes close.
+## Its head peeks out now and then - BOO the hiding spot first and IT gets the surprise.
+@export var hides_in_furniture: bool = false
+## Jumps out when the player gets this close to its hiding spot.
+@export var ambush_range: float = 70.0
+## Wind-up after jumping out (short: that's the point of an ambush).
+@export var ambush_windup: float = 0.4
+## Gives up and comes out after this many seconds of nobody walking by.
+@export var hide_time: float = 12.0
+## Seconds to wander around before looking for a hiding spot again.
+@export var hide_cooldown: float = 6.0
+## Only considers hiding spots within this distance.
+@export var hide_search_radius: float = 260.0
 
 @export_group("When scared by the player")
 @export var after_scare: AfterScare = AfterScare.FAINT

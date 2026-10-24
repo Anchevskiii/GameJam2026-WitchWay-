@@ -1,10 +1,15 @@
 class_name PlayerController
 extends CharacterBody2D
 
-## Top-down player controller with directional flashlight and the rubber chicken scare tool.
+## Top-down player controller: movement, flashlight, the masked BOO and hiding.
+##   SPACE  BOO! Only scares monsters that don't see you coming (from behind / around a corner).
+##   E      hide in a nearby cupboard/couch (monsters can't see you). E again sneaks out,
+##          SPACE jumps out with a lunge - a jump-out ALWAYS surprises and reaches further.
+## The walk animation is handled by the StumbleAnimator child node.
 ## Attached to: CharacterBody2D in scenes/actors/player.tscn
 
 const PUDDLE_TEXTURE: Texture2D = preload("res://assets/sprites/objects/puddle.png")
+const MASK_TEXTURE: Texture2D = preload("res://assets/sprites/characters/player_guy_mask.png")
 
 @export_group("Movement")
 @export var walk_speed: float = 175.0
@@ -19,25 +24,37 @@ const PUDDLE_TEXTURE: Texture2D = preload("res://assets/sprites/objects/puddle.p
 @export var flicker_min_interval: float = 6.0
 @export var flicker_max_interval: float = 14.0
 
-@export_group("Rubber Chicken (scare tool)")
-## How far the honk reaches, in pixels.
-@export var honk_range: float = 120.0
-## Half-width of the honk cone in degrees (60 = a 120 degree cone in front of the player).
-@export var honk_half_angle: float = 60.0
-## Seconds between honks, so the player can't spam.
-@export var honk_cooldown: float = 0.7
+@export_group("Mask scare")
+## How close a monster must be for a BOO to reach it, in pixels.
+@export var boo_range: float = 80.0
+## Jumping out of a hiding spot reaches further (measured from the hiding spot).
+@export var jump_out_range: float = 170.0
+## Speed of the lunge when jumping out of hiding.
+@export var jump_out_speed: float = 520.0
+## Seconds between BOOs, so the player can't spam.
+@export var boo_cooldown: float = 0.8
+## How long the mask stays on after a BOO.
+@export var mask_time: float = 0.6
 
 @onready var flashlight_pivot: Node2D = $FlashlightPivot
 @onready var flashlight_beam: PointLight2D = $FlashlightPivot/FlashlightBeam
 @onready var player_sprite: Sprite2D = $PlayerSprite
 @onready var camera: Camera2D = $Camera2D
+@onready var glow_light: PointLight2D = $GlowLight
+@onready var collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var _normal_texture: Texture2D = player_sprite.texture
+
+## True while hiding in a cupboard/couch. Monsters can't see a hidden player.
+var is_hidden: bool = false
+var _hide_spot: HideSpot = null
+var _pre_hide_position: Vector2
 
 var _facing_direction: Vector2 = Vector2.DOWN
 var _is_flashlight_on: bool = true
 ## Rooms can break the flashlight ("flashlight texture failed to load").
 var _flashlight_available: bool = true
 var _can_move: bool = true
-var _honk_cooldown_left: float = 0.0
+var _boo_cooldown_left: float = 0.0
 
 var _flicker_timer: float = 0.0
 var _is_flickering: bool = false
@@ -63,9 +80,25 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("toggle_flashlight"):
 		_is_flashlight_on = not _is_flashlight_on
 		_update_flashlight_state()
-	_honk_cooldown_left -= delta
-	if Input.is_action_just_pressed("scare") and _honk_cooldown_left <= 0.0:
-		_honk()
+	_boo_cooldown_left -= delta
+	if is_hidden:
+		velocity = Vector2.ZERO
+		if Input.is_action_just_pressed("scare"):
+			_jump_out()
+		elif Input.is_action_just_pressed("interact"):
+			_leave_hiding_spot()
+		return
+	if Input.is_action_just_pressed("interact"):
+		var taken: HideSpot = _occupied_hide_spot_in_reach()
+		if taken:
+			(taken.occupant as Npc).ambush()  # someone's already in there...
+			return
+		var spot: HideSpot = _nearest_hide_spot()
+		if spot:
+			_hide_in(spot)
+			return
+	if Input.is_action_just_pressed("scare") and _boo_cooldown_left <= 0.0:
+		_boo(global_position, boo_range, false)
 
 	_handle_movement(delta)
 	_handle_direction(delta)
@@ -92,8 +125,9 @@ func _handle_direction(delta: float) -> void:
 	var target_angle: float = _facing_direction.angle()
 	flashlight_pivot.rotation = lerp_angle(flashlight_pivot.rotation, target_angle, turn_speed * delta)
 
-	if player_sprite:
-		player_sprite.rotation = lerp_angle(player_sprite.rotation, target_angle, turn_speed * delta)
+	# The sprite is a side-on pixel guy: just face left/right. StumbleAnimator does the walk.
+	if player_sprite and absf(_facing_direction.x) > 0.1:
+		player_sprite.flip_h = _facing_direction.x < 0.0
 
 
 func _handle_flashlight_flicker(delta: float) -> void:
@@ -132,44 +166,103 @@ func set_flashlight_available(available: bool) -> void:
 	_update_flashlight_state()
 
 
-# ---------------------------------------------------------------- rubber chicken
+# ---------------------------------------------------------------- mask scare
 
-func _honk() -> void:
-	_honk_cooldown_left = honk_cooldown
-	AudioManager.play("honk", 0.0, randf_range(0.9, 1.15))
-	EventBus.player_honked.emit(global_position, _facing_direction, honk_range, honk_half_angle)
-	_spawn_honk_effect()
+func _boo(origin: Vector2, reach: float, from_hiding: bool) -> void:
+	_boo_cooldown_left = boo_cooldown
+	AudioManager.play("whoosh", -8.0, randf_range(0.95, 1.1))
+	_put_on_mask()
+	_spawn_boo_text()
+	EventBus.player_booed.emit(origin, reach, from_hiding)
 
 
-## A fading cone + "HONK!" text so the player can see the honk's reach.
-func _spawn_honk_effect() -> void:
-	var effect := Node2D.new()
-	effect.global_position = global_position
-	effect.z_index = 15
+## Swap to the masked sprite for a moment.
+func _put_on_mask() -> void:
+	player_sprite.texture = MASK_TEXTURE
+	get_tree().create_timer(mask_time).timeout.connect(func() -> void: player_sprite.texture = _normal_texture)
 
-	var cone := Polygon2D.new()
-	var points: PackedVector2Array = [Vector2.ZERO]
-	for i in 9:
-		var angle: float = deg_to_rad(lerpf(-honk_half_angle, honk_half_angle, i / 8.0))
-		points.append(Vector2.RIGHT.rotated(angle) * honk_range)
-	cone.polygon = points
-	cone.color = Color(1.0, 0.95, 0.4, 0.25)
-	cone.rotation = _facing_direction.angle()
-	effect.add_child(cone)
 
+func _spawn_boo_text() -> void:
 	var label := Label.new()
-	label.text = "HONK!"
-	label.add_theme_font_size_override("font_size", 14)
+	label.text = "BOO!"
+	label.add_theme_font_size_override("font_size", 26)
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
-	label.add_theme_constant_override("outline_size", 4)
-	label.position = _facing_direction * 30.0 - Vector2(22, 10)
-	effect.add_child(label)
+	label.add_theme_constant_override("outline_size", 6)
+	label.position = global_position + Vector2(-32, -64)
+	label.z_index = 30
+	get_parent().add_child(label)
+	var tween: Tween = label.create_tween()
+	tween.tween_property(label, "position:y", label.position.y - 18.0, 0.5)
+	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.5).set_delay(0.2)
+	tween.tween_callback(label.queue_free)
 
-	get_parent().add_child(effect)
-	var tween: Tween = effect.create_tween()
-	tween.tween_property(effect, "modulate:a", 0.0, 0.35)
-	tween.parallel().tween_property(label, "position:y", label.position.y - 14.0, 0.35)
-	tween.tween_callback(effect.queue_free)
+
+# ---------------------------------------------------------------- hiding
+
+func _nearest_hide_spot() -> HideSpot:
+	var best: HideSpot = null
+	var best_dist: float = INF
+	for spot in get_tree().get_nodes_in_group("hide_spots"):
+		var hide_spot: HideSpot = spot as HideSpot
+		var dist: float = global_position.distance_to(hide_spot.global_position)
+		if hide_spot.is_player_in_reach() and hide_spot.is_free_for(self) and dist < best_dist:
+			best = hide_spot
+			best_dist = dist
+	return best
+
+
+## A cupboard in reach that a monster is hiding in, if any.
+func _occupied_hide_spot_in_reach() -> HideSpot:
+	for spot in get_tree().get_nodes_in_group("hide_spots"):
+		var hide_spot: HideSpot = spot as HideSpot
+		if hide_spot.occupied and hide_spot.occupant is Npc and hide_spot.is_player_in_reach():
+			return hide_spot
+	return null
+
+
+func _hide_in(spot: HideSpot) -> void:
+	is_hidden = true
+	_hide_spot = spot
+	_pre_hide_position = global_position
+	spot.set_occupied(true, self)  # your head peeks out now and then
+	velocity = Vector2.ZERO
+	player_sprite.visible = false
+	flashlight_beam.enabled = false
+	glow_light.energy = 0.35  # a faint glow so dark rooms don't go fully black
+	collision_shape.set_deferred("disabled", true)
+	global_position = spot.global_position
+
+
+func _unhide() -> void:
+	is_hidden = false
+	_hide_spot.set_occupied(false)
+	player_sprite.visible = true
+	glow_light.energy = 0.9
+	_update_flashlight_state()
+	collision_shape.set_deferred("disabled", false)
+	global_position = _pre_hide_position
+
+
+func _leave_hiding_spot() -> void:
+	_unhide()
+	_hide_spot = null
+
+
+## Burst out of hiding towards the nearest monster (or back the way you came) and BOO.
+func _jump_out() -> void:
+	var spot_position: Vector2 = _hide_spot.global_position
+	var direction: Vector2 = (_pre_hide_position - spot_position).normalized()
+	var nearest_dist: float = jump_out_range
+	for npc in get_tree().get_nodes_in_group("npcs"):
+		var dist: float = spot_position.distance_to((npc as Node2D).global_position)
+		if dist < nearest_dist:
+			nearest_dist = dist
+			direction = spot_position.direction_to((npc as Node2D).global_position)
+	_unhide()
+	_hide_spot = null
+	_facing_direction = direction
+	velocity = direction * jump_out_speed
+	_boo(spot_position, jump_out_range, true)
 
 
 # ---------------------------------------------------------------- game over

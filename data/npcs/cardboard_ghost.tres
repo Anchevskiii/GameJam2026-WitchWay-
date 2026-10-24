@@ -1,9 +1,6 @@
-[gd_resource type="Resource" script_class="NpcData" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="NpcData" load_steps=6 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/ghost/Png_animation/Ghost1.png" id="1_ldiox"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/ghost/Png_animation/Ghost2.png" id="2_33xec"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/ghost/Png_animation/Ghost3.png" id="3_vm67o"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/ghost/Png_animation/Ghost4.png" id="4_uhxwe"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/ghost.png" id="1_7fuio"]
 [ext_resource type="Script" path="res://scripts/resources/prop_data.gd" id="5_minl5"]
 [ext_resource type="Resource" path="res://data/props/sock.tres" id="6_txetb"]
 [ext_resource type="Resource" path="res://data/props/rubber_duck.tres" id="7_q3i0y"]
@@ -12,7 +9,7 @@
 [resource]
 script = ExtResource("8_ict7m")
 display_name = "Cardboard Ghost (Training Model)"
-frames = Array[Texture2D]([ExtResource("1_ldiox"), ExtResource("2_33xec"), ExtResource("3_vm67o"), ExtResource("4_uhxwe")])
+frames = Array[Texture2D]([ExtResource("1_7fuio")])
 anim_fps = 0.0
 tint = Color(0.78, 0.62, 0.45, 1)
 sprite_scale = 1.0
@@ -30,6 +27,8 @@ windup_text = "BOO"
 scare_sound = "boo"
 after_scare = 1
 loot = Array[ExtResource("5_minl5")]([ExtResource("6_txetb"), ExtResource("7_q3i0y")])
+scream_radius = 100.0
+scream_delay = 0.35
 panic_time = 0.4
 panic_speed = 0.0
 recover_time = 3.0

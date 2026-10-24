@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://dtqju2ktnaflg"
-path="res://.godot/imported/honk.wav-8363f1c9bccb072993d3401ad6e819b9.sample"
+uid="uid://jkknt5yig5sj"
+path="res://.godot/imported/whoosh.wav-c15509047a0e70676ed2ef33e361cdd3.sample"
 
 [deps]
 
-source_file="res://assets/audio/sfx/honk.wav"
-dest_files=["res://.godot/imported/honk.wav-8363f1c9bccb072993d3401ad6e819b9.sample"]
+source_file="res://assets/audio/sfx/whoosh.wav"
+dest_files=["res://.godot/imported/whoosh.wav-c15509047a0e70676ed2ef33e361cdd3.sample"]
 
 [params]
 

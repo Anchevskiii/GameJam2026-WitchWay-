@@ -5,8 +5,10 @@ extends Node
 ##
 ## The world lives in a SubViewport so LagController can freeze ONLY the game picture
 ## (fake lag) while the HUD and the narrator keep updating normally.
+## Chunky pixels: the SubViewport renders at 1/3 resolution (WorldContainer.stretch_shrink = 3)
+## and is scaled up with nearest-neighbour filtering. size_2d_override keeps world coordinates
+## at 1280x720, so gameplay numbers don't change. The HUD stays crisp outside it.
 
-@export_file("*.tscn") var first_room: String = "res://scenes/levels/living_room.tscn"
 @export var fade_time: float = 0.3
 
 @onready var world: SubViewport = $WorldContainer/World
@@ -18,7 +20,17 @@ var _is_changing_room: bool = false
 func _ready() -> void:
 	LagController.register_viewport(world)
 	EventBus.room_change_requested.connect(_on_room_change_requested)
-	_load_room(first_room)
+	EventBus.level_completed.connect(_on_level_completed)
+	# Fresh start, death and "Restart" all reload Main: resume at the last Living Room.
+	GameManager.current_level = GameManager.checkpoint_level
+	_load_room(GameManager.scene_for_level(GameManager.current_level))
+
+
+func _on_level_completed() -> void:
+	if _is_changing_room:
+		return
+	GameManager.advance_level()
+	_on_room_change_requested(GameManager.scene_for_level(GameManager.current_level))
 
 
 func _on_room_change_requested(scene_path: String) -> void:

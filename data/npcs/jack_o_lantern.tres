@@ -1,9 +1,6 @@
-[gd_resource type="Resource" script_class="NpcData" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="NpcData" load_steps=5 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/jack_o_lantern/Png_animation/Jack o latern1.png" id="1_1dqyc"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/jack_o_lantern/Png_animation/Jack o latern2.png" id="2_wtw1o"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/jack_o_lantern/Png_animation/Jack o latern3.png" id="3_ba3lh"]
-[ext_resource type="Texture2D" path="res://assets/sprites/entities/jack_o_lantern/Png_animation/Jack o latern4.png" id="4_qixvv"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/jack_o_lantern.png" id="1_fctch"]
 [ext_resource type="Script" path="res://scripts/resources/prop_data.gd" id="5_gpwyh"]
 [ext_resource type="Resource" path="res://data/props/pumpkin_seed.tres" id="6_0mr1u"]
 [ext_resource type="Script" path="res://scripts/resources/npc_data.gd" id="7_3ori1"]
@@ -11,7 +8,7 @@
 [resource]
 script = ExtResource("7_3ori1")
 display_name = "Jack-o'-lantern"
-frames = Array[Texture2D]([ExtResource("1_1dqyc"), ExtResource("2_wtw1o"), ExtResource("3_ba3lh"), ExtResource("4_qixvv")])
+frames = Array[Texture2D]([ExtResource("1_fctch")])
 anim_fps = 6.0
 tint = Color(1, 1, 1, 1)
 sprite_scale = 1.0
@@ -29,6 +26,8 @@ windup_text = "HA"
 scare_sound = "cackle"
 after_scare = 2
 loot = Array[ExtResource("5_gpwyh")]([ExtResource("6_0mr1u"), ExtResource("6_0mr1u"), ExtResource("6_0mr1u"), ExtResource("6_0mr1u")])
+scream_radius = 100.0
+scream_delay = 0.35
 panic_time = 0.6
 panic_speed = 0.0
 recover_time = 5.0

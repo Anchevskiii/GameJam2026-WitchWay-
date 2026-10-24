@@ -38,7 +38,7 @@
 		"We fixed the door. Please do not break it again."
 	],
 	"npc_scared": [
-		"You scared a monster. That's... not how this works.",
+		"You scared a monster. That is... not how this works.",
 		"Monster.exe is running away.",
 		"HR will hear about this."
 	],
@@ -46,7 +46,9 @@
 		"Lag is an immersive feature. We thank you for your patience.",
 		"The frame rate is being artisanal."
 	],
-	"honk_miss": [
-		"You honked at nothing. The nothing is unimpressed."
+	"boo_seen": [
+		"They saw you coming. Surprises work better as a surprise.",
+		"Nice try. Masks are scarier from behind.",
+		"The monster has seen that mask before. It was on sale."
 	]
 }

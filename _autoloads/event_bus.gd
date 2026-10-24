@@ -17,9 +17,9 @@ signal lag_freeze_changed(is_frozen: bool)
 # Bug mechanic signals
 signal bug_triggered(bug_type: String)
 
-# Player scare tool: the rubber chicken honk.
-## origin/direction in world space; NPCs check if they are inside the cone.
-signal player_honked(origin: Vector2, direction: Vector2, honk_range: float, half_angle_deg: float)
+# Player scare: the masked BOO. Only works on monsters that don't see it coming
+# (from behind, around a corner) - or on anyone when jumping out of a hiding spot.
+signal player_booed(origin: Vector2, boo_range: float, from_hiding: bool)
 signal npc_scared(npc_name: String)
 signal prop_spawned(prop_name: String, load_weight: float)
 
