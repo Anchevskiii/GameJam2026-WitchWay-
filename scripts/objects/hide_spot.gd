@@ -31,6 +31,9 @@ var _player: Node2D = null
 func _ready() -> void:
 	add_to_group("hide_spots")
 	_prompt = Label.new()
+	var unshaded := CanvasItemMaterial.new()
+	unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	_prompt.material = unshaded
 	_prompt.add_theme_font_size_override("font_size", 18)
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
 	_prompt.add_theme_constant_override("outline_size", 5)
@@ -134,6 +137,9 @@ func _find_sprite(node: Node) -> Sprite2D:
 
 # ---------------------------------------------------------------- prompt / wobble
 
+## True when PlayerController picks this HideSpot as the single active interaction target.
+var is_active_target: bool = false
+
 func _update_prompt() -> void:
 	if _player == null:
 		return
@@ -143,7 +149,7 @@ func _update_prompt() -> void:
 		_prompt.visible = true
 	else:
 		_prompt.text = "[E] HIDE"
-		_prompt.visible = not occupied and is_player_in_reach() and not _player.get("is_hidden")
+		_prompt.visible = is_active_target and not _player.get("is_hidden")
 
 
 ## Little wobble of the furniture so it's clear someone just moved in/out.

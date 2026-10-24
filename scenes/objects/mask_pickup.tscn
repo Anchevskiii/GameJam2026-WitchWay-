@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/mask_pickup.gd" id="1_mask"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/ghost_sheet.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/environment/light_radial.tres" id="3_glow"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_mask"]
+radius = 18.0
+
+[node name="MaskPickup" type="Area2D"]
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("1_mask")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_mask")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.55, 0.95, 1, 1)
+scale = Vector2(1.2, 1.2)
+texture = ExtResource("2_tex")
+
+[node name="Label" type="Label" parent="."]
+offset_left = -24.0
+offset_top = -22.0
+offset_right = 24.0
+offset_bottom = -6.0
+theme_override_colors/font_color = Color(0.4, 0.95, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 10
+text = "MASK"
+horizontal_alignment = 1
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+color = Color(0.35, 0.9, 1, 1)
+energy = 0.85
+texture = ExtResource("3_glow")
+texture_scale = 0.55

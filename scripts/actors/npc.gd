@@ -5,28 +5,29 @@ extends CharacterBody2D
 ## Attached to: CharacterBody2D root of scenes/actors/npc.tscn. Configure via `data` (NpcData).
 ##
 ## Stealth scare duel:
-##   IDLE     wanders and looks around. It SEES the player (or a kid) only inside its view cone
-##            (yellow), with no walls/furniture in between, and never while they hide.
-##            Spotting the player or a trick-or-treating kid -> WINDUP
-##   WINDUP   visible tell (grows, glows red, "BOO" bubble) while CHASING the target. If it
-##            completes in range (and the player isn't hidden), the target gets scared -> COOLDOWN
-##   HIDING   (hides_in_furniture) sits in a cupboard, head peeking out now and then.
-##            Player gets close -> jumps out with a short wind-up. BOO the cupboard first
-##            and the surprise is on it.
-##   PANIC    the player surprised it (BOO from behind / jumped out of hiding)! Drops loot,
-##            screams (nearby NPCs panic too) and runs around bumping into others
-##   DONE     DISABLED: greyed out and glitching with a countdown. Recovers after a while -> IDLE
-## A BOO it can see coming does nothing. Wind-ups pause while LagController.is_frozen.
+##   IDLE          wanders and looks around. It SEES the player (or a kid) only inside its view cone
+##                 (yellow), with no walls/furniture in between, and never while they hide or wear a mask.
+##                 Spotting the player or a trick-or-treating kid -> WINDUP
+##   CORNER_LURK   stands completely still in a dark corner/spot waiting for the player to approach.
+##   WINDUP        visible tell (grows, glows red, "BOO" bubble) while CHASING the target. If it
+##                 completes in range (and the player isn't hidden/masked), the target gets scared -> COOLDOWN
+##   HIDING        (hides_in_furniture) sits in a cupboard, head peeking out now and then.
+##                 Player gets close -> jumps out with a short wind-up. BOO the cupboard first
+##                 and the surprise is on it.
+##   PANIC         the player surprised it (BOO from behind / jumped out of hiding / masked)! Drops loot,
+##                 screams (nearby NPCs panic too) and runs around bumping into others
+##   DONE          DISABLED: greyed out and glitching with a countdown. Recovers after a while -> IDLE
+## A BOO it can see coming does nothing (unless masked). Wind-ups pause while LagController.is_frozen.
 
-enum State { IDLE, WINDUP, COOLDOWN, PANIC, DONE, HIDING }
+enum State { IDLE, WINDUP, COOLDOWN, PANIC, DONE, HIDING, CORNER_LURK }
 
 const MISSING_TEXTURE: Texture2D = preload("res://assets/sprites/environment/missing_texture.png")
 ## Panicking NPCs scare other NPCs within this distance.
 const BUMP_RADIUS: float = 34.0
 ## The NPC notices a player bumping right into it, even from behind.
 const TOUCH_SENSE: float = 20.0
-const CONE_COLOR: Color = Color(1.0, 0.95, 0.5, 0.13)
-const CONE_ALERT_COLOR: Color = Color(1.0, 0.3, 0.25, 0.2)
+const CONE_COLOR: Color = Color(1.0, 0.9, 0.5, 0.08)
+const CONE_ALERT_COLOR: Color = Color(1.0, 0.25, 0.2, 0.16)
 
 @export var data: NpcData
 ## Darkness rooms: > 0 means the NPC is "not loaded" (invisible, then a missing-texture
@@ -73,22 +74,32 @@ var _view_cone: Polygon2D
 var _hide_spot: HideSpot = null
 var _hide_walk_time: float = 0.0
 var _time_since_hide: float = 0.0
-## Shorter wind-up used right after jumping out of a hiding spot.
+## Shorter wind-up used right after jumping out of a hiding spot or corner ambush.
 var _ambush_windup: bool = false
 ## Who the current wind-up is aimed at: the player or a Kid.
 var _target: Node2D = null
+## Ghost phasing mechanics:
+var _ghost_phase_timer: float = 0.0
+var _is_phased: bool = false
 
 
 func _ready() -> void:
 	add_to_group("npcs")
 	_home = global_position
 	_wander_target = _home
-	bubble.visible = false
+	if bubble:
+		bubble.visible = false
+		var unshaded := CanvasItemMaterial.new()
+		unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		bubble.material = unshaded
 	windup_light.enabled = false
 	if data == null:
 		push_error("Npc %s has no NpcData." % name)
 		set_physics_process(false)
 		return
+	if data.is_ghost or data.can_pass_walls:
+		collision_mask = 0
+		add_to_group("ghosts")
 	_reset_visuals()
 	_facing = 1.0 if randf() > 0.5 else -1.0
 	_look_timer = randf_range(data.look_around_min, data.look_around_max)
@@ -107,6 +118,7 @@ func _physics_process(delta: float) -> void:
 	_animate(delta)
 	_update_loaded_look()
 	_update_view_cone()
+	_update_ghost_phase(delta)
 	_state_time += delta
 	_time_since_hide += delta
 	match state:
@@ -130,7 +142,20 @@ func _physics_process(delta: float) -> void:
 		State.HIDING:
 			_process_hiding()
 			return  # sitting still inside the furniture: no physics movement
+		State.CORNER_LURK:
+			_process_corner_lurk()
 	move_and_slide()
+
+
+func _update_ghost_phase(delta: float) -> void:
+	if not (data.is_ghost or data.can_pass_walls) or state == State.DONE or state == State.HIDING:
+		return
+	_ghost_phase_timer += delta
+	if _ghost_phase_timer >= 4.0:
+		_ghost_phase_timer = 0.0
+		_is_phased = not _is_phased
+		var target_alpha: float = 0.25 if _is_phased else 0.92
+		create_tween().tween_property(sprite, "modulate:a", target_alpha, 0.7)
 
 
 # ---------------------------------------------------------------- states
@@ -148,7 +173,7 @@ func _process_idle(delta: float) -> void:
 		_wander_time -= delta
 		if global_position.distance_to(_wander_target) < 6.0 or _wander_time <= 0.0:
 			_pick_wander_target()
-		velocity = global_position.direction_to(_wander_target) * data.move_speed * speed_scale * (1.1 if _investigating else 0.6)
+		velocity = global_position.direction_to(_wander_target) * data.move_speed * speed_scale * (1.1 if _investigating else 0.45)
 	else:
 		velocity = Vector2.ZERO
 
@@ -165,6 +190,8 @@ func _process_idle(delta: float) -> void:
 		_give_up_hiding_spot()
 		_target = target
 		_enter(State.WINDUP)
+	elif data.hides_in_corners and can_hide and not _investigating and randf() < 0.012 and target == null and _time_since_hide >= data.hide_cooldown:
+		_enter(State.CORNER_LURK)
 	elif _wants_to_hide() and target == null:
 		_hide_spot = _find_hiding_spot()
 		if _hide_spot:
@@ -174,16 +201,33 @@ func _process_idle(delta: float) -> void:
 			_time_since_hide = 0.0  # nothing free nearby: look again after the cooldown
 
 
+func _process_corner_lurk() -> void:
+	velocity = Vector2.ZERO
+	if _player == null:
+		return
+	var dist: float = _distance_to_player()
+	var player_masked_or_hidden: bool = _player.get("is_masked") or _player.get("is_hidden")
+	if not player_masked_or_hidden and ( (dist <= data.ambush_range * 1.25 and _has_line_of_sight(global_position, _player.global_position)) or can_see_player() ):
+		_ambush_windup = true
+		_target = _player
+		_enter(State.WINDUP)
+		face_towards(_player.global_position)
+	elif _state_time >= data.hide_time:
+		_time_since_hide = 0.0
+		_enter(State.IDLE)
+
+
 func _process_windup(delta: float) -> void:
 	velocity = Vector2.ZERO
-	if not is_instance_valid(_target) or (_target is Kid and not (_target as Kid).is_scareable()):
+	if not is_instance_valid(_target) or (_target is Kid and not (_target as Kid).is_scareable()) or (_target == _player and _player.get("is_masked")):
 		_enter(State.COOLDOWN)
 		return
 	face_towards(_target.global_position)
 	# Harder: it doesn't just stand there - it comes at you while winding up.
 	var to_target: Vector2 = _target.global_position - global_position
+	var chase_speed: float = (data.rush_speed if data.rush_speed > 0.0 and _ambush_windup else data.move_speed * 0.95) * speed_scale
 	if data.can_move and can_chase and to_target.length() > 36.0 and not LagController.is_frozen:
-		velocity = to_target.normalized() * data.move_speed * speed_scale * 0.9
+		velocity = to_target.normalized() * chase_speed
 	# Lag freeze = wind-up pauses. That's the dodge window.
 	if LagController.is_frozen:
 		_state_time -= delta
@@ -211,14 +255,18 @@ func _process_windup(delta: float) -> void:
 func _release_scare() -> void:
 	bubble.text = data.windup_text + "!"
 	bubble.scale = Vector2.ONE * 1.6
-	if _target == _player and _player.get("is_hidden"):
-		bubble.text = "?"  # the player ducked into a hiding spot - miss!
+	if _target == _player and (_player.get("is_hidden") or _player.get("is_masked")):
+		bubble.text = "?"  # the player ducked into a hiding spot or put on a mask - miss!
 		_enter(State.COOLDOWN)
 		return
 	AudioManager.play(data.scare_sound, -4.0)
 	var in_range: bool = is_instance_valid(_target) and global_position.distance_to(_target.global_position) <= data.scare_range
 	if in_range and _target == _player:
-		GameManager.scare_player(data.scare_damage * damage_scale, data.display_name)
+		var is_ambush: bool = _ambush_windup
+		if _player and _player.has_method("is_facing_target") and _player.is_facing_target(global_position):
+			is_ambush = false
+		var dmg: float = (data.ambush_damage if is_ambush else data.scare_damage) * damage_scale
+		GameManager.scare_player(dmg, data.display_name)
 	elif in_range and _target is Kid:
 		(_target as Kid).get_scared(global_position, "a " + data.display_name)
 	_enter(State.COOLDOWN)
@@ -299,14 +347,15 @@ func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> v
 		return
 	# You spotted the peeking head and BOO'd the cupboard: the ambusher gets ambushed.
 	if state == State.HIDING:
-		if global_position.distance_to(origin) <= boo_range + 16.0:
+		if global_position.distance_to(origin) <= boo_range + 20.0:
 			_leave_hiding_spot(origin.direction_to(global_position))
 			get_scared("someone who saw its head peeking out")
 		return
 	if global_position.distance_to(origin) > boo_range or not _has_line_of_sight(origin, global_position):
 		return
-	# The whole trick: a scare only works as a SURPRISE. Jumping out of hiding always is one.
-	if not from_hiding and (state == State.WINDUP or can_see_player()):
+	var player_masked: bool = _player != null and _player.get("is_masked")
+	# The whole trick: a scare only works as a SURPRISE. Jumping out of hiding or wearing a disguise mask always is one.
+	if not from_hiding and not player_masked and (state == State.WINDUP or can_see_player()):
 		bubble.visible = true
 		bubble.text = "nice try"
 		get_tree().create_timer(0.9).timeout.connect(_hide_bubble_if_calm)
@@ -315,10 +364,10 @@ func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> v
 	get_scared("a masked stranger")
 
 
-## True if the player is inside this NPC's view cone, in range, not hidden, and
+## True if the player is inside this NPC's view cone, in range, not hidden, not masked, and
 ## not behind a wall or furniture.
 func can_see_player() -> bool:
-	if _player == null or _player.get("is_hidden"):
+	if _player == null or _player.get("is_hidden") or _player.get("is_masked"):
 		return false
 	return can_see(_player)
 
@@ -383,6 +432,12 @@ func _enter(new_state: State) -> void:
 			bubble.visible = false
 			_ambush_windup = false
 			_reset_visuals()
+		State.CORNER_LURK:
+			bubble.visible = false
+			windup_light.enabled = false
+			sprite.modulate = data.tint.darkened(0.45)
+			if _view_cone:
+				_view_cone.visible = false
 		State.WINDUP:
 			bubble.visible = true
 			windup_light.enabled = true
@@ -437,10 +492,12 @@ func _reset_visuals() -> void:
 ## Heard a creaky board / a trap snap: walk over to look. Monsters that stay put (seated
 ## guests, hiders) and ones busy scaring or switched off ignore it.
 func _on_noise_made(at: Vector2, radius: float) -> void:
-	if state != State.IDLE or not data.can_move or not can_chase or _hide_spot != null:
+	if (state != State.IDLE and state != State.CORNER_LURK) or not data.can_move or not can_chase or _hide_spot != null:
 		return
 	if global_position.distance_to(at) > radius:
 		return
+	if state == State.CORNER_LURK:
+		_enter(State.IDLE)
 	_wander_target = at
 	_wander_time = 8.0
 	_investigating = true
@@ -473,21 +530,50 @@ func _animate(delta: float) -> void:
 			sprite.texture = data.frames[_frame]
 
 
-## Darkness rooms: far = invisible, closer = magenta placeholder, close = real sprite.
+## Visibility & darkness:
+##   - In safe rooms or when winding up / panicking: visible if within line-of-sight or close.
+##   - In dark rooms (load_in_radius > 0): uses the streaming-in missing-texture effect at close range.
+##   - When lurking in corners (CORNER_LURK) or in normal dark rooms: hidden in the shadows unless
+##     the player illuminates them with the flashlight (or comes right up to them) with line of sight!
 func _update_loaded_look() -> void:
-	if load_in_radius <= 0.0 or state == State.DONE or state == State.HIDING:
+	if state == State.DONE or state == State.HIDING:
 		return
+	if GameManager.is_safe_room:
+		sprite.visible = true
+		return
+
 	var dist: float = _distance_to_player()
-	if dist <= load_in_radius or state == State.WINDUP:
+	var has_los: bool = _player != null and _has_line_of_sight(_player.global_position, global_position)
+	var lit_by_player: bool = false
+	if _player != null and _player.has_method("is_illuminating"):
+		lit_by_player = _player.call("is_illuminating", global_position) and has_los
+
+	if state == State.CORNER_LURK:
+		# Corner lurkers stay completely invisible in the shadows unless the flashlight beam hits them directly
+		sprite.visible = lit_by_player
+		return
+
+	if load_in_radius > 0.0:
+		if dist <= load_in_radius or state == State.WINDUP or lit_by_player:
+			sprite.visible = has_los or dist <= 56.0 or state == State.WINDUP
+			if sprite.texture == MISSING_TEXTURE and not data.frames.is_empty():
+				sprite.texture = data.frames[_frame]
+				sprite.region_enabled = false
+		elif dist <= load_in_radius * 2.0 and has_los:
+			sprite.visible = randf() > 0.15  # flickers while "streaming in"
+			sprite.texture = MISSING_TEXTURE
+			sprite.region_enabled = true
+			sprite.region_rect = Rect2(0, 0, 16, 28)
+		else:
+			sprite.visible = false
+		return
+
+	# Standard dark atmosphere: monsters behind walls or outside your light stay hidden in darkness
+	if lit_by_player or state == State.WINDUP or state == State.PANIC or (has_los and dist <= 100.0):
 		sprite.visible = true
 		if sprite.texture == MISSING_TEXTURE and not data.frames.is_empty():
 			sprite.texture = data.frames[_frame]
 			sprite.region_enabled = false
-	elif dist <= load_in_radius * 2.0:
-		sprite.visible = randf() > 0.15  # flickers while "streaming in"
-		sprite.texture = MISSING_TEXTURE
-		sprite.region_enabled = true
-		sprite.region_rect = Rect2(0, 0, 16, 28)
 	else:
 		sprite.visible = false
 
@@ -543,7 +629,7 @@ func _enter_hiding_spot() -> void:
 
 func _process_hiding() -> void:
 	velocity = Vector2.ZERO
-	var player_hidden: bool = _player != null and _player.get("is_hidden")
+	var player_hidden: bool = _player != null and (_player.get("is_hidden") or _player.get("is_masked"))
 	if not player_hidden and _distance_to_player() <= data.ambush_range:
 		ambush()
 	elif _state_time >= data.hide_time:

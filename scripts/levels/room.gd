@@ -29,8 +29,10 @@ const WALL_TILE: Vector2i = Vector2i(2, 0)
 const NPC_SCENE: PackedScene = preload("res://scenes/actors/npc.tscn")
 const DOOR_SCENE: PackedScene = preload("res://scenes/objects/bugs/glitch_door.tscn")
 const KID_SCENE: PackedScene = preload("res://scenes/actors/kid.tscn")
+const MASK_SCENE: PackedScene = preload("res://scenes/objects/mask_pickup.tscn")
 ## Kids that start within this distance of each other form one group.
 const KID_GROUP_RANGE: float = 130.0
+const MASK_RESPAWN_DELAY: float = 14.0
 const GLOW_TEXTURE: Texture2D = preload("res://assets/sprites/environment/light_radial.tres")
 const FALLBACK_THEME: RoomTheme = preload("res://data/themes/living_room.tres")
 ## Layout of assets/sprites/interiors/house_interior.png (see the build script).
@@ -90,8 +92,8 @@ static var _visited_scenes: Dictionary = {}
 ## Multiplies prop CPU weights in this room.
 @export var cpu_load_multiplier: float = 1.0
 @export var flashlight_works: bool = true
-## CanvasModulate colour. White = normal lighting, near-black = darkness room.
-@export var ambient_color: Color = Color(1, 1, 1)
+## CanvasModulate colour. Darkened on haunted floors so rooms feel eerie and other rooms aren't visible.
+@export var ambient_color: Color = Color(0.05, 0.045, 0.08)
 ## > 0: NPCs are invisible/missing-texture until the player is this close (pixels).
 @export var npc_load_radius: float = 0.0
 ## Multiplies every NPC's wander radius. 0 = everyone stays in their spot (dinner party).
@@ -141,6 +143,8 @@ func _ready() -> void:
 
 	props_root.add_to_group("prop_layer")
 	actors_root.add_to_group("actors_root")
+	if not is_safe_room and (ambient_color.r > 0.12 or ambient_color.g > 0.12):
+		ambient_color = Color(0.05, 0.045, 0.08, 1.0)
 	canvas_modulate.color = ambient_color
 
 	GameManager.is_safe_room = is_safe_room
@@ -155,6 +159,7 @@ func _ready() -> void:
 	_build_from_layout()
 	_build_wall_outlines()
 	_spawn_traps()
+	_spawn_initial_masks()
 	_group_kids()
 	add_child(Dread.new())
 	EventBus.house_awakened.connect(_on_house_awakened)
@@ -370,6 +375,8 @@ func _spawn_from_legend(ch: String, cell: Vector2i) -> void:
 		glow.energy = 0.9
 		glow.color = Color(1.0, 0.75, 0.4)
 		_spawn_floor_decor(light_legend[ch], cell).add_child(glow)
+	elif ch == "M":
+		_spawn_mask_at(cell_to_world(cell))
 	else:
 		push_warning("Room '%s': unknown layout character '%s' at %s" % [room_title, ch, cell])
 
@@ -537,6 +544,58 @@ func _spawn_traps() -> void:
 				continue
 		trap.position = cell_to_world(entry[0])
 		decor_root.add_child(trap)
+
+
+## Spawns disguise masks on haunted floors (and respawns them elsewhere after being picked up).
+func _spawn_initial_masks() -> void:
+	if is_safe_room:
+		return
+	var existing: int = 0
+	for c in decor_root.get_children():
+		if c is MaskPickup:
+			existing += 1
+	var target_count: int = 2 if procedural else 1
+	for i in maxi(0, target_count - existing):
+		_respawn_mask(player.global_position if is_instance_valid(player) else Vector2.ZERO)
+
+
+func _spawn_mask_at(world_pos: Vector2) -> void:
+	var mask_item: MaskPickup = MASK_SCENE.instantiate()
+	mask_item.position = world_pos
+	mask_item.collected.connect(_on_mask_collected)
+	decor_root.add_child(mask_item)
+
+
+func _on_mask_collected(from_pos: Vector2) -> void:
+	get_tree().create_timer(MASK_RESPAWN_DELAY).timeout.connect(_respawn_mask.bind(from_pos))
+
+
+func _respawn_mask(old_pos: Vector2) -> void:
+	if GameManager.is_game_over or not is_instance_valid(player):
+		return
+	var occupied: Array[Vector2] = []
+	for g in ["npcs", "kids"]:
+		for n in get_tree().get_nodes_in_group(g):
+			occupied.append((n as Node2D).global_position)
+	var best: Array[Vector2i] = []
+	for y in range(1, _rows.size() - 1):
+		for x in range(1, _rows[y].length() - 1):
+			if _rows[y][x] != ".":
+				continue
+			var wp: Vector2 = cell_to_world(Vector2i(x, y))
+			if wp.distance_to(player.global_position) < 160.0 or wp.distance_to(old_pos) < 140.0:
+				continue
+			var clear: bool = true
+			for o in occupied:
+				if wp.distance_to(o) < 100.0:
+					clear = false
+					break
+			if clear:
+				best.append(Vector2i(x, y))
+	if best.is_empty():
+		get_tree().create_timer(10.0).timeout.connect(_respawn_mask.bind(old_pos))
+		return
+	_spawn_mask_at(cell_to_world(best[randi() % best.size()]))
 
 
 ## The last key was taken: lights fail, everything hears it, and the Stalker comes -

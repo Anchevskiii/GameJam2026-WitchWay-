@@ -12,6 +12,9 @@ static func spawn(near: Node, at: Vector2, text_value: String, color: Color = Co
 	if parent == null:
 		parent = near.get_parent()
 	var label := FloatingText.new()
+	var unshaded := CanvasItemMaterial.new()
+	unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	label.material = unshaded
 	label.text = text_value
 	label.z_index = 40
 	label.add_theme_font_size_override("font_size", font_size)

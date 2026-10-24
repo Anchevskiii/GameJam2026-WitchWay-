@@ -21,10 +21,15 @@ enum AfterScare {
 @export_group("Movement")
 @export var can_move: bool = true
 @export var move_speed: float = 40.0
+## Rush speed when aggressively dashing towards player upon spotting them.
+@export var rush_speed: float = 135.0
 ## How far from its start position the NPC wanders while idle.
 @export var wander_radius: float = 64.0
 ## Ghost behaviour: backs away from the player instead of approaching.
 @export var afraid_of_player: bool = false
+## Ghost attributes: passes through walls and periodically phases in/out.
+@export var is_ghost: bool = false
+@export var can_pass_walls: bool = false
 
 @export_group("Scare duel")
 ## Harmless NPCs never wind up (training dummies).
@@ -52,10 +57,14 @@ enum AfterScare {
 ## Sneaks into free cupboards/couches and jumps out at a player who comes close.
 ## Its head peeks out now and then - BOO the hiding spot first and IT gets the surprise.
 @export var hides_in_furniture: bool = false
+## Stalks or waits in dark corners or doorways to jump out at the player.
+@export var hides_in_corners: bool = true
 ## Jumps out when the player gets this close to its hiding spot.
 @export var ambush_range: float = 70.0
 ## Wind-up after jumping out (short: that's the point of an ambush).
 @export var ambush_windup: float = 0.4
+## Higher damage applied when player is caught by surprise ambush.
+@export var ambush_damage: float = 28.0
 ## Gives up and comes out after this many seconds of nobody walking by.
 @export var hide_time: float = 12.0
 ## Seconds to wander around before looking for a hiding spot again.

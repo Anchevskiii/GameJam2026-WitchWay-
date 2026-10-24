@@ -45,7 +45,11 @@ var _used: bool = false
 
 
 func _ready() -> void:
-	countdown_label.visible = false
+	if countdown_label:
+		var unshaded := CanvasItemMaterial.new()
+		unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		countdown_label.material = unshaded
+		countdown_label.visible = false
 	exit_area.body_entered.connect(_on_exit_area_body_entered)
 	# React to the moment load HITS 100% (an event). Polling the value would miss it,
 	# because GameManager starts decaying it again in the very same frame.

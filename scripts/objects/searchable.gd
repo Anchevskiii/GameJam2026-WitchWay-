@@ -29,6 +29,9 @@ var _player: Node2D = null
 func _ready() -> void:
 	add_to_group("searchables")
 	_prompt = Label.new()
+	var unshaded := CanvasItemMaterial.new()
+	unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	_prompt.material = unshaded
 	_prompt.add_theme_font_size_override("font_size", 16)
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
 	_prompt.add_theme_constant_override("outline_size", 5)
@@ -40,10 +43,13 @@ func _ready() -> void:
 	add_child(_prompt)
 
 
+## True when PlayerController picks this Searchable as the single active interaction target.
+var is_active_target: bool = false
+
 func _process(_delta: float) -> void:
 	if _player == null:
 		_player = get_tree().get_first_node_in_group("player") as Node2D
-	_prompt.visible = not searched and is_player_in_reach()
+	_prompt.visible = not searched and (is_active_target or progress > 0.0)
 	_prompt.text = "SEARCHING..." if progress > 0.0 else "Hold E: search"
 	queue_redraw()
 
