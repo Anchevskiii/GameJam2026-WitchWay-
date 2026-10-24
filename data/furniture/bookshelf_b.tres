@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_7j0da"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_c58oh"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2dilw"]
+atlas = ExtResource("2_c58oh")
+region = Rect2(384, 2188, 64, 68)
+
+[resource]
+script = ExtResource("1_7j0da")
+display_name = "Bookshelf B"
+texture = SubResource("AtlasTexture_2dilw")
+kind = 0
+footprint = Vector2i(2, 1)
+hideable = true
+searchable = false
+light_color = Color(0, 0, 0, 0)

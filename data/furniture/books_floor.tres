@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_or8fh"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_tyow1"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hvjgr"]
+atlas = ExtResource("2_tyow1")
+region = Rect2(420, 908, 56, 46)
+
+[resource]
+script = ExtResource("1_or8fh")
+display_name = "Books Floor"
+texture = SubResource("AtlasTexture_hvjgr")
+kind = 3
+footprint = Vector2i(2, 1)
+hideable = false
+searchable = false
+light_color = Color(0, 0, 0, 0)

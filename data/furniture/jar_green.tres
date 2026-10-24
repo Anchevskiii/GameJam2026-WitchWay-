@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_t11s7"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_d8e78"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_o00aw"]
+atlas = ExtResource("2_d8e78")
+region = Rect2(34, 2200, 30, 32)
+
+[resource]
+script = ExtResource("1_t11s7")
+display_name = "Jar Green"
+texture = SubResource("AtlasTexture_o00aw")
+kind = 1
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = false
+light_color = Color(0, 0, 0, 0)

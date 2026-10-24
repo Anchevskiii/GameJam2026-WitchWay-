@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_ky580"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_nyove"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bhxf5"]
+atlas = ExtResource("2_nyove")
+region = Rect2(424, 356, 80, 120)
+
+[resource]
+script = ExtResource("1_ky580")
+display_name = "Rug Blue Tall"
+texture = SubResource("AtlasTexture_bhxf5")
+kind = 3
+footprint = Vector2i(3, 4)
+hideable = false
+searchable = false
+light_color = Color(0, 0, 0, 0)

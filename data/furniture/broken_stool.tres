@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_onhbl"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_je01d"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ju6qm"]
+atlas = ExtResource("2_je01d")
+region = Rect2(226, 1920, 30, 42)
+
+[resource]
+script = ExtResource("1_onhbl")
+display_name = "Broken Stool"
+texture = SubResource("AtlasTexture_ju6qm")
+kind = 1
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = false
+light_color = Color(0, 0, 0, 0)

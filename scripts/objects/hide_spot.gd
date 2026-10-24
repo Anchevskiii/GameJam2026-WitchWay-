@@ -105,11 +105,16 @@ func _start_peek() -> void:
 	_peek.flip_h = _peek_side < 0.0
 
 	# Start hidden behind the furniture, slide out past its edge, hold, slide back in.
-	var furniture_half: Vector2 = furniture_sprite.texture.get_size() * 0.5
-	var top_y: float = -furniture_half.y + head_height * _peek.scale.y * 0.5 + 2.0
-	var hidden_x: float = _peek_side * (furniture_half.x - tex.get_width() * 0.5 * _peek.scale.x)
+	# Work in this node's space: the furniture sprite may be offset (3/4-view furniture
+	# stands on its footprint and rises above it).
+	var rect: Rect2 = furniture_sprite.get_rect()
+	rect.position += furniture_sprite.global_position - global_position
+	var center_x: float = rect.get_center().x
+	var half_w: float = rect.size.x * 0.5
+	var top_y: float = rect.position.y + head_height * _peek.scale.y * 0.5 + 2.0
+	var hidden_x: float = center_x + _peek_side * (half_w - tex.get_width() * 0.5 * _peek.scale.x)
 	# Slide out until most of the head is past the edge - it should be noticeable.
-	var out_x: float = _peek_side * (furniture_half.x + tex.get_width() * 0.3 * _peek.scale.x)
+	var out_x: float = center_x + _peek_side * (half_w + tex.get_width() * 0.3 * _peek.scale.x)
 	_peek.position = Vector2(hidden_x, top_y)
 	_peek.visible = true
 	var tween: Tween = _peek.create_tween()

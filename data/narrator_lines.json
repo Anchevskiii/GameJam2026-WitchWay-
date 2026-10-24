@@ -59,5 +59,35 @@
 	"glitch_crash": [
 		"House.exe has crashed. Please enjoy the free-roam mode.",
 		"Fatal glitch. Everything is fine."
+	],
+	"bear_trap": [
+		"A bear trap. In a house. We are not a zoo. We are barely a house.",
+		"That was a feature called 'Floor Hug'. Please stop hugging the floor.",
+		"Management reminds you: watch your step. The step is watching you."
+	],
+	"creaky_board": [
+		"*CREAK*. Everyone heard that. Everyone.",
+		"That floorboard has filed a noise complaint about you.",
+		"Loose board. Loose lips. Same thing, really."
+	],
+	"key_found": [
+		"A key! The exit is slightly less locked now.",
+		"Key acquired. Keep looking. The house hid the others out of spite.",
+		"Another key. Please do not tell the house."
+	],
+	"last_key": [
+		"That was the last key. Something upstairs just woke up. Run.",
+		"All keys found. The house has noticed. The house is not happy. RUN."
+	],
+	"house_awake": [
+		"The lights are failing. Something tall is drifting through the walls towards you.",
+		"It goes through walls. You do not. Hide, BOO it, or simply leave faster."
+	],
+	"door_locked": [
+		"The exit is locked. Keys are usually in drawers. Usually.",
+		"Locked. The door would love to help, but it's union."
+	],
+	"search_scare": [
+		"Something in the drawer was also searching. For you."
 	]
 }

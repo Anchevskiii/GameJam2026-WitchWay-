@@ -47,6 +47,11 @@ var is_game_active: bool = false
 var is_safe_room: bool = false
 ## Set by the current Room. Multiplies every prop's load weight ("this room is unoptimized").
 var cpu_load_multiplier: float = 1.0
+## Set by the current Room. Deeper floors restore sanity more slowly.
+var sanity_regen_scale: float = 1.0
+## Keys the exit needs on this floor (set by the Room; 0 = the exit isn't locked) and keys found.
+var keys_needed: int = 0
+var keys_found: int = 0
 
 # Run statistics, shown on the game over screen.
 var stats_npcs_scared: int = 0
@@ -117,6 +122,26 @@ func restore_sanity(amount: float) -> void:
 
 func refill_sanity() -> void:
 	restore_sanity(max_sanity)
+
+
+func set_keys_needed(count: int) -> void:
+	keys_needed = count
+	keys_found = 0
+	EventBus.keys_changed.emit(keys_found, keys_needed)
+
+
+## A key was found. The last one wakes the house up.
+func add_key() -> void:
+	if keys_found >= keys_needed:
+		return
+	keys_found += 1
+	EventBus.keys_changed.emit(keys_found, keys_needed)
+	if keys_found == keys_needed:
+		EventBus.house_awakened.emit()
+
+
+func has_all_keys() -> bool:
+	return keys_found >= keys_needed
 
 
 func trigger_game_over() -> void:

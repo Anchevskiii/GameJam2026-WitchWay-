@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_pe7pu"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_8vnxg"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1m5bw"]
+atlas = ExtResource("2_8vnxg")
+region = Rect2(262, 1796, 54, 52)
+
+[resource]
+script = ExtResource("1_pe7pu")
+display_name = "Desk Old"
+texture = SubResource("AtlasTexture_1m5bw")
+kind = 2
+footprint = Vector2i(2, 1)
+hideable = false
+searchable = true
+light_color = Color(0, 0, 0, 0)

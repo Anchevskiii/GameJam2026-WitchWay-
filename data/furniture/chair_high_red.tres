@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_pa7s6"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_5qalh"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_krm58"]
+atlas = ExtResource("2_5qalh")
+region = Rect2(420, 1986, 24, 44)
+
+[resource]
+script = ExtResource("1_pa7s6")
+display_name = "Chair High Red"
+texture = SubResource("AtlasTexture_krm58")
+kind = 1
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = false
+light_color = Color(0, 0, 0, 0)

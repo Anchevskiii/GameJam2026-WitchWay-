@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="RoomTheme" load_steps=23 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_qbg7j"]
+[ext_resource type="Resource" path="res://data/furniture/fruit_purple.tres" id="2_pcbkl"]
+[ext_resource type="Resource" path="res://data/furniture/basket.tres" id="3_ggihp"]
+[ext_resource type="Resource" path="res://data/furniture/vase_b.tres" id="4_i8sto"]
+[ext_resource type="Resource" path="res://data/furniture/table_light.tres" id="5_7xmmo"]
+[ext_resource type="Resource" path="res://data/furniture/stove.tres" id="6_w5o7g"]
+[ext_resource type="Resource" path="res://data/furniture/pantry_shelf.tres" id="7_eqf8a"]
+[ext_resource type="Resource" path="res://data/furniture/cabinet_low.tres" id="8_0mx8e"]
+[ext_resource type="Resource" path="res://data/furniture/dresser.tres" id="9_n6e7l"]
+[ext_resource type="Resource" path="res://data/furniture/wardrobe_short.tres" id="10_rmn7y"]
+[ext_resource type="Resource" path="res://data/furniture/sideboard.tres" id="11_fqdon"]
+[ext_resource type="Resource" path="res://data/furniture/rug_green.tres" id="12_jaw1u"]
+[ext_resource type="Script" path="res://scripts/resources/room_theme.gd" id="13_64uea"]
+[ext_resource type="Resource" path="res://data/furniture/stool_round.tres" id="14_6ulql"]
+[ext_resource type="Resource" path="res://data/furniture/chair_high.tres" id="15_lry1e"]
+[ext_resource type="Resource" path="res://data/furniture/fruit_green.tres" id="16_4deb4"]
+[ext_resource type="Resource" path="res://data/furniture/fruit_red.tres" id="17_gk7mu"]
+[ext_resource type="Resource" path="res://data/furniture/jar_green.tres" id="18_ncssn"]
+[ext_resource type="Resource" path="res://data/furniture/box_small.tres" id="19_jupvy"]
+[ext_resource type="Resource" path="res://data/furniture/window_white.tres" id="20_l6dyx"]
+[ext_resource type="Resource" path="res://data/furniture/painting_fire.tres" id="21_f784x"]
+[ext_resource type="Resource" path="res://data/furniture/corkboard.tres" id="22_b4co2"]
+
+[resource]
+script = ExtResource("13_64uea")
+display_name = "Kitchen"
+wallpaper = 1
+floor_pattern = 6
+north_pieces = Array[ExtResource("1_qbg7j")]([ExtResource("7_eqf8a"), ExtResource("8_0mx8e"), ExtResource("9_n6e7l"), ExtResource("10_rmn7y"), ExtResource("11_fqdon")])
+wall_decor = Array[ExtResource("1_qbg7j")]([ExtResource("20_l6dyx"), ExtResource("21_f784x"), ExtResource("22_b4co2")])
+side_pieces = Array[ExtResource("1_qbg7j")]([ExtResource("16_4deb4"), ExtResource("17_gk7mu"), ExtResource("3_ggihp"), ExtResource("18_ncssn"), ExtResource("19_jupvy")])
+center_pieces = Array[ExtResource("1_qbg7j")]([ExtResource("5_7xmmo")])
+rugs = Array[ExtResource("1_qbg7j")]([ExtResource("12_jaw1u")])
+feature_pieces = Array[ExtResource("1_qbg7j")]([ExtResource("6_w5o7g")])
+feature_flank = Array[ExtResource("1_qbg7j")]([])
+accent_pieces = Array[ExtResource("1_qbg7j")]([ExtResource("2_pcbkl"), ExtResource("3_ggihp"), ExtResource("4_i8sto")])
+set_in_front_of_feature = false
+seat_west = ExtResource("14_6ulql")
+seat_east = ExtResource("14_6ulql")
+seat_north = ExtResource("15_lry1e")
+floor_clutter = Array[ExtResource("1_qbg7j")]([])

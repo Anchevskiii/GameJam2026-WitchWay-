@@ -28,7 +28,7 @@ func _process(delta: float) -> void:
 		_still_time += delta
 		if _still_time >= still_delay and GameManager.current_sanity < GameManager.max_sanity:
 			var rate: float = still_regen_rate * (hidden_regen_multiplier if _body.get("is_hidden") else 1.0)
-			GameManager.restore_sanity(rate * delta)
+			GameManager.restore_sanity(rate * GameManager.sanity_regen_scale * delta)
 	else:
 		_still_time = 0.0
 

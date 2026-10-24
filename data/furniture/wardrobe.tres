@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_5yagx"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_qwl1a"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_y3iog"]
+atlas = ExtResource("2_qwl1a")
+region = Rect2(228, 1544, 54, 78)
+
+[resource]
+script = ExtResource("1_5yagx")
+display_name = "Wardrobe"
+texture = SubResource("AtlasTexture_y3iog")
+kind = 0
+footprint = Vector2i(2, 1)
+hideable = true
+searchable = false
+light_color = Color(0, 0, 0, 0)

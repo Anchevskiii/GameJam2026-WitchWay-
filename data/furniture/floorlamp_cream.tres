@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_ylefc"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_gp4la"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rmni3"]
+atlas = ExtResource("2_gp4la")
+region = Rect2(352, 1774, 30, 50)
+
+[resource]
+script = ExtResource("1_ylefc")
+display_name = "Floorlamp Cream"
+texture = SubResource("AtlasTexture_rmni3")
+kind = 1
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = false
+light_color = Color(1, 0.85, 0.6, 1)

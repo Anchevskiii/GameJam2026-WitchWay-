@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_hdrd7"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_lcp2x"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2cl7n"]
+atlas = ExtResource("2_lcp2x")
+region = Rect2(76, 788, 42, 28)
+
+[resource]
+script = ExtResource("1_hdrd7")
+display_name = "Painting Cat"
+texture = SubResource("AtlasTexture_2cl7n")
+kind = 4
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = false
+light_color = Color(0, 0, 0, 0)

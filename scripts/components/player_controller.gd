@@ -55,6 +55,11 @@ var _is_flashlight_on: bool = true
 var _flashlight_available: bool = true
 var _can_move: bool = true
 var _boo_cooldown_left: float = 0.0
+## Seconds left stuck in a bear trap.
+var _snared_left: float = 0.0
+## The drawer/cabinet being searched (E held), or null.
+var _searching: Searchable = null
+var _search_time: float = 0.0
 
 var _flicker_timer: float = 0.0
 var _is_flickering: bool = false
@@ -81,6 +86,15 @@ func _physics_process(delta: float) -> void:
 		_is_flashlight_on = not _is_flashlight_on
 		_update_flashlight_state()
 	_boo_cooldown_left -= delta
+	if _snared_left > 0.0:
+		_snared_left -= delta
+		velocity = Vector2.ZERO
+		if Input.is_action_just_pressed("scare") and _boo_cooldown_left <= 0.0:
+			_boo(global_position, boo_range, false)  # can't run, but you can still BOO
+		return
+	if _searching:
+		_process_search(delta)
+		return
 	if is_hidden:
 		velocity = Vector2.ZERO
 		if Input.is_action_just_pressed("scare"):
@@ -96,6 +110,12 @@ func _physics_process(delta: float) -> void:
 		var spot: HideSpot = _nearest_hide_spot()
 		if spot:
 			_hide_in(spot)
+			return
+		var drawer: Searchable = _nearest_searchable()
+		if drawer:
+			_searching = drawer
+			_search_time = 0.0
+			velocity = Vector2.ZERO
 			return
 	if Input.is_action_just_pressed("scare") and _boo_cooldown_left <= 0.0:
 		_boo(global_position, boo_range, false)
@@ -195,6 +215,45 @@ func _spawn_boo_text() -> void:
 	tween.tween_property(label, "position:y", label.position.y - 18.0, 0.5)
 	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.5).set_delay(0.2)
 	tween.tween_callback(label.queue_free)
+
+
+# ---------------------------------------------------------------- traps & searching
+
+## Stuck (bear trap) for `seconds`: no walking, BOO still works.
+func snare(seconds: float) -> void:
+	_snared_left = maxf(_snared_left, seconds)
+	velocity = Vector2.ZERO
+
+
+func is_snared() -> bool:
+	return _snared_left > 0.0
+
+
+## Holding E at a drawer: stand still until it's searched. Let go (or get scared off) = stop.
+func _process_search(delta: float) -> void:
+	velocity = Vector2.ZERO
+	if not Input.is_action_pressed("interact") or not _searching.is_player_in_reach() or _searching.searched:
+		_searching.progress = 0.0
+		_searching = null
+		return
+	_search_time += delta
+	_searching.progress = clampf(_search_time / _searching.search_time, 0.0, 1.0)
+	if _search_time >= _searching.search_time:
+		var drawer: Searchable = _searching
+		_searching = null
+		drawer.open()
+
+
+func _nearest_searchable() -> Searchable:
+	var best: Searchable = null
+	var best_dist: float = INF
+	for node in get_tree().get_nodes_in_group("searchables"):
+		var drawer: Searchable = node as Searchable
+		var dist: float = global_position.distance_to(drawer.global_position)
+		if not drawer.searched and drawer.is_player_in_reach() and dist < best_dist:
+			best = drawer
+			best_dist = dist
+	return best
 
 
 # ---------------------------------------------------------------- hiding

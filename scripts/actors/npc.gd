@@ -41,6 +41,9 @@ const CONE_ALERT_COLOR: Color = Color(1.0, 0.3, 0.25, 0.2)
 ## Difficulty, set by the Room: < 1 = faster wind-ups, > 1 = scarier scares.
 @export var windup_scale: float = 1.0
 @export var damage_scale: float = 1.0
+## Difficulty, set by the Room: deeper floors = faster monsters that see further.
+@export var speed_scale: float = 1.0
+@export var sight_scale: float = 1.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var bubble: Label = $Bubble
@@ -55,6 +58,8 @@ var _home: Vector2
 var _state_time: float = 0.0
 var _wander_target: Vector2
 var _wander_time: float = 0.0
+## Heading to a noise it heard (walks there faster than a wander).
+var _investigating: bool = false
 var _panic_dir: Vector2 = Vector2.RIGHT
 var _panic_turn_time: float = 0.0
 var _anim_time: float = 0.0
@@ -89,6 +94,7 @@ func _ready() -> void:
 	_look_timer = randf_range(data.look_around_min, data.look_around_max)
 	_build_view_cone()
 	EventBus.player_booed.connect(_on_player_booed)
+	EventBus.noise_made.connect(_on_noise_made)
 
 
 func _physics_process(delta: float) -> void:
@@ -135,14 +141,14 @@ func _process_idle(delta: float) -> void:
 
 	if data.afraid_of_player and sees_player:
 		var away: Vector2 = (global_position - _player.global_position).normalized()
-		velocity = away * data.move_speed * 1.4
+		velocity = away * data.move_speed * speed_scale * 1.4
 	elif _hide_spot != null:
 		_walk_to_hiding_spot(delta)
 	elif data.can_move:
 		_wander_time -= delta
 		if global_position.distance_to(_wander_target) < 6.0 or _wander_time <= 0.0:
 			_pick_wander_target()
-		velocity = global_position.direction_to(_wander_target) * data.move_speed * 0.6
+		velocity = global_position.direction_to(_wander_target) * data.move_speed * speed_scale * (1.1 if _investigating else 0.6)
 	else:
 		velocity = Vector2.ZERO
 
@@ -177,7 +183,7 @@ func _process_windup(delta: float) -> void:
 	# Harder: it doesn't just stand there - it comes at you while winding up.
 	var to_target: Vector2 = _target.global_position - global_position
 	if data.can_move and can_chase and to_target.length() > 36.0 and not LagController.is_frozen:
-		velocity = to_target.normalized() * data.move_speed * 0.9
+		velocity = to_target.normalized() * data.move_speed * speed_scale * 0.9
 	# Lag freeze = wind-up pauses. That's the dodge window.
 	if LagController.is_frozen:
 		_state_time -= delta
@@ -343,7 +349,7 @@ func _find_visible_target() -> Node2D:
 
 
 func _sight() -> float:
-	return data.notice_range * GameManager.monster_sight_scale
+	return data.notice_range * GameManager.monster_sight_scale * sight_scale
 
 
 ## Turn to look at a point (used by tests and scripted moments).
@@ -428,7 +434,22 @@ func _reset_visuals() -> void:
 		sprite.texture = data.frames[0]
 
 
+## Heard a creaky board / a trap snap: walk over to look. Monsters that stay put (seated
+## guests, hiders) and ones busy scaring or switched off ignore it.
+func _on_noise_made(at: Vector2, radius: float) -> void:
+	if state != State.IDLE or not data.can_move or not can_chase or _hide_spot != null:
+		return
+	if global_position.distance_to(at) > radius:
+		return
+	_wander_target = at
+	_wander_time = 8.0
+	_investigating = true
+	face_towards(at)
+	FloatingText.spawn(self, global_position + Vector2(0, -34), "?", Color(1.0, 0.9, 0.3), 20)
+
+
 func _pick_wander_target() -> void:
+	_investigating = false
 	_wander_target = _home + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(0.0, data.wander_radius * wander_scale)
 	_wander_time = randf_range(1.5, 3.5)
 
@@ -503,8 +524,8 @@ func _walk_to_hiding_spot(delta: float) -> void:
 	if not is_instance_valid(_hide_spot) or not _hide_spot.is_free_for(self) or _hide_walk_time > 6.0:
 		_give_up_hiding_spot()  # taken, or stuck behind furniture: try again later
 		return
-	velocity = global_position.direction_to(_hide_spot.global_position) * data.move_speed
-	if global_position.distance_to(_hide_spot.global_position) < _hide_spot.reach * 0.6:
+	velocity = global_position.direction_to(_hide_spot.global_position) * data.move_speed * speed_scale
+	if global_position.distance_to(_hide_spot.global_position) < _hide_spot.reach * 0.75:
 		_enter_hiding_spot()
 
 

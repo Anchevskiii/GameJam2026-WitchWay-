@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_eifr8"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_b62kw"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uq272"]
+atlas = ExtResource("2_b62kw")
+region = Rect2(424, 516, 80, 120)
+
+[resource]
+script = ExtResource("1_eifr8")
+display_name = "Rug Red Tall"
+texture = SubResource("AtlasTexture_uq272")
+kind = 3
+footprint = Vector2i(3, 4)
+hideable = false
+searchable = false
+light_color = Color(0, 0, 0, 0)

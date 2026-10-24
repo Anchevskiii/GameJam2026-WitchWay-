@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=33 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/levels/room_base.tscn" id="1_base"]
 [ext_resource type="Resource" path="res://data/npcs/bat.tres" id="2_r"]
@@ -8,33 +8,47 @@
 [ext_resource type="Resource" path="res://data/npcs/tired_vampire.tres" id="6_r"]
 [ext_resource type="Resource" path="res://data/npcs/ghost.tres" id="7_r"]
 [ext_resource type="Resource" path="res://data/npcs/jack_o_lantern.tres" id="8_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/cupboard.png" id="9_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/bookshelf.png" id="10_r"]
 [ext_resource type="Texture2D" path="res://assets/sprites/objects/dining_table.png" id="11_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/lamp.png" id="12_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/clock.png" id="13_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/plant.png" id="14_r"]
 [ext_resource type="Texture2D" path="res://assets/sprites/objects/cobweb.png" id="15_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/rug.png" id="16_r"]
 [ext_resource type="Texture2D" path="res://assets/sprites/objects/pumpkin.png" id="17_r"]
 [ext_resource type="Texture2D" path="res://assets/sprites/objects/bones.png" id="18_r"]
 [ext_resource type="Texture2D" path="res://assets/sprites/objects/candles.png" id="19_r"]
+[ext_resource type="Resource" path="res://data/furniture/cabinet_glass.tres" id="f_cabinet_glass"]
+[ext_resource type="Resource" path="res://data/furniture/chair_dining_l.tres" id="f_chair_dining_l"]
+[ext_resource type="Resource" path="res://data/furniture/chair_dining_r.tres" id="f_chair_dining_r"]
+[ext_resource type="Resource" path="res://data/furniture/cushion_yellow.tres" id="f_cushion_yellow"]
+[ext_resource type="Resource" path="res://data/furniture/drawers_row.tres" id="f_drawers_row"]
+[ext_resource type="Resource" path="res://data/furniture/dresser_wide.tres" id="f_dresser_wide"]
+[ext_resource type="Resource" path="res://data/furniture/floorlamp_cream.tres" id="f_floorlamp_cream"]
+[ext_resource type="Resource" path="res://data/furniture/fruit_red.tres" id="f_fruit_red"]
+[ext_resource type="Resource" path="res://data/furniture/garland.tres" id="f_garland"]
+[ext_resource type="Resource" path="res://data/furniture/painting_fire.tres" id="f_painting_fire"]
+[ext_resource type="Resource" path="res://data/furniture/painting_green.tres" id="f_painting_green"]
+[ext_resource type="Resource" path="res://data/furniture/plant_tree.tres" id="f_plant_tree"]
+[ext_resource type="Resource" path="res://data/furniture/portrait_monster.tres" id="f_portrait_monster"]
+[ext_resource type="Resource" path="res://data/furniture/rug_red_wide.tres" id="f_rug_red_wide"]
+[ext_resource type="Resource" path="res://data/furniture/sideboard_lamp.tres" id="f_sideboard_lamp"]
+[ext_resource type="Resource" path="res://data/furniture/table_light.tres" id="f_table_light"]
+[ext_resource type="Resource" path="res://data/furniture/wardrobe.tres" id="f_wardrobe"]
+[ext_resource type="Resource" path="res://data/furniture/window_red.tres" id="f_window_red"]
+[ext_resource type="Resource" path="res://data/themes/dining.tres" id="theme"]
 
 [node name="DiningRoom" instance=ExtResource("1_base")]
 room_title = "The Dining Room"
 objective = "Scares make the house GLITCH. Crash it (100%) and the exit door (top right) fails to render. Then RUN."
 layout = "################################
-#o...K...L...O...W.#.W........o#
-#..................#.....j.....D
-#..................#...........#
-#...b.............Q#L..........#
-#.....h..w...v.....#.....j.....#
-#W.....T.c..T..G...#...........#
-#......g...b.......#####.#######
-#.............................u#
-#...&.........c..W.#...........#
-#....&.............#.....j.....#
-#o.P....r.....Q....#..n.......Q#
+####1###2##1#3#4#######1##5#3###
+#QK+.S++.H+.R++.W+L#QW+.K+.S++Q#
+#..................#.....jr....D
+#..................#......AM+Z.#
+#..fb.............Q#L.....A++Z.#
+#....rh..wr..v.....#.....j.....#
+#W+....T.c..T..G...#...........#
+#......g...b.......#####.###3###
+#.....................L....R++u#
+#...&.........c..W+#...........#
+#....&.y...........#.....j.....#
+#o.P..........Q....#..n.......Q#
 ################################"
 npc_legend = {
 "b": ExtResource("2_r"),
@@ -45,19 +59,11 @@ npc_legend = {
 "g": ExtResource("7_r"),
 "j": ExtResource("8_r")
 }
-hide_legend = {
-"W": ExtResource("9_r"),
-"K": ExtResource("10_r")
-}
 decor_legend = {
-"T": ExtResource("11_r"),
-"L": ExtResource("12_r"),
-"O": ExtResource("13_r"),
-"Q": ExtResource("14_r")
+"T": ExtResource("11_r")
 }
 floor_decor_legend = {
 "o": ExtResource("15_r"),
-"r": ExtResource("16_r"),
 "u": ExtResource("17_r"),
 "n": ExtResource("18_r")
 }
@@ -72,3 +78,27 @@ npcs_hide = false
 npcs_chase = false
 ambient_color = Color(0.82, 0.76, 0.88, 1)
 intro_lines = Array[String](["The Dining Room. Built in one weekend. Completely unoptimized.", "Every scare makes the house glitch. Glitch it to 100% and it crashes - the exit door stops rendering.", "Surprise one dinner guest while nobody's looking, or jump out of a cupboard. Panicking guests scare each other, and every dropped prop costs CPU."])
+furniture_legend = {
+"Q": ExtResource("f_plant_tree"),
+"K": ExtResource("f_cabinet_glass"),
+"S": ExtResource("f_dresser_wide"),
+"H": ExtResource("f_sideboard_lamp"),
+"R": ExtResource("f_drawers_row"),
+"W": ExtResource("f_wardrobe"),
+"L": ExtResource("f_floorlamp_cream"),
+"M": ExtResource("f_table_light"),
+"A": ExtResource("f_chair_dining_r"),
+"Z": ExtResource("f_chair_dining_l"),
+"r": ExtResource("f_rug_red_wide"),
+"f": ExtResource("f_fruit_red"),
+"y": ExtResource("f_cushion_yellow")
+}
+wall_decor_legend = {
+"1": ExtResource("f_window_red"),
+"2": ExtResource("f_painting_fire"),
+"3": ExtResource("f_garland"),
+"4": ExtResource("f_portrait_monster"),
+"5": ExtResource("f_painting_green")
+}
+default_theme = ExtResource("theme")
+traps = [[Vector2i(10, 9), "creak"], [Vector2i(14, 4), "bear"]]

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_pmcsw"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_nb5w8"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1253j"]
+atlas = ExtResource("2_nb5w8")
+region = Rect2(0, 1834, 96, 40)
+
+[resource]
+script = ExtResource("1_pmcsw")
+display_name = "Drawers Row"
+texture = SubResource("AtlasTexture_1253j")
+kind = 0
+footprint = Vector2i(3, 1)
+hideable = false
+searchable = true
+light_color = Color(0, 0, 0, 0)

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_l5s81"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_5asp6"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c1777"]
+atlas = ExtResource("2_5asp6")
+region = Rect2(448, 1894, 32, 74)
+
+[resource]
+script = ExtResource("1_l5s81")
+display_name = "China Cabinet"
+texture = SubResource("AtlasTexture_c1777")
+kind = 0
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = true
+light_color = Color(0, 0, 0, 0)

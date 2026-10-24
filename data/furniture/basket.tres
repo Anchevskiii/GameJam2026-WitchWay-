@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_r886n"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_6grdv"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nd3n4"]
+atlas = ExtResource("2_6grdv")
+region = Rect2(2, 2200, 30, 32)
+
+[resource]
+script = ExtResource("1_r886n")
+display_name = "Basket"
+texture = SubResource("AtlasTexture_nd3n4")
+kind = 1
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = true
+light_color = Color(0, 0, 0, 0)

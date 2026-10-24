@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="RoomTheme" load_steps=26 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_u4rrc"]
+[ext_resource type="Resource" path="res://data/furniture/lamp_red.tres" id="2_30pu3"]
+[ext_resource type="Resource" path="res://data/furniture/plant_small.tres" id="3_uuqv3"]
+[ext_resource type="Resource" path="res://data/furniture/nightstand_lamp.tres" id="4_mdib4"]
+[ext_resource type="Resource" path="res://data/furniture/nightstand_plant.tres" id="5_jxjlc"]
+[ext_resource type="Resource" path="res://data/furniture/bed_double_purple.tres" id="6_bshnd"]
+[ext_resource type="Resource" path="res://data/furniture/bed_purple.tres" id="7_gcml2"]
+[ext_resource type="Resource" path="res://data/furniture/cushion_blue.tres" id="8_fja0p"]
+[ext_resource type="Resource" path="res://data/furniture/cushion_yellow.tres" id="9_3pec3"]
+[ext_resource type="Resource" path="res://data/furniture/books_floor.tres" id="10_hcy0r"]
+[ext_resource type="Resource" path="res://data/furniture/wardrobe_purple.tres" id="11_fseoe"]
+[ext_resource type="Resource" path="res://data/furniture/vanity.tres" id="12_dh074"]
+[ext_resource type="Resource" path="res://data/furniture/wardrobe_glass.tres" id="13_ge5hb"]
+[ext_resource type="Resource" path="res://data/furniture/dresser.tres" id="14_j2au5"]
+[ext_resource type="Resource" path="res://data/furniture/rug_blue_small.tres" id="15_28080"]
+[ext_resource type="Resource" path="res://data/furniture/rug_red_small.tres" id="16_reims"]
+[ext_resource type="Script" path="res://scripts/resources/room_theme.gd" id="17_bgodc"]
+[ext_resource type="Resource" path="res://data/furniture/mirror_stand.tres" id="18_xslh8"]
+[ext_resource type="Resource" path="res://data/furniture/vase_b.tres" id="19_owafe"]
+[ext_resource type="Resource" path="res://data/furniture/cabinet_small.tres" id="20_whlg1"]
+[ext_resource type="Resource" path="res://data/furniture/window_curtains.tres" id="21_ux85y"]
+[ext_resource type="Resource" path="res://data/furniture/painting_flower.tres" id="22_wsxwe"]
+[ext_resource type="Resource" path="res://data/furniture/mirror_small.tres" id="23_35dxh"]
+[ext_resource type="Resource" path="res://data/furniture/garland.tres" id="24_ma4k6"]
+[ext_resource type="Resource" path="res://data/furniture/portrait_monster.tres" id="25_th5l1"]
+
+[resource]
+script = ExtResource("17_bgodc")
+display_name = "Bedroom"
+wallpaper = 9
+floor_pattern = 0
+north_pieces = Array[ExtResource("1_u4rrc")]([ExtResource("11_fseoe"), ExtResource("12_dh074"), ExtResource("13_ge5hb"), ExtResource("14_j2au5")])
+wall_decor = Array[ExtResource("1_u4rrc")]([ExtResource("21_ux85y"), ExtResource("22_wsxwe"), ExtResource("23_35dxh"), ExtResource("24_ma4k6"), ExtResource("25_th5l1")])
+side_pieces = Array[ExtResource("1_u4rrc")]([ExtResource("3_uuqv3"), ExtResource("18_xslh8"), ExtResource("19_owafe"), ExtResource("20_whlg1")])
+center_pieces = Array[ExtResource("1_u4rrc")]([])
+rugs = Array[ExtResource("1_u4rrc")]([ExtResource("15_28080"), ExtResource("16_reims")])
+feature_pieces = Array[ExtResource("1_u4rrc")]([ExtResource("6_bshnd"), ExtResource("7_gcml2")])
+feature_flank = Array[ExtResource("1_u4rrc")]([ExtResource("4_mdib4"), ExtResource("5_jxjlc")])
+accent_pieces = Array[ExtResource("1_u4rrc")]([ExtResource("2_30pu3"), ExtResource("3_uuqv3")])
+set_in_front_of_feature = true
+floor_clutter = Array[ExtResource("1_u4rrc")]([ExtResource("8_fja0p"), ExtResource("9_3pec3"), ExtResource("10_hcy0r")])

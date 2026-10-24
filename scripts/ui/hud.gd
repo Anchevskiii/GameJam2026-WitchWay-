@@ -19,6 +19,7 @@ const CPU_OVERLOAD: Color = Color(1.0, 0.0, 0.86)
 @onready var narrator_text: Label = $Control/NarratorBox/VBoxContainer/NarratorText
 
 var _cpu_fill: StyleBoxFlat
+var _keys_label: Label
 var _narrator_tween: Tween
 
 
@@ -32,6 +33,14 @@ func _ready() -> void:
 	EventBus.cpu_overload_changed.connect(_on_cpu_overload_changed)
 	EventBus.room_entered.connect(_on_room_entered)
 	EventBus.narrator_line_changed.connect(_on_narrator_line_changed)
+	# Keys for a locked exit: shown only on floors that have them.
+	_keys_label = Label.new()
+	_keys_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	_keys_label.visible = false
+	room_label.get_parent().add_child(_keys_label)
+	room_label.get_parent().move_child(_keys_label, room_label.get_index())
+	EventBus.keys_changed.connect(_on_keys_changed)
+	EventBus.house_awakened.connect(func() -> void: _keys_label.text = "ALL KEYS - GET OUT!")
 	_on_sanity_changed(GameManager.current_sanity, GameManager.max_sanity)
 	_on_cpu_overload_changed(GameManager.current_cpu_overload, GameManager.max_cpu_overload)
 
@@ -64,6 +73,11 @@ func _on_cpu_overload_changed(current: float, max_val: float) -> void:
 	else:
 		cpu_label.text = "STABLE"
 		_cpu_fill.bg_color = CPU_CALM
+
+
+func _on_keys_changed(found: int, needed: int) -> void:
+	_keys_label.visible = needed > 0
+	_keys_label.text = "KEYS %d/%d" % [found, needed]
 
 
 func _on_room_entered(room_title: String, objective: String) -> void:
