@@ -39,6 +39,7 @@ const WALLPAPER_ROW: int = 2       ## 1-tile wall face (wall 1 tile thick)
 const FLOOR_ROW: int = 12
 const FACE_BOTTOM_ROW: int = 22    ## 2-tile wall face, lower half (wall 2+ tiles thick)
 const FACE_TOP_ROW: int = 32       ## 2-tile wall face, upper half with the ceiling band
+const EDGE_ROW: int = 42           ## junction patches for the WallEdges layer (T and L joints)
 ## Wall decorations keep this many pixels away from corners and doorways.
 const WALL_DECOR_MARGIN: float = 3.0
 
@@ -124,6 +125,7 @@ static var _visited_scenes: Dictionary = {}
 @onready var floor_layer: TileMapLayer = $Floor
 @onready var wall_layer: TileMapLayer = $Walls
 @onready var wall_top_layer: TileMapLayer = $WallTops
+@onready var wall_edge_layer: TileMapLayer = $WallEdges
 @onready var glitch_layer: TileMapLayer = $GlitchWalls
 @onready var decor_root: Node2D = $Decor
 @onready var props_root: Node2D = $Props
@@ -255,6 +257,11 @@ func _paint_wall_top(cell: Vector2i) -> void:
 		if _looks_like_wall(_char_at(above)):
 			_wall_layer_for(cell).set_cell(cell, TILE_SOURCE, Vector2i(column, FACE_BOTTOM_ROW + wallpaper))
 			_wall_layer_for(above).set_cell(above, TILE_SOURCE, Vector2i(column, FACE_TOP_ROW + wallpaper))
+			# A wall comes down onto this one from above: open the band's top line where it joins.
+			var up: Vector2i = above + Vector2i.UP
+			if _looks_solid(up):
+				var corners: int = (0 if _looks_solid(up + Vector2i.LEFT) else 1) | (0 if _looks_solid(up + Vector2i.RIGHT) else 2)
+				wall_edge_layer.set_cell(above, TILE_SOURCE, Vector2i(corners, EDGE_ROW))
 		else:
 			_wall_layer_for(cell).set_cell(cell, TILE_SOURCE, Vector2i(column, WALLPAPER_ROW + wallpaper))
 		return
@@ -263,17 +270,32 @@ func _paint_wall_top(cell: Vector2i) -> void:
 	var mask: int = 0
 	if _looks_solid(cell + Vector2i.UP):
 		mask |= 1
-	if _looks_solid(cell + Vector2i.RIGHT):
+	if _ceiling_joins(cell + Vector2i.RIGHT):
 		mask |= 2
 	if _looks_solid(below):
 		mask |= 4
-	if _looks_solid(cell + Vector2i.LEFT):
+	if _ceiling_joins(cell + Vector2i.LEFT):
 		mask |= 8
 	_wall_layer_for(cell).set_cell(cell, TILE_SOURCE, Vector2i(mask % 8, CEILING_ROW + mask / 8))
+	# Beside a face top, the ceiling band flows straight into this ceiling (T and L joints).
+	var band: int = (1 if _is_face_top(cell + Vector2i.LEFT) else 0) | (2 if _is_face_top(cell + Vector2i.RIGHT) else 0)
+	if band > 0:
+		wall_edge_layer.set_cell(cell, TILE_SOURCE, Vector2i(3 + band, EDGE_ROW))
+
+
+## Does ceiling continue into the wall beside it? Not if that wall shows its wallpapered
+## face there (we look down onto it), so the ceiling gets an edge on that side.
+func _ceiling_joins(side: Vector2i) -> bool:
+	if not _looks_solid(side):
+		return false
+	var is_face: bool = _looks_like_wall(_char_at(side)) and not _looks_solid(side + Vector2i.DOWN)
+	return not is_face and not _is_face_top(side)
 
 
 ## True for the upper tile of a 2-tile wall face (a wall whose wall below has floor below it).
 func _is_face_top(cell: Vector2i) -> bool:
+	if not _looks_like_wall(_char_at(cell)):
+		return false
 	var below: Vector2i = cell + Vector2i.DOWN
 	return _looks_like_wall(_char_at(below)) and not _looks_solid(below + Vector2i.DOWN)
 
