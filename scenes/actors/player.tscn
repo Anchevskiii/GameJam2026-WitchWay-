@@ -30,7 +30,7 @@ color = Color(1, 0.96, 0.88, 1)
 energy = 1.45
 range_item_cull_mask = 3
 shadow_item_cull_mask = 1
-shadow_enabled = true
+shadow_enabled = false
 texture = ExtResource("3_beam_tex")
 texture_scale = 1.0
 
@@ -39,7 +39,7 @@ color = Color(0.85, 0.8, 0.7, 1)
 energy = 0.5
 range_item_cull_mask = 3
 shadow_item_cull_mask = 1
-shadow_enabled = true
+shadow_enabled = false
 texture = ExtResource("5_glow")
 texture_scale = 0.45
 

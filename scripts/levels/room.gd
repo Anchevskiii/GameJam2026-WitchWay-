@@ -126,6 +126,53 @@ func _ready() -> void:
 	_visited_scenes[scene_file_path] = true
 
 
+var _entity_spawn_timer: float = 0.0
+const ENTITY_CHECK_INTERVAL: float = 12.0
+
+
+func _process(delta: float) -> void:
+	if not procedural or is_safe_room or GameManager.is_game_over:
+		return
+	_entity_spawn_timer += delta
+	if _entity_spawn_timer >= ENTITY_CHECK_INTERVAL:
+		_entity_spawn_timer = 0.0
+		_check_respawn_entities()
+
+
+func _check_respawn_entities() -> void:
+	var npcs: Array[Node] = get_tree().get_nodes_in_group("npcs")
+	var active_count: int = 0
+	for n in npcs:
+		var npc: Npc = n as Npc
+		if is_instance_valid(npc) and npc.state != Npc.State.DONE:
+			active_count += 1
+	
+	var desired_count: int = 1 if GameManager.current_level == 0 else (2 + mini(GameManager.current_level / 3, 3))
+	if active_count < desired_count and not npc_legend.is_empty() and is_instance_valid(player):
+		var spawn_candidates: Array[Vector2i] = []
+		for y in range(1, _layout_rows.size() - 1):
+			for x in range(1, _layout_rows[y].length() - 1):
+				var ch: String = _layout_rows[y][x]
+				if ch == "." or ch == "o" or ch == "r":
+					var world_p: Vector2 = cell_to_world(Vector2i(x, y))
+					if world_p.distance_to(player.global_position) > 180.0:
+						spawn_candidates.append(Vector2i(x, y))
+		if not spawn_candidates.is_empty():
+			var cell: Vector2i = spawn_candidates[randi() % spawn_candidates.size()]
+			var npc: Npc = NPC_SCENE.instantiate()
+			var keys: Array = npc_legend.keys()
+			var k: String = keys[randi() % keys.size()]
+			npc.data = npc_legend[k]
+			npc.load_in_radius = npc_load_radius
+			npc.wander_scale = npc_wander_scale
+			npc.can_hide = npcs_hide
+			npc.can_chase = npcs_chase
+			npc.windup_scale = npc_windup_scale
+			npc.damage_scale = npc_damage_scale
+			npc.position = cell_to_world(cell)
+			actors_root.add_child(npc)
+
+
 ## Copies HouseGenerator's output (property name -> value) onto this room.
 func _apply_generated(settings: Dictionary) -> void:
 	for key in settings:
@@ -158,10 +205,8 @@ func _build_from_layout() -> void:
 			match ch:
 				"#", "X":
 					wall_layer.set_cell(cell, TILE_SOURCE, WALL_TILE)
-					_spawn_wall_occluder(cell)
 				"a", "v":
 					wall_layer.set_cell(cell, TILE_SOURCE, WALL_TILE)
-					_spawn_wall_occluder(cell)
 					_spawn_from_legend(ch, cell)
 				"D":
 					wall_layer.set_cell(cell, TILE_SOURCE, WALL_TILE)
@@ -180,21 +225,6 @@ func _build_from_layout() -> void:
 				_:
 					_spawn_from_legend(ch, cell)
 
-
-func _spawn_wall_occluder(cell: Vector2i) -> void:
-	var occluder := LightOccluder2D.new()
-	occluder.position = cell_to_world(cell)
-	occluder.occluder_light_mask = 1
-	var poly := OccluderPolygon2D.new()
-	poly.cull_mode = OccluderPolygon2D.CULL_CLOCKWISE
-	poly.polygon = PackedVector2Array([
-		Vector2(-12, -12),
-		Vector2(12, -12),
-		Vector2(12, 12),
-		Vector2(-12, 12)
-	])
-	occluder.occluder = poly
-	decor_root.add_child(occluder)
 
 
 ## Spawns a bugged wall ("F") that looks identical to a normal brick wall,

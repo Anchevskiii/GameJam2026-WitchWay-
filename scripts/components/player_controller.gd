@@ -26,9 +26,9 @@ const MASK_TEXTURE: Texture2D = preload("res://assets/sprites/characters/player_
 
 @export_group("Mask scare")
 ## How close a monster must be for a BOO to reach it, in pixels.
-@export var boo_range: float = 80.0
+@export var boo_range: float = 120.0
 ## Jumping out of a hiding spot reaches further (measured from the hiding spot).
-@export var jump_out_range: float = 170.0
+@export var jump_out_range: float = 200.0
 ## Speed of the lunge when jumping out of hiding.
 @export var jump_out_speed: float = 520.0
 ## Seconds between BOOs, so the player can't spam.

@@ -82,7 +82,7 @@ func generate(level: int, seed_value: int) -> Dictionary:
 
 
 func _try_generate(tier: int, kind: Kind) -> Dictionary:
-	var cols: int = 3
+	var cols: int = 2 if tier == 0 else 3
 	var rows: int = 2 if tier < 2 else 3
 	var room_w: int = 9 + mini(tier, 2)
 	var room_h: int = 7 + mini(tier, 2)
@@ -110,10 +110,10 @@ func _try_generate(tier: int, kind: Kind) -> Dictionary:
 				for x in range(rx, rx + room_w):
 					_grid[y][x] = "."
 			var r_type: String = "parlor"
-			if r == rows - 1 and c == 1:
-				r_type = "safe" # South center = Entrance Foyer (Safe Room)
-			elif r == 0 and c == 1:
-				r_type = "exit" # North center = Exit Sanctuary
+			if r == rows - 1 and c == 0:
+				r_type = "safe" # South-west = Entrance Foyer (Safe Room)
+			elif r == 0 and c == cols - 1:
+				r_type = "exit" # North-east = Exit Sanctuary
 			else:
 				r_type = room_types[clampi(1 + (room_idx % 5), 1, 5)]
 			
@@ -177,14 +177,14 @@ func _try_generate(tier: int, kind: Kind) -> Dictionary:
 	# 7. Place wall-mounted air vents
 	_place_wall_air_vents(tier)
 
-	# 8. Place monsters in non-safe rooms
-	var monster_count: int = 2 + mini(tier, 4)
+	# 8. Place monsters in non-safe rooms (gentle start on early tiers!)
+	var monster_count: int = 1 + mini(tier, 3)
 	_place_monsters(monster_count, tier, kind)
 
-	# 9. Place masks & kids
+	# 9. Place masks & kids (masks spawn frequently!)
+	_place_masks()
 	if tier >= 1:
 		_place_kids()
-	_place_masks()
 
 	# 10. Validate reachability
 	if not _is_valid(kind):
@@ -197,32 +197,27 @@ func _try_generate(tier: int, kind: Kind) -> Dictionary:
 
 func _build_ground_floor() -> Dictionary:
 	var rows: Array[String] = [
-		"###############D################",
-		"#o..Z..o#............#o..l....o#",
-		"#.......#....c...c...#.........#",
-		"#...Z...#............#....T....#",
-		"#a......F............#...A.A...#",
-		"#...n...#............#.........#",
-		"#.......#....c...c...#....c....#",
-		"#o.....o#............#o.......o#",
-		"####..########..##########..####",
-		"#..............................#",
-		"#..C...t......O...V.....u......#",
-		"#..A...........................#",
-		"#........g...r.......g.........#",
-		"#..............................#",
-		"####..########..##########..####",
-		"#o.....o#o....l.....o#o...S...o#",
-		"#..B....#............#..S...S..#",
-		"#.......#.....r......#....K....#",
-		"#..W....#............#....t..A.#",
-		"#.......#.....P......#.........#",
-		"#o.....o#o..........o#o...c...o#",
-		"################################"
+		"################D#######",
+		"#o..Z..o#..............#",
+		"#.......#......c.......#",
+		"#...Z...#..............#",
+		"#a......F..............#",
+		"#...n...#..............#",
+		"#.......#......c.......#",
+		"#o.....o#..............#",
+		"#####..###########..####",
+		"#o..l..o#o...S..o#.....#",
+		"#.......#..S...S.#.....#",
+		"#...r...#....K...#.....#",
+		"#..................M...#",
+		"#...P........t...#.....#",
+		"#............A...#..g..#",
+		"#o.....o#o...c..o#.....#",
+		"########################"
 	]
 	return {
 		"room_title": "The Haunted Manor: Ground Floor",
-		"objective": "Search the dark manor rooms for the Golden Key to unlock the North Exit Door.",
+		"objective": "Explore the Study for the Golden Key and unlock the North Exit Door.",
 		"layout": "\n".join(rows),
 		"npc_legend": _load_all(NPC_PATHS, ""),
 		"hide_legend": _load_all(HIDE_ITEMS, OBJ),
@@ -243,7 +238,7 @@ func _build_ground_floor() -> Dictionary:
 		"cpu_load_multiplier": 1.0,
 		"intro_lines": [
 			"Floor 1: The Haunted Manor Ground Floor. You start safely in the entrance foyer.",
-			"Explore the dark rooms with your flashlight [F]. Locate the Golden Skeleton Key in the Library to unlock the Exit Door."
+			"Explore the Study for the Golden Key [K] and Disguise Mask [M] to unlock the North Exit Door."
 		]
 	}
 
@@ -388,10 +383,15 @@ func _place_kids() -> void:
 
 
 func _place_masks() -> void:
-	for i in range(1, mini(3, _rooms.size() - 1)):
+	var mask_count: int = clampi(2 + _rooms.size() / 3, 2, 4)
+	var placed: int = 0
+	for i in range(1, _rooms.size()):
+		if placed >= mask_count:
+			break
 		var cell: Vector2i = _random_free_room_cell(_rooms[i])
 		if cell.x >= 0:
 			_put(cell, "M")
+			placed += 1
 
 
 func _random_free_room_cell(room: Dictionary) -> Vector2i:

@@ -134,7 +134,8 @@ func _physics_process(delta: float) -> void:
 			bubble.visible = false
 			if data.after_scare != NpcData.AfterScare.FALL_APART:
 				sprite.visible = false
-			if _state_time >= data.recover_time:
+			var actual_recover_time: float = minf(data.recover_time, 4.5)
+			if _state_time >= actual_recover_time:
 				_recover()
 		State.HIDING:
 			_process_hiding()
@@ -342,23 +343,29 @@ func _drop_loot() -> float:
 	return prop_data.load_weight
 
 
-func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> void:
+func _on_player_booed(origin: Vector2, boo_reach: float, from_hiding: bool) -> void:
 	if state == State.PANIC or state == State.DONE:
 		return
 	# You spotted the peeking head and BOO'd the cupboard: the ambusher gets ambushed.
 	if state == State.HIDING:
-		if global_position.distance_to(origin) <= boo_range + 16.0:
+		if global_position.distance_to(origin) <= boo_reach + 24.0:
 			_leave_hiding_spot(origin.direction_to(global_position))
 			get_scared("someone who saw its head peeking out")
 		return
-	if global_position.distance_to(origin) > boo_range or not _has_line_of_sight(origin, global_position):
+	if global_position.distance_to(origin) > boo_reach or not _has_line_of_sight(origin, global_position):
 		return
-	# The whole trick: a scare only works as a SURPRISE. Jumping out of hiding or wearing the 6s Mask Pickup always works!
+	
+	# Check if player has mask, jumped from hiding, or if flashlight is blinding the monster
 	var player_masked: bool = _player != null and _player.get("is_masked")
-	if not from_hiding and not player_masked and (state == State.WINDUP or can_see_player()):
-		Narrator.say_event("boo_seen")
+	var player_flashlight_blinding: bool = _player != null and _player.has_method("is_facing_target") and _player.is_facing_target(global_position)
+	
+	# Scaring works from hiding, masked, with flashlight blinding, when lurking/idle, or counter-scaring in early windup
+	if from_hiding or player_masked or player_flashlight_blinding or state == State.IDLE or state == State.CORNER_LURK or (state == State.WINDUP and _state_time < data.windup_time * 0.75):
+		get_scared("a scary surprise")
 		return
-	get_scared("a masked stranger")
+		
+	# Only if monster is already mid-strike in late windup and player has no mask or flashlight
+	Narrator.say_event("boo_seen")
 
 
 ## True if the player is inside this NPC's view cone, in range, not hidden, and
@@ -472,6 +479,9 @@ func _apply_after_scare() -> void:
 
 func _recover() -> void:
 	_reset_visuals()
+	sprite.modulate.a = 0.0
+	var tw := create_tween()
+	tw.tween_property(sprite, "modulate:a", data.tint.a, 0.6)
 	_enter(State.IDLE)
 	_pick_wander_target()
 
