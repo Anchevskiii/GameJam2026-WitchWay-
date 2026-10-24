@@ -339,8 +339,9 @@ func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> v
 		return
 	if global_position.distance_to(origin) > boo_range or not _has_line_of_sight(origin, global_position):
 		return
-	# The whole trick: a scare only works as a SURPRISE. Jumping out of hiding always is one.
-	if not from_hiding and (state == State.WINDUP or can_see_player()):
+	# The whole trick: a scare only works as a SURPRISE. Jumping out of hiding or wearing the 6s Mask Pickup always works!
+	var player_masked: bool = _player != null and _player.get("is_masked")
+	if not from_hiding and not player_masked and (state == State.WINDUP or can_see_player()):
 		bubble.visible = true
 		bubble.text = "nice try"
 		get_tree().create_timer(0.9).timeout.connect(_hide_bubble_if_calm)

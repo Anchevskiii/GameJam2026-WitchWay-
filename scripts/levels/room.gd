@@ -187,7 +187,7 @@ func _spawn_from_legend(ch: String, cell: Vector2i) -> void:
 		var lamp: WallLamp = LAMP_SCENE.instantiate()
 		lamp.position = cell_to_world(cell)
 		decor_root.add_child(lamp)
-	elif ch == "v":
+	elif ch == "v" or ch == "a":
 		var vent: AirVent = VENT_SCENE.instantiate()
 		vent.position = cell_to_world(cell)
 		decor_root.add_child(vent)
