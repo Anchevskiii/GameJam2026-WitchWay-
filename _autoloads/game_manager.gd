@@ -62,6 +62,12 @@ var _low_sanity_warned: bool = false
 func _ready() -> void:
 	is_game_active = false
 	reset_level_state()
+	EventBus.npc_scared.connect(_on_npc_scared)
+
+
+func _on_npc_scared(_npc_name: String) -> void:
+	# Laughing off a successful scare restores a bit of sanity!
+	restore_sanity(10.0)
 
 
 func _process(delta: float) -> void:
@@ -92,12 +98,14 @@ func _set_cpu_load(value: float) -> void:
 
 
 ## Removes sanity. Call this whenever something scares the player.
-func scare_player(amount: float, source_name: String = "") -> void:
+## is_ambush = true deals bonus shock damage (jumping out of wardrobe, corner ambush, dark jumpscare).
+func scare_player(amount: float, source_name: String = "", is_ambush: bool = false) -> void:
 	if is_game_over or is_safe_room or amount <= 0.0:
 		return
-	current_sanity = clampf(current_sanity - amount, 0.0, max_sanity)
+	var final_amount: float = amount * (1.5 if is_ambush else 1.0)
+	current_sanity = clampf(current_sanity - final_amount, 0.0, max_sanity)
 	EventBus.sanity_changed.emit(current_sanity, max_sanity)
-	EventBus.player_scared.emit(amount, source_name)
+	EventBus.player_scared.emit(final_amount, source_name)
 
 	if current_sanity <= max_sanity * 0.25 and not _low_sanity_warned:
 		_low_sanity_warned = true

@@ -24,6 +24,9 @@ const MISSING_FAKE_TILE: Vector2i = Vector2i(4, 0)
 const NPC_SCENE: PackedScene = preload("res://scenes/actors/npc.tscn")
 const DOOR_SCENE: PackedScene = preload("res://scenes/objects/bugs/glitch_door.tscn")
 const KID_SCENE: PackedScene = preload("res://scenes/actors/kid.tscn")
+const LAMP_SCENE: PackedScene = preload("res://scenes/objects/wall_lamp.tscn")
+const VENT_SCENE: PackedScene = preload("res://scenes/objects/traps_scares/air_vent.tscn")
+const MASK_SCENE: PackedScene = preload("res://scenes/objects/mask_pickup.tscn")
 ## Kids that start within this distance of each other form one group.
 const KID_GROUP_RANGE: float = 130.0
 const GLOW_TEXTURE: Texture2D = preload("res://assets/sprites/environment/light_radial.tres")
@@ -180,6 +183,18 @@ func _spawn_from_legend(ch: String, cell: Vector2i) -> void:
 		glow.energy = 0.9
 		glow.color = Color(1.0, 0.75, 0.4)
 		_spawn_floor_decor(light_legend[ch], cell).add_child(glow)
+	elif ch == "l":
+		var lamp: WallLamp = LAMP_SCENE.instantiate()
+		lamp.position = cell_to_world(cell)
+		decor_root.add_child(lamp)
+	elif ch == "v":
+		var vent: AirVent = VENT_SCENE.instantiate()
+		vent.position = cell_to_world(cell)
+		decor_root.add_child(vent)
+	elif ch == "M":
+		var mask_item: MaskPickup = MASK_SCENE.instantiate()
+		mask_item.position = cell_to_world(cell)
+		decor_root.add_child(mask_item)
 	else:
 		push_warning("Room '%s': unknown layout character '%s' at %s" % [room_title, ch, cell])
 

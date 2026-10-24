@@ -18,7 +18,7 @@ extends CharacterBody2D
 ##   DONE     DISABLED: greyed out and glitching with a countdown. Recovers after a while -> IDLE
 ## A BOO it can see coming does nothing. Wind-ups pause while LagController.is_frozen.
 
-enum State { IDLE, WINDUP, COOLDOWN, PANIC, DONE, HIDING }
+enum State { IDLE, WINDUP, COOLDOWN, PANIC, DONE, HIDING, CORNER_LURK }
 
 const MISSING_TEXTURE: Texture2D = preload("res://assets/sprites/environment/missing_texture.png")
 ## Panicking NPCs scare other NPCs within this distance.
@@ -72,6 +72,9 @@ var _time_since_hide: float = 0.0
 var _ambush_windup: bool = false
 ## Who the current wind-up is aimed at: the player or a Kid.
 var _target: Node2D = null
+## Ghost phasing mechanics:
+var _ghost_phase_timer: float = 0.0
+var _is_phased: bool = false
 
 
 func _ready() -> void:
@@ -84,6 +87,9 @@ func _ready() -> void:
 		push_error("Npc %s has no NpcData." % name)
 		set_physics_process(false)
 		return
+	if data.is_ghost or data.can_pass_walls:
+		collision_mask = 0
+		add_to_group("ghosts")
 	_reset_visuals()
 	_facing = 1.0 if randf() > 0.5 else -1.0
 	_look_timer = randf_range(data.look_around_min, data.look_around_max)
@@ -101,6 +107,7 @@ func _physics_process(delta: float) -> void:
 	_animate(delta)
 	_update_loaded_look()
 	_update_view_cone()
+	_update_ghost_phase(delta)
 	_state_time += delta
 	_time_since_hide += delta
 	match state:
@@ -124,7 +131,20 @@ func _physics_process(delta: float) -> void:
 		State.HIDING:
 			_process_hiding()
 			return  # sitting still inside the furniture: no physics movement
+		State.CORNER_LURK:
+			_process_corner_lurk()
 	move_and_slide()
+
+
+func _update_ghost_phase(delta: float) -> void:
+	if not (data.is_ghost or data.can_pass_walls) or state == State.DONE or state == State.HIDING:
+		return
+	_ghost_phase_timer += delta
+	if _ghost_phase_timer >= 4.0:
+		_ghost_phase_timer = 0.0
+		_is_phased = not _is_phased
+		var target_alpha: float = 0.15 if _is_phased else 0.9
+		create_tween().tween_property(sprite, "modulate:a", target_alpha, 0.7)
 
 
 # ---------------------------------------------------------------- states
@@ -159,6 +179,8 @@ func _process_idle(delta: float) -> void:
 		_give_up_hiding_spot()
 		_target = target
 		_enter(State.WINDUP)
+	elif data.hides_in_corners and can_hide and randf() < 0.015 and target == null and _time_since_hide >= data.hide_cooldown:
+		_enter(State.CORNER_LURK)
 	elif _wants_to_hide() and target == null:
 		_hide_spot = _find_hiding_spot()
 		if _hide_spot:
@@ -168,16 +190,30 @@ func _process_idle(delta: float) -> void:
 			_time_since_hide = 0.0  # nothing free nearby: look again after the cooldown
 
 
+func _process_corner_lurk() -> void:
+	velocity = Vector2.ZERO
+	if _player == null:
+		return
+	var dist: float = _distance_to_player()
+	if (dist <= data.ambush_range * 1.3 or can_see_player()) and not _player.get("is_masked"):
+		_ambush_windup = true
+		_target = _player
+		_enter(State.WINDUP)
+	elif _state_time >= data.hide_time:
+		_enter(State.IDLE)
+
+
 func _process_windup(delta: float) -> void:
 	velocity = Vector2.ZERO
-	if not is_instance_valid(_target) or (_target is Kid and not (_target as Kid).is_scareable()):
+	if not is_instance_valid(_target) or (_target is Kid and not (_target as Kid).is_scareable()) or (_target == _player and _player.get("is_masked")):
 		_enter(State.COOLDOWN)
 		return
 	face_towards(_target.global_position)
-	# Harder: it doesn't just stand there - it comes at you while winding up.
+	# Harder: it doesn't just stand there - it rushes at you while winding up.
 	var to_target: Vector2 = _target.global_position - global_position
-	if data.can_move and can_chase and to_target.length() > 36.0 and not LagController.is_frozen:
-		velocity = to_target.normalized() * data.move_speed * 0.9
+	var chase_speed: float = data.rush_speed if data.rush_speed > 0.0 else data.move_speed * 1.3
+	if data.can_move and can_chase and to_target.length() > 32.0 and not LagController.is_frozen:
+		velocity = to_target.normalized() * chase_speed
 	# Lag freeze = wind-up pauses. That's the dodge window.
 	if LagController.is_frozen:
 		_state_time -= delta
@@ -190,7 +226,7 @@ func _process_windup(delta: float) -> void:
 	# "B" -> "BO" -> "BOO" -> "BOO!" -> "BOO!!!" as the scare charges up.
 	var letters: int = maxi(1, ceili(minf(progress / 0.7, 1.0) * data.windup_text.length()))
 	bubble.text = data.windup_text.left(letters) + "!".repeat(int(maxf(progress - 0.7, 0.0) / 0.1))
-	if _state_time < 0.3:
+	if _state_time < 0.25:
 		bubble.text = "!"  # "spotted you" 
 	bubble.scale = Vector2.ONE * (0.8 + 0.6 * progress)
 
@@ -198,21 +234,25 @@ func _process_windup(delta: float) -> void:
 		bubble.text = "aww"
 		_enter(State.COOLDOWN)
 		return
-	if progress >= 1.0:
+	if progress >= 1.0 or (can_chase and to_target.length() <= 34.0):
 		_release_scare()
 
 
 func _release_scare() -> void:
 	bubble.text = data.windup_text + "!"
 	bubble.scale = Vector2.ONE * 1.6
-	if _target == _player and _player.get("is_hidden"):
-		bubble.text = "?"  # the player ducked into a hiding spot - miss!
+	if _target == _player and (_player.get("is_hidden") or _player.get("is_masked")):
+		bubble.text = "?"  # the player ducked into a hiding spot or put on a mask - miss!
 		_enter(State.COOLDOWN)
 		return
 	AudioManager.play(data.scare_sound, -4.0)
 	var in_range: bool = is_instance_valid(_target) and global_position.distance_to(_target.global_position) <= data.scare_range
 	if in_range and _target == _player:
-		GameManager.scare_player(data.scare_damage * damage_scale, data.display_name)
+		var is_ambush: bool = _ambush_windup
+		if _player and _player.has_method("is_facing_target") and _player.is_facing_target(global_position):
+			is_ambush = false
+		var dmg: float = (data.ambush_damage if is_ambush else data.scare_damage) * damage_scale
+		GameManager.scare_player(dmg, data.display_name, is_ambush)
 	elif in_range and _target is Kid:
 		(_target as Kid).get_scared(global_position, "a " + data.display_name)
 	_enter(State.COOLDOWN)
@@ -310,9 +350,9 @@ func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> v
 
 
 ## True if the player is inside this NPC's view cone, in range, not hidden, and
-## not behind a wall or furniture.
+## not behind a wall or furniture (or if wearing the disguise mask).
 func can_see_player() -> bool:
-	if _player == null or _player.get("is_hidden"):
+	if _player == null or _player.get("is_hidden") or _player.get("is_masked"):
 		return false
 	return can_see(_player)
 
@@ -327,6 +367,8 @@ func can_see(node: Node2D) -> bool:
 		var angle: float = absf(rad_to_deg(Vector2(_facing, 0.0).angle_to(to_node)))
 		if angle > data.view_half_angle:
 			return false
+	if data.can_pass_walls:
+		return true
 	return _has_line_of_sight(global_position, node.global_position)
 
 
@@ -377,6 +419,12 @@ func _enter(new_state: State) -> void:
 			bubble.visible = false
 			_ambush_windup = false
 			_reset_visuals()
+		State.CORNER_LURK:
+			bubble.visible = false
+			windup_light.enabled = false
+			sprite.modulate = data.tint.darkened(0.55)
+			if _view_cone:
+				_view_cone.visible = false
 		State.WINDUP:
 			bubble.visible = true
 			windup_light.enabled = true

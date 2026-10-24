@@ -21,8 +21,8 @@ const MASK_TEXTURE: Texture2D = preload("res://assets/sprites/characters/player_
 @export var turn_speed: float = 18.0
 @export var flashlight_energy: float = 1.4
 @export var enable_flashlight_flicker: bool = true
-@export var flicker_min_interval: float = 6.0
-@export var flicker_max_interval: float = 14.0
+@export var flicker_min_interval: float = 2.5
+@export var flicker_max_interval: float = 6.0
 
 @export_group("Mask scare")
 ## How close a monster must be for a BOO to reach it, in pixels.
@@ -42,10 +42,15 @@ const MASK_TEXTURE: Texture2D = preload("res://assets/sprites/characters/player_
 @onready var camera: Camera2D = $Camera2D
 @onready var glow_light: PointLight2D = $GlowLight
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var mask_bar: ProgressBar = get_node_or_null("MaskBar")
+@onready var chills_ring: PointLight2D = get_node_or_null("ChillsRing")
 @onready var _normal_texture: Texture2D = player_sprite.texture
 
 ## True while hiding in a cupboard/couch. Monsters can't see a hidden player.
 var is_hidden: bool = false
+## True while wearing the picked-up disguise mask (6s powerup from Floor 3+).
+var is_masked: bool = false
+var mask_time_left: float = 0.0
 var _hide_spot: HideSpot = null
 var _pre_hide_position: Vector2
 
@@ -59,6 +64,8 @@ var _boo_cooldown_left: float = 0.0
 var _flicker_timer: float = 0.0
 var _is_flickering: bool = false
 var _flicker_duration: float = 0.0
+var _dark_still_time: float = 0.0
+var _ghost_jumpscare_triggered: bool = false
 
 
 func _ready() -> void:
@@ -75,6 +82,9 @@ func _physics_process(delta: float) -> void:
 		velocity = velocity.lerp(Vector2.ZERO, friction * delta)
 		move_and_slide()
 		return
+
+	_handle_mask(delta)
+	_handle_ghost_chills(delta)
 
 	# Input is polled here (not _unhandled_input) so it also works inside the world SubViewport.
 	if Input.is_action_just_pressed("toggle_flashlight"):
@@ -104,6 +114,69 @@ func _physics_process(delta: float) -> void:
 	_handle_direction(delta)
 	_handle_flashlight_flicker(delta)
 	move_and_slide()
+
+
+func _handle_mask(delta: float) -> void:
+	if not is_masked:
+		return
+	mask_time_left -= delta
+	if mask_bar:
+		mask_bar.visible = true
+		mask_bar.value = mask_time_left
+	# While wearing the disguise mask, kids nearby get startled on sight!
+	for kid in get_tree().get_nodes_in_group("kids"):
+		var k: Kid = kid as Kid
+		if k.is_scareable() and global_position.distance_to(k.global_position) < 65.0:
+			k.get_scared(global_position, "a masked figure")
+	if mask_time_left <= 0.0:
+		is_masked = false
+		player_sprite.texture = _normal_texture
+		if mask_bar:
+			mask_bar.visible = false
+
+
+## Called only when picking up a MaskPickup item in the world (Floor 3+).
+func activate_disguise_mask(duration: float = 6.0) -> void:
+	is_masked = true
+	mask_time_left = duration
+	player_sprite.texture = MASK_TEXTURE
+	if mask_bar:
+		mask_bar.max_value = duration
+		mask_bar.value = duration
+		mask_bar.visible = true
+
+
+func _handle_ghost_chills(delta: float) -> void:
+	var ghost_near: bool = false
+	for ghost in get_tree().get_nodes_in_group("ghosts"):
+		if is_instance_valid(ghost) and global_position.distance_to((ghost as Node2D).global_position) < 180.0:
+			ghost_near = true
+			break
+
+	var in_dark: bool = not _is_flashlight_on or not _flashlight_available
+	if velocity.length() < 12.0 and in_dark and not is_hidden and not GameManager.is_safe_room:
+		_dark_still_time += delta
+	else:
+		_dark_still_time = maxf(0.0, _dark_still_time - delta * 2.0)
+		_ghost_jumpscare_triggered = false
+
+	var show_chills: bool = ghost_near or _dark_still_time > 2.0
+	if chills_ring:
+		chills_ring.visible = show_chills
+		if show_chills:
+			chills_ring.energy = 0.5 + sin(Time.get_ticks_msec() * 0.007) * 0.4
+
+	if _dark_still_time >= 6.0 and not _ghost_jumpscare_triggered:
+		_ghost_jumpscare_triggered = true
+		AudioManager.play("cackle", 2.0, randf_range(0.9, 1.1))
+		GameManager.scare_player(30.0, "Darkness Apparition", true)
+
+
+func is_facing_target(target_pos: Vector2) -> bool:
+	if not _is_flashlight_on or not _flashlight_available:
+		return false
+	var dir_to_target: Vector2 = (target_pos - global_position).normalized()
+	return _facing_direction.dot(dir_to_target) > 0.45
 
 
 func _handle_movement(delta: float) -> void:
@@ -141,13 +214,15 @@ func _handle_flashlight_flicker(delta: float) -> void:
 			flashlight_beam.energy = flashlight_energy
 			_reset_flicker_timer()
 		else:
-			# Random subtle jitter around 50-75% energy, never completely zero
-			flashlight_beam.energy = flashlight_energy * randf_range(0.45, 0.75)
+			if randf() < 0.25:
+				flashlight_beam.energy = 0.0
+			else:
+				flashlight_beam.energy = flashlight_energy * randf_range(0.3, 0.75)
 	else:
 		_flicker_timer -= delta
 		if _flicker_timer <= 0.0:
 			_is_flickering = true
-			_flicker_duration = randf_range(0.08, 0.18)
+			_flicker_duration = randf_range(0.12, 0.35)
 
 
 func _reset_flicker_timer() -> void:
@@ -179,7 +254,9 @@ func _boo(origin: Vector2, reach: float, from_hiding: bool) -> void:
 ## Swap to the masked sprite for a moment.
 func _put_on_mask() -> void:
 	player_sprite.texture = MASK_TEXTURE
-	get_tree().create_timer(mask_time).timeout.connect(func() -> void: player_sprite.texture = _normal_texture)
+	get_tree().create_timer(mask_time).timeout.connect(func() -> void:
+		if not is_masked:
+			player_sprite.texture = _normal_texture)
 
 
 func _spawn_boo_text() -> void:

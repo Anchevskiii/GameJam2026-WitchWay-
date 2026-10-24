@@ -106,6 +106,7 @@ func _try_generate(tier: int, kind: Kind) -> Dictionary:
 	_furnish(start_room, kind)
 	_place_monsters(start_room, maxi(npc_count, 2), tier, kind, _leaves[exit_room_index])
 	_place_kids(start_room, 2 + mini(tier, 3))
+	_place_hazards_and_lights(start_room, kind, tier)
 
 	if not _is_valid(kind):
 		return {}
@@ -300,6 +301,33 @@ func _place_kids(start_room: Rect2i, count: int) -> void:
 			_put(cell, "&")
 
 
+func _place_hazards_and_lights(start_room: Rect2i, kind: Kind, tier: int) -> void:
+	# Place wall lamps in some rooms, leaving others pitch black or dimly lit
+	for room in _leaves:
+		var lamp_chance: float = 0.15 if kind == Kind.DARK else 0.45
+		if room == start_room or rng.randf() < lamp_chance:
+			var spots: Array[Vector2i] = _wall_hugging_cells(room)
+			for cell in spots:
+				if _cell_at(cell) == "." and not _reserved.has(cell):
+					_reserved[cell] = true
+					_put(cell, "l")
+					break
+
+	# Air vents in narrow doorways/corridors
+	for doorway in _doorways:
+		if _cell_at(doorway) == "." and not _reserved.has(doorway) and rng.randf() < 0.2:
+			_put(doorway, "v")
+
+	# Disguise Mask pickup spawns from Floor 3+ (tier >= 1)
+	if tier >= 1:
+		for room in _leaves:
+			if room != start_room:
+				var mask_cell: Vector2i = _random_free_cell(room)
+				if mask_cell.x >= 0:
+					_put(mask_cell, "M")
+					break
+
+
 # ---------------------------------------------------------------- validation
 
 ## Everyone-walkable check: the exit is reachable, nothing is walled in, and on DARK
@@ -323,7 +351,7 @@ func _is_valid(kind: Kind) -> bool:
 func _is_walkable(ch: String, fake_walls_open: bool) -> bool:
 	if ch == "F":
 		return fake_walls_open
-	return ch in [".", "P", "D", "&"] or NPC_PATHS.has(ch) or FLOOR_ITEMS.has(ch) or LIGHT_ITEMS.has(ch)
+	return ch in [".", "P", "D", "&", "l", "v", "M"] or NPC_PATHS.has(ch) or FLOOR_ITEMS.has(ch) or LIGHT_ITEMS.has(ch)
 
 
 func _flood(from: Vector2i, fake_walls_open: bool) -> Dictionary:
