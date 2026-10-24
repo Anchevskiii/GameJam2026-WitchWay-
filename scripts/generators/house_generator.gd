@@ -105,6 +105,7 @@ func _try_generate(tier: int, kind: Kind) -> Dictionary:
 		npc_count -= 6
 	_furnish(start_room, kind)
 	_place_monsters(start_room, maxi(npc_count, 2), tier, kind, _leaves[exit_room_index])
+	_place_kids(start_room, 2 + mini(tier, 3))
 
 	if not _is_valid(kind):
 		return {}
@@ -284,6 +285,21 @@ func _place_monsters(start_room: Rect2i, count: int, tier: int, kind: Kind, exit
 		_put(cell, pool[rng.randi_range(0, pool.length() - 1)])
 
 
+## A group of trick-or-treaters, all in one room (not the start room) so they stick together.
+func _place_kids(start_room: Rect2i, count: int) -> void:
+	var rooms: Array[Rect2i] = []
+	for room in _leaves:
+		if room != start_room:
+			rooms.append(room)
+	if rooms.is_empty():
+		return
+	var room: Rect2i = rooms[rng.randi_range(0, rooms.size() - 1)]
+	for i in count:
+		var cell: Vector2i = _random_free_cell(room)
+		if cell.x >= 0:
+			_put(cell, "&")
+
+
 # ---------------------------------------------------------------- validation
 
 ## Everyone-walkable check: the exit is reachable, nothing is walled in, and on DARK
@@ -307,7 +323,7 @@ func _is_valid(kind: Kind) -> bool:
 func _is_walkable(ch: String, fake_walls_open: bool) -> bool:
 	if ch == "F":
 		return fake_walls_open
-	return ch in [".", "P", "D"] or NPC_PATHS.has(ch) or FLOOR_ITEMS.has(ch) or LIGHT_ITEMS.has(ch)
+	return ch in [".", "P", "D", "&"] or NPC_PATHS.has(ch) or FLOOR_ITEMS.has(ch) or LIGHT_ITEMS.has(ch)
 
 
 func _flood(from: Vector2i, fake_walls_open: bool) -> Dictionary:
@@ -369,14 +385,15 @@ func _settings(tier: int, kind: Kind, party_loot: float) -> Dictionary:
 			"npc_load_radius": 90.0,
 			"npc_wander_scale": 1.0,
 			"npcs_hide": true,
+			"npcs_chase": true,
 			"cpu_load_multiplier": 1.0,
 		})
 	else:
 		title = PARTY_TITLES[rng.randi_range(0, PARTY_TITLES.size() - 1)]
 		lines.append("%s. Someone invited far too many guests." % title)
-		lines.append("Crash the CPU to 100% and the exit door forgets to render. A surprised party is a great start.")
+		lines.append("Scares make the house glitch. Crash it to 100% and the exit door forgets to render.")
 		settings.merge({
-			"objective": "Push the CPU to 100% so the exit door stops rendering. Surprise the dinner party!",
+			"objective": "Scares make the house GLITCH. Crash it (100%) so the exit door stops rendering. Surprise the party!",
 			"exit_requires_cpu_overload": true,
 			"door_open_time": 6.0,
 			"flashlight_works": true,
@@ -384,7 +401,8 @@ func _settings(tier: int, kind: Kind, party_loot: float) -> Dictionary:
 			"npc_load_radius": 0.0,
 			"npc_wander_scale": 0.25,
 			"npcs_hide": false,
-			# One good chain reaction at the table should crash the CPU (with headroom for decay).
+			"npcs_chase": false,
+			# One good chain reaction at the table should crash the house (with headroom for decay).
 			"cpu_load_multiplier": clampf(150.0 / maxf(party_loot, 1.0), 1.0, 3.0),
 		})
 	settings["room_title"] = title

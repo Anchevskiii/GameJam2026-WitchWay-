@@ -19,7 +19,7 @@
 
 [node name="LivingRoom" instance=ExtResource("1_base")]
 room_title = "The Living Room"
-objective = "Sneak up BEHIND the cardboard ghost and BOO it (SPACE). Or hide in the cupboard (E) and jump out (SPACE)."
+objective = "BOO the cardboard ghost from BEHIND (SPACE), or hide (E) and jump out. Try scaring the kid too."
 layout = "######################
 #o..................o#
 #..w..K..v..L.....O..#
@@ -28,7 +28,7 @@ layout = "######################
 #.................Z..#
 #........r......g....#
 #....................D
-#..P.................#
+#..P..&..............#
 #...Q......t..c....Q.#
 #o.....u.............#
 ######################"
@@ -59,5 +59,5 @@ light_legend = {
 }
 is_safe_room = true
 ambient_color = Color(1, 0.95, 0.88, 1)
-intro_lines = Array[String](["Welcome to the Haunted House! This is the Living Room. It's the only room with someone living in it. You.", "Move with WASD, run with SHIFT. You are wearing our complimentary Very Scary Mask.", "Monsters only get scared if they don't see you coming. The yellow cone is where they're looking.", "Sneak up behind the Cardboard Ghost and press SPACE. Or hide in the cupboard or behind the couch (E) and jump out with SPACE.", "If a monster spots you, it winds up a scare. Duck into a hiding spot and it misses. Hiding also calms you down."])
+intro_lines = Array[String](["Welcome to the Haunted House! This is the Living Room. It's the only room with someone living in it. You.", "Move with WASD, run with SHIFT. You are wearing our complimentary Very Scary Mask.", "Monsters only get scared if they don't see you coming. The yellow cone is where they're looking.", "Sneak up behind the Cardboard Ghost and press SPACE. Or hide in the cupboard (E) and jump out with SPACE.", "Every scare makes the house GLITCH. Glitch it all the way and it crashes - exits stop rendering.", "Other kids are trick-or-treating here too. Scare one three times and... well. Their candy restores your sanity.", "Monsters that spot you chase you. Duck into a hiding spot and their scare misses."])
 revisit_lines = Array[String](["Welcome back to the Living Room. Your progress has been saved. Your dignity has not.", "Sanity restored. Every third floor is a Living Room. Management is very generous."])

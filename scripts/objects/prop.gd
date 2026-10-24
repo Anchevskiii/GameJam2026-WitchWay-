@@ -1,8 +1,9 @@
 class_name Prop
 extends RigidBody2D
 
-## A dropped prop (sock, cauldron, ...). Adds CPU load when it spawns, rolls around,
+## A dropped prop (sock, cauldron, candy...). Adds glitch when it spawns, rolls around,
 ## and knocks over NPCs it hits while moving fast (chain reactions!).
+## Props with sanity_restore (candy) are picked up by walking over them.
 ## Attached to: RigidBody2D root of scenes/objects/prop.tscn
 ## Spawn with: Prop.spawn(prop_data, world_position, impulse)
 ##
@@ -12,6 +13,8 @@ extends RigidBody2D
 const SCENE_PATH: String = "res://scenes/objects/prop.tscn"
 ## Oldest props get deleted above this count (their CPU load still decays normally).
 const MAX_PROPS: int = 60
+## Candy is picked up when the player gets this close.
+const PICKUP_RADIUS: float = 20.0
 
 static var _live_props: Array[Prop] = []
 
@@ -76,6 +79,19 @@ func _register() -> void:
 		var oldest: Prop = _live_props.pop_front()
 		if is_instance_valid(oldest):
 			oldest.queue_free()
+
+
+## Candy: picked up by walking over it. A distance check (not a collision) so it also
+## works for candy that has come to rest and gone to sleep in the physics engine.
+func _physics_process(_delta: float) -> void:
+	if data == null or data.sanity_restore <= 0.0:
+		return
+	var player: Node2D = get_tree().get_first_node_in_group("player") as Node2D
+	if player and not player.get("is_hidden") and global_position.distance_to(player.global_position) < PICKUP_RADIUS:
+		GameManager.restore_sanity(data.sanity_restore)
+		FloatingText.spawn(self, global_position, "+%d SANITY" % roundi(data.sanity_restore), Color(0.5, 1.0, 0.55), 18)
+		AudioManager.play("pop", -4.0, 1.5)
+		queue_free()
 
 
 func _on_body_entered(body: Node) -> void:

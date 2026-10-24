@@ -22,7 +22,7 @@
 
 [node name="DiningRoom" instance=ExtResource("1_base")]
 room_title = "The Dining Room"
-objective = "Push the CPU to 100% so the exit door (top right) fails to render. Then RUN through it."
+objective = "Scares make the house GLITCH. Crash it (100%) and the exit door (top right) fails to render. Then RUN."
 layout = "################################
 #o...K...L...O...W.#.W........o#
 #..................#.....j.....D
@@ -32,8 +32,8 @@ layout = "################################
 #W.....T.c..T..G...#...........#
 #......g...b.......#####.#######
 #.............................u#
-#.............c..W.#...........#
-#..................#.....j.....#
+#...&.........c..W.#...........#
+#....&.............#.....j.....#
 #o.P....r.....Q....#..n.......Q#
 ################################"
 npc_legend = {
@@ -69,5 +69,6 @@ door_open_time = 6.0
 cpu_load_multiplier = 1.5
 npc_wander_scale = 0.0
 npcs_hide = false
+npcs_chase = false
 ambient_color = Color(0.82, 0.76, 0.88, 1)
-intro_lines = Array[String](["The Dining Room. Built in one weekend. Completely unoptimized.", "The exit door only renders when the CPU has nothing better to do. Give it something better to do.", "Surprise one dinner guest while nobody's looking, or jump out of a cupboard. Panicking guests scare each other, and every dropped prop costs CPU."])
+intro_lines = Array[String](["The Dining Room. Built in one weekend. Completely unoptimized.", "Every scare makes the house glitch. Glitch it to 100% and it crashes - the exit door stops rendering.", "Surprise one dinner guest while nobody's looking, or jump out of a cupboard. Panicking guests scare each other, and every dropped prop costs CPU."])

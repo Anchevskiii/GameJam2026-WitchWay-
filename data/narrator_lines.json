@@ -1,7 +1,7 @@
 {
 	"_readme": "Narrator lines by event. Narrator.say_event(key) picks one at random. {placeholders} get filled in by the game.",
 	"heavy_prop": [
-		"A {prop}? That one costs {weight}% CPU. Management is sweating.",
+		"A {prop}? That one is worth {weight}% glitch. Management is sweating.",
 		"{prop} spawned. Our servers felt that.",
 		"Please do not drop the {prop}. It is not optimized.",
 		"The {prop} was modelled with 4 million polygons. For realism."
@@ -50,5 +50,14 @@
 		"They saw you coming. Surprises work better as a surprise.",
 		"Nice try. Masks are scarier from behind.",
 		"The monster has seen that mask before. It was on sale."
+	],
+	"kid_peed": [
+		"A child has peed. Management did not see anything.",
+		"Three scares. Sorry, Timmy.",
+		"That kid is going home early. Their candy is not."
+	],
+	"glitch_crash": [
+		"House.exe has crashed. Please enjoy the free-roam mode.",
+		"Fatal glitch. Everything is fine."
 	]
 }

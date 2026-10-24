@@ -5,13 +5,23 @@ extends Node
 ##
 ## Sanity: starts full (100) and drains when the player gets scared. At 0 the player
 ## pees their pants (game over). Regenerates slowly while standing still (see SanityComponent).
-## CPU load: a fake gameplay meter. Props add load, and it decays back down on its own,
-## so the player must chain scares quickly to push it to 100%.
+## GLITCH meter (current_cpu_overload, shown as "GLITCH" in the HUD): scaring things makes the
+## house glitch. Every scare adds glitch (shown as "+N GLITCH" where it happened). It holds for
+## a few seconds, then drains - so chain scares quickly. At 100% the house crashes: the
+## exit door on OVERLOAD floors fails to render, and the screen glitches hardest.
 
 @export var max_sanity: float = 100.0
 @export var max_cpu_overload: float = 100.0
-## How fast CPU load drains per second when nothing is happening.
-@export var cpu_decay_rate: float = 3.5
+## How fast the glitch meter drains per second once it starts draining.
+@export var cpu_decay_rate: float = 6.0
+## Seconds the meter holds after the last gain before it starts draining.
+@export var glitch_hold_time: float = 2.5
+
+@export_group("Difficulty")
+## Every monster's wind-up is multiplied by this (lower = they scare you faster).
+@export var monster_windup_scale: float = 0.7
+## Every monster sees this much further than its NpcData says.
+@export var monster_sight_scale: float = 1.25
 
 ## Endless run: level 0, 3, 6, ... are the Living Room (safe room + checkpoint).
 ## Levels 1 and 2 are the hand-made Dark Hallway and Dining Room; every other level is generated.
@@ -41,6 +51,9 @@ var cpu_load_multiplier: float = 1.0
 var stats_npcs_scared: int = 0
 var stats_props_spawned: int = 0
 var stats_times_peed: int = 0
+var stats_kids_peed: int = 0
+
+var _time_since_glitch_gain: float = 999.0
 
 var _low_sanity_warned: bool = false
 
@@ -52,14 +65,16 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if is_game_over:
 		return
-	if current_cpu_overload > 0.0:
+	_time_since_glitch_gain += delta
+	if current_cpu_overload > 0.0 and _time_since_glitch_gain >= glitch_hold_time:
 		_set_cpu_load(current_cpu_overload - cpu_decay_rate * delta)
 
 
-## Adds CPU load (e.g. a prop was spawned). The room multiplier is applied here.
+## Adds glitch (a prop was spawned, something got scared). The room multiplier is applied here.
 func add_cpu_load(amount: float) -> void:
 	if is_game_over:
 		return
+	_time_since_glitch_gain = 0.0
 	_set_cpu_load(current_cpu_overload + amount * cpu_load_multiplier)
 
 
@@ -70,6 +85,8 @@ func _set_cpu_load(value: float) -> void:
 	if glitch_now != is_glitch_mode:
 		is_glitch_mode = glitch_now
 		EventBus.glitch_mode_toggled.emit(is_glitch_mode)
+		if is_glitch_mode:
+			Narrator.say_event("glitch_crash")
 
 
 ## Removes sanity. Call this whenever something scares the player.

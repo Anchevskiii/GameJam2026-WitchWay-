@@ -1,0 +1,62 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/kid.gd" id="1_kid"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/kid_ghost.png" id="2_ghost"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/kid_pumpkin.png" id="3_pumpkin"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/kid_witch.png" id="4_witch"]
+[ext_resource type="Script" path="res://scripts/components/stumble_animator.gd" id="5_stumble"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_kid"]
+radius = 9.0
+
+[node name="Kid" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 1
+motion_mode = 1
+script = ExtResource("1_kid")
+costumes = Array[Texture2D]([ExtResource("2_ghost"), ExtResource("3_pumpkin"), ExtResource("4_witch")])
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_kid")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_ghost")
+
+[node name="StumbleAnimator" type="Node" parent="."]
+script = ExtResource("5_stumble")
+tilt_degrees = 14.0
+steps_per_second = 5.0
+reference_speed = 70.0
+
+[node name="Pips" type="HBoxContainer" parent="."]
+offset_left = -14.0
+offset_top = -38.0
+offset_right = 14.0
+offset_bottom = -32.0
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="Pip1" type="ColorRect" parent="Pips"]
+custom_minimum_size = Vector2(6, 6)
+layout_mode = 2
+
+[node name="Pip2" type="ColorRect" parent="Pips"]
+custom_minimum_size = Vector2(6, 6)
+layout_mode = 2
+
+[node name="Pip3" type="ColorRect" parent="Pips"]
+custom_minimum_size = Vector2(6, 6)
+layout_mode = 2
+
+[node name="Bubble" type="Label" parent="."]
+z_index = 20
+offset_left = -60.0
+offset_top = -66.0
+offset_right = 60.0
+offset_bottom = -40.0
+theme_override_colors/font_color = Color(1, 1, 0.85, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 18
+text = "AAAH!"
+horizontal_alignment = 1

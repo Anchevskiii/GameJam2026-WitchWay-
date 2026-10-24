@@ -1,7 +1,7 @@
 class_name HUD
 extends CanvasLayer
 
-## Sanity bar, CPU bar, room name/objective and the Narrator text box.
+## Sanity bar, GLITCH bar (scares make the house glitch), room name/objective and the Narrator text box.
 ## Attached to: CanvasLayer in scenes/ui/hud.tscn
 
 const CPU_CALM: Color = Color(0.2, 0.8, 1.0)
@@ -48,17 +48,21 @@ func _on_cpu_overload_changed(current: float, max_val: float) -> void:
 	cpu_bar.max_value = max_val
 	cpu_bar.value = current
 	var pct: int = int((current / maxf(max_val, 1.0)) * 100.0)
+	# The glitch meter in words: scaring things makes the house glitch; at 100% it crashes.
 	if pct >= 100:
-		cpu_label.text = "100% OVERLOAD"
+		cpu_label.text = "CRASHED!"
 		_cpu_fill.bg_color = CPU_OVERLOAD
 	elif pct >= 75:
-		cpu_label.text = "%d%% THROTTLING" % pct
+		cpu_label.text = "%d%% CRASHING" % pct
 		_cpu_fill.bg_color = CPU_HOT
 	elif pct >= 50:
 		cpu_label.text = "%d%% LAGGING" % pct
 		_cpu_fill.bg_color = CPU_WARM
+	elif pct >= 20:
+		cpu_label.text = "%d%% FLICKERING" % pct
+		_cpu_fill.bg_color = CPU_CALM
 	else:
-		cpu_label.text = "%d%%" % pct
+		cpu_label.text = "STABLE"
 		_cpu_fill.bg_color = CPU_CALM
 
 

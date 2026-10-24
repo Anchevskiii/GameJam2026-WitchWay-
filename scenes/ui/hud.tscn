@@ -112,7 +112,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.85, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 13
-text = "CPU"
+text = "GLITCH"
 
 [node name="CPUPercent" type="Label" parent="Control/PanelContainer/VBoxContainer/CPUBox/HeaderBox"]
 layout_mode = 2

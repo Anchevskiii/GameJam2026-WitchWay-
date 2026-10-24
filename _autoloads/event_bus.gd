@@ -21,6 +21,7 @@ signal bug_triggered(bug_type: String)
 # (from behind, around a corner) - or on anyone when jumping out of a hiding spot.
 signal player_booed(origin: Vector2, boo_range: float, from_hiding: bool)
 signal npc_scared(npc_name: String)
+signal kid_scared(times: int, max_times: int)
 signal prop_spawned(prop_name: String, load_weight: float)
 
 # Narrator ("Haunted House Management") text box. Empty text = hide the box.
