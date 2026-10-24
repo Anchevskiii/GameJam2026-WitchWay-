@@ -39,7 +39,10 @@ const WALLPAPER_ROW: int = 2       ## 1-tile wall face (wall 1 tile thick)
 const FLOOR_ROW: int = 12
 const FACE_BOTTOM_ROW: int = 22    ## 2-tile wall face, lower half (wall 2+ tiles thick)
 const FACE_TOP_ROW: int = 32       ## 2-tile wall face, upper half with the ceiling band
-const EDGE_ROW: int = 42           ## junction patches for the WallEdges layer (T and L joints)
+## Plain ceiling tile (its outline is drawn by WallOutlines), and the height of the ceiling
+## band at the top of a 2-tile wall face.
+const CEILING_TILE: Vector2i = Vector2i(7, CEILING_ROW + 1)
+const BAND: float = 10.0
 ## Wall decorations keep this many pixels away from corners and doorways.
 const WALL_DECOR_MARGIN: float = 3.0
 
@@ -125,7 +128,6 @@ static var _visited_scenes: Dictionary = {}
 @onready var floor_layer: TileMapLayer = $Floor
 @onready var wall_layer: TileMapLayer = $Walls
 @onready var wall_top_layer: TileMapLayer = $WallTops
-@onready var wall_edge_layer: TileMapLayer = $WallEdges
 @onready var glitch_layer: TileMapLayer = $GlitchWalls
 @onready var decor_root: Node2D = $Decor
 @onready var props_root: Node2D = $Props
@@ -151,6 +153,7 @@ func _ready() -> void:
 
 	GameManager.set_keys_needed(keys_needed)
 	_build_from_layout()
+	_build_wall_outlines()
 	_spawn_traps()
 	_group_kids()
 	add_child(Dread.new())
@@ -257,39 +260,67 @@ func _paint_wall_top(cell: Vector2i) -> void:
 		if _looks_like_wall(_char_at(above)):
 			_wall_layer_for(cell).set_cell(cell, TILE_SOURCE, Vector2i(column, FACE_BOTTOM_ROW + wallpaper))
 			_wall_layer_for(above).set_cell(above, TILE_SOURCE, Vector2i(column, FACE_TOP_ROW + wallpaper))
-			# A wall comes down onto this one from above: open the band's top line where it joins.
-			var up: Vector2i = above + Vector2i.UP
-			if _looks_solid(up):
-				var corners: int = (0 if _looks_solid(up + Vector2i.LEFT) else 1) | (0 if _looks_solid(up + Vector2i.RIGHT) else 2)
-				wall_edge_layer.set_cell(above, TILE_SOURCE, Vector2i(corners, EDGE_ROW))
 		else:
 			_wall_layer_for(cell).set_cell(cell, TILE_SOURCE, Vector2i(column, WALLPAPER_ROW + wallpaper))
 		return
 	if _is_face_top(cell):
 		return  # already painted as the upper half of the wall face below it
-	var mask: int = 0
-	if _looks_solid(cell + Vector2i.UP):
-		mask |= 1
-	if _ceiling_joins(cell + Vector2i.RIGHT):
-		mask |= 2
-	if _looks_solid(below):
-		mask |= 4
-	if _ceiling_joins(cell + Vector2i.LEFT):
-		mask |= 8
-	_wall_layer_for(cell).set_cell(cell, TILE_SOURCE, Vector2i(mask % 8, CEILING_ROW + mask / 8))
-	# Beside a face top, the ceiling band flows straight into this ceiling (T and L joints).
-	var band: int = (1 if _is_face_top(cell + Vector2i.LEFT) else 0) | (2 if _is_face_top(cell + Vector2i.RIGHT) else 0)
-	if band > 0:
-		wall_edge_layer.set_cell(cell, TILE_SOURCE, Vector2i(3 + band, EDGE_ROW))
+	_wall_layer_for(cell).set_cell(cell, TILE_SOURCE, CEILING_TILE)
 
 
-## Does ceiling continue into the wall beside it? Not if that wall shows its wallpapered
-## face there (we look down onto it), so the ceiling gets an edge on that side.
-func _ceiling_joins(side: Vector2i) -> bool:
-	if not _looks_solid(side):
-		return false
-	var is_face: bool = _looks_like_wall(_char_at(side)) and not _looks_solid(side + Vector2i.DOWN)
-	return not is_face and not _is_face_top(side)
+## Is the TOP part of this tile ceiling (lavender)? Ceiling tiles, the band of a face top,
+## and the void outside the house are; wall faces and floor aren't.
+func _ceiling_upper(cell: Vector2i) -> bool:
+	return _looks_solid(cell) and not _is_face_bottom(cell)
+
+
+## Is the LOWER part of this tile ceiling? Only full ceiling tiles (and the void).
+func _ceiling_lower(cell: Vector2i) -> bool:
+	return _ceiling_upper(cell) and not _is_face_top(cell)
+
+
+## A wall tile with floor right below it (shows wallpaper).
+func _is_face_bottom(cell: Vector2i) -> bool:
+	return _looks_like_wall(_char_at(cell)) and not _looks_solid(cell + Vector2i.DOWN)
+
+
+## The dark outline around every piece of ceiling, worked out on half-tiles (the band at the
+## top of a wall face is ceiling, the wallpaper below it isn't) and including the diagonal
+## neighbours, so inside corners are filled too.
+func _build_wall_outlines() -> void:
+	var outlines := WallOutlines.new()
+	outlines.z_index = -4
+	var t: float = TILE_SIZE
+	for y in _rows.size():
+		for x in _rows[y].length():
+			var c := Vector2i(x, y)
+			var full: bool = _looks_like_wall(_char_at(c)) and _ceiling_lower(c)
+			var band: bool = _is_face_top(c)
+			if not full and not band:
+				continue
+			var o := Vector2(c) * t
+			var up: Vector2i = c + Vector2i.UP
+			var down: Vector2i = c + Vector2i.DOWN
+			# Top edge: 2px where it lines up with a band, 4px on plain ceiling.
+			var top: float = 2.0 if band or _is_face_top(c + Vector2i.LEFT) or _is_face_top(c + Vector2i.RIGHT) else 4.0
+			if not _ceiling_lower(up):
+				outlines.rects.append(Rect2(o, Vector2(t, top)))
+			for side in [Vector2i.LEFT, Vector2i.RIGHT]:
+				var sx: float = o.x if side == Vector2i.LEFT else o.x + t - 4.0
+				# Inside corner at the top: ceiling above and beside, but not diagonally.
+				if _ceiling_lower(up) and _ceiling_upper(c + side) and not _ceiling_lower(up + side):
+					outlines.rects.append(Rect2(sx, o.y, 4.0, top))
+				# Side edge: upper part (band level), then the rest of a full ceiling tile.
+				if not _ceiling_upper(c + side):
+					outlines.rects.append(Rect2(sx, o.y, 4.0, BAND + (3.0 if band else 0.0)))
+				if full and not _ceiling_lower(c + side):
+					outlines.rects.append(Rect2(sx, o.y + BAND, 4.0, t - BAND))
+				# Inside corner at the bottom.
+				if full and _ceiling_upper(down) and _ceiling_lower(c + side) and not _ceiling_upper(down + side):
+					outlines.rects.append(Rect2(sx, o.y + t - 4.0, 4.0, 4.0))
+			if full and not _ceiling_upper(down):
+				outlines.rects.append(Rect2(o.x, o.y + t - 4.0, t, 4.0))
+	add_child(outlines)
 
 
 ## True for the upper tile of a 2-tile wall face (a wall whose wall below has floor below it).

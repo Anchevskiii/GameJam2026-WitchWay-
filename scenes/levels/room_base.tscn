@@ -25,10 +25,6 @@ tile_set = ExtResource("2_tiles")
 z_index = -5
 tile_set = ExtResource("4_interior")
 
-[node name="WallEdges" type="TileMapLayer" parent="."]
-z_index = -5
-tile_set = ExtResource("4_interior")
-
 [node name="GlitchWalls" type="TileMapLayer" parent="."]
 z_index = -4
 tile_set = ExtResource("4_interior")
