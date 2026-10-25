@@ -79,7 +79,7 @@ func _ready() -> void:
 	add_to_group("player")
 	if flashlight_beam:
 		flashlight_beam.texture = _beam_texture()
-		flashlight_beam.texture_scale = 2.0
+		flashlight_beam.texture_scale = 1.35
 	EventBus.game_over_triggered.connect(_on_game_over)
 	_reset_flicker_timer()
 	_update_flashlight_state()
@@ -257,14 +257,14 @@ func is_facing_target(target_pos: Vector2) -> bool:
 ## or right next to the player's personal glow.
 func is_illuminating(target_pos: Vector2) -> bool:
 	var dist: float = global_position.distance_to(target_pos)
-	if dist <= 44.0:
+	if dist <= 32.0:
 		return true
-	if not _is_flashlight_on or not _flashlight_available or dist > 220.0:
+	if not _is_flashlight_on or not _flashlight_available or dist > 158.0:
 		return false
 	if _is_flickering and flashlight_beam and flashlight_beam.energy <= 0.05:
 		return false
 	var dir_to_target: Vector2 = (target_pos - global_position).normalized()
-	return _facing_direction.dot(dir_to_target) > 0.48
+	return _facing_direction.dot(dir_to_target) > 0.52
 
 
 func _handle_movement(delta: float) -> void:
@@ -347,12 +347,16 @@ func _put_on_mask() -> void:
 
 func _spawn_boo_text() -> void:
 	var label := Label.new()
+	var unshaded := CanvasItemMaterial.new()
+	unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	label.material = unshaded
 	label.text = "BOO!"
 	label.add_theme_font_size_override("font_size", 26)
+	label.add_theme_color_override("font_color", Color(1.0, 0.96, 0.45))
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 6)
 	label.position = global_position + Vector2(-32, -64)
-	label.z_index = 30
+	label.z_index = 60
 	get_parent().add_child(label)
 	var tween: Tween = label.create_tween()
 	tween.tween_property(label, "position:y", label.position.y - 18.0, 0.5)
@@ -406,7 +410,7 @@ func _unhide() -> void:
 	is_hidden = false
 	_hide_spot.set_occupied(false)
 	player_sprite.visible = true
-	glow_light.energy = 0.55
+	glow_light.energy = 0.42
 	_update_flashlight_state()
 	collision_shape.set_deferred("disabled", false)
 	global_position = _pre_hide_position
@@ -463,14 +467,14 @@ static func _beam_texture() -> ImageTexture:
 		for px in size:
 			var u: float = float(px - c)
 			var v: float = float(py - c)
-			var body: float = clampf(1.0 - Vector2(u, v).length() / 17.0, 0.0, 1.0) * 0.7
+			var body: float = clampf(1.0 - Vector2(u, v).length() / 13.0, 0.0, 1.0) * 0.55
 			var cone: float = 0.0
 			if u > 0.0:
-				var half: float = 14.0 + u * 0.62
+				var half: float = 12.0 + u * 0.58
 				var side: float = clampf(1.0 - absf(v) / half, 0.0, 1.0)
 				side = side * side * (3.0 - 2.0 * side)
-				var reach: float = clampf(1.0 - u / float(c), 0.0, 1.0)
-				cone = side * pow(reach, 0.9) * clampf(u / 8.0 + 0.45, 0.0, 1.0)
+				var reach: float = clampf(1.0 - u / float(c * 0.88), 0.0, 1.0)
+				cone = side * pow(reach, 1.15) * clampf(u / 8.0 + 0.45, 0.0, 1.0)
 			var val: float = maxf(body, cone)
 			img.set_pixel(px, py, Color(val, val, val, 1.0))
 	_beam_tex = ImageTexture.create_from_image(img)

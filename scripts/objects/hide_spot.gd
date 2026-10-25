@@ -35,12 +35,13 @@ func _ready() -> void:
 	unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 	_prompt.material = unshaded
 	_prompt.add_theme_font_size_override("font_size", 18)
-	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
-	_prompt.add_theme_constant_override("outline_size", 5)
+	_prompt.add_theme_color_override("font_color", Color(1.0, 0.98, 0.78))
+	_prompt.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
+	_prompt.add_theme_constant_override("outline_size", 6)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.size = Vector2(260, 24)
 	_prompt.position = Vector2(-130, -58)
-	_prompt.z_index = 30
+	_prompt.z_index = 60
 	_prompt.visible = false
 	add_child(_prompt)
 

@@ -28,17 +28,20 @@ var _player: Node2D = null
 
 func _ready() -> void:
 	add_to_group("searchables")
-	_prompt = Label.new()
 	var unshaded := CanvasItemMaterial.new()
 	unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	material = unshaded
+	z_index = 60
+	_prompt = Label.new()
 	_prompt.material = unshaded
-	_prompt.add_theme_font_size_override("font_size", 16)
-	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
-	_prompt.add_theme_constant_override("outline_size", 5)
+	_prompt.add_theme_font_size_override("font_size", 17)
+	_prompt.add_theme_color_override("font_color", Color(1.0, 0.98, 0.78))
+	_prompt.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
+	_prompt.add_theme_constant_override("outline_size", 6)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.size = Vector2(200, 22)
 	_prompt.position = Vector2(-100, -54)
-	_prompt.z_index = 30
+	_prompt.z_index = 60
 	_prompt.visible = false
 	add_child(_prompt)
 
@@ -60,7 +63,9 @@ func is_player_in_reach() -> bool:
 
 func _draw() -> void:
 	if progress > 0.0 and not searched:
-		draw_arc(Vector2(0, -30), 10.0, -PI / 2, -PI / 2 + TAU * progress, 24, Color(1, 0.9, 0.5), 3.0)
+		draw_circle(Vector2(0, -30), 12.0, Color(0.0, 0.0, 0.0, 0.65))
+		draw_arc(Vector2(0, -30), 12.0, 0.0, TAU, 24, Color(0.0, 0.0, 0.0, 0.95), 5.5)
+		draw_arc(Vector2(0, -30), 12.0, -PI / 2, -PI / 2 + TAU * progress, 24, Color(1.0, 0.96, 0.45, 1.0), 3.8)
 
 
 ## Called by the player when the search is done.

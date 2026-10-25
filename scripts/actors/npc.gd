@@ -136,7 +136,9 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 			bubble.text = "DISABLED %d" % ceili(data.recover_time - _state_time)
 			if data.after_scare != NpcData.AfterScare.FALL_APART:
-				sprite.visible = randf() > 0.08  # glitching while switched off
+				sprite.visible = randf() > 0.08  # flickering while switched off
+			else:
+				sprite.visible = false
 			if _state_time >= data.recover_time:
 				_recover()
 		State.HIDING:
@@ -457,16 +459,13 @@ func _hide_bubble_if_calm() -> void:
 func _apply_after_scare() -> void:
 	match data.after_scare:
 		NpcData.AfterScare.FLEE:
-			sprite.modulate.a = 0.4  # half "unloaded"
+			sprite.modulate.a = 0.4  # half faded out
 		NpcData.AfterScare.FAINT:
 			stumble.enabled = false  # lie down instead of stumbling
 			sprite.rotation = PI / 2.0
 		NpcData.AfterScare.FALL_APART:
-			# Fell apart into a heap of missing texture.
 			stumble.enabled = false
-			sprite.texture = MISSING_TEXTURE
-			sprite.region_enabled = true
-			sprite.region_rect = Rect2(0, 0, 24, 12)
+			sprite.visible = false
 	# Disabled = greyed out (and flickering, see _physics_process).
 	sprite.modulate = Color(0.55, 0.55, 0.62, sprite.modulate.a)
 
@@ -526,15 +525,14 @@ func _animate(delta: float) -> void:
 	if _anim_time >= 1.0 / maxf(fps, 0.5):
 		_anim_time = 0.0
 		_frame = (_frame + 1) % data.frames.size()
-		if sprite.texture != MISSING_TEXTURE:
-			sprite.texture = data.frames[_frame]
+		sprite.texture = data.frames[_frame]
 
 
 ## Visibility & darkness:
 ##   - In safe rooms or when winding up / panicking: visible if within line-of-sight or close.
-##   - In dark rooms (load_in_radius > 0): uses the streaming-in missing-texture effect at close range.
-##   - When lurking in corners (CORNER_LURK) or in normal dark rooms: hidden in the shadows unless
+##   - When lurking in corners (CORNER_LURK) or in dark rooms: hidden in the shadows unless
 ##     the player illuminates them with the flashlight (or comes right up to them) with line of sight!
+##   - Never shows magenta missing-texture placeholders on entities.
 func _update_loaded_look() -> void:
 	if state == State.DONE or state == State.HIDING:
 		return
@@ -554,28 +552,11 @@ func _update_loaded_look() -> void:
 		return
 
 	if load_in_radius > 0.0:
-		if dist <= load_in_radius or state == State.WINDUP or lit_by_player:
-			sprite.visible = has_los or dist <= 56.0 or state == State.WINDUP
-			if sprite.texture == MISSING_TEXTURE and not data.frames.is_empty():
-				sprite.texture = data.frames[_frame]
-				sprite.region_enabled = false
-		elif dist <= load_in_radius * 2.0 and has_los:
-			sprite.visible = randf() > 0.15  # flickers while "streaming in"
-			sprite.texture = MISSING_TEXTURE
-			sprite.region_enabled = true
-			sprite.region_rect = Rect2(0, 0, 16, 28)
-		else:
-			sprite.visible = false
+		sprite.visible = (dist <= load_in_radius and has_los) or dist <= 40.0 or state == State.WINDUP or state == State.PANIC or lit_by_player
 		return
 
 	# Standard dark atmosphere: monsters behind walls or outside your light stay hidden in darkness
-	if lit_by_player or state == State.WINDUP or state == State.PANIC or (has_los and dist <= 100.0):
-		sprite.visible = true
-		if sprite.texture == MISSING_TEXTURE and not data.frames.is_empty():
-			sprite.texture = data.frames[_frame]
-			sprite.region_enabled = false
-	else:
-		sprite.visible = false
+	sprite.visible = lit_by_player or state == State.WINDUP or state == State.PANIC or (has_los and dist <= 64.0)
 
 
 func _distance_to_player() -> float:
