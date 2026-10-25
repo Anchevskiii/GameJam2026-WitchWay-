@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3 uid="uid://q4llt6fg2km"]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_ba3l5"]
+[ext_resource type="Texture2D" uid="uid://b4ebvtjxmfga7" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_5uts6"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bmi1m"]
+atlas = ExtResource("2_5uts6")
+region = Rect2(38, 1898, 54, 46)
+
+[resource]
+script = ExtResource("1_ba3l5")
+display_name = "Cabinet Low"
+texture = SubResource("AtlasTexture_bmi1m")
+kind = 0
+footprint = Vector2i(2, 1)
+hideable = false
+searchable = true
+light_color = Color(0, 0, 0, 0)

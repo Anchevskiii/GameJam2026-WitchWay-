@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="RoomTheme" load_steps=22 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_md35s"]
+[ext_resource type="Resource" path="res://data/furniture/floorlamp_blue.tres" id="2_r6m6h"]
+[ext_resource type="Resource" path="res://data/furniture/plant_small.tres" id="3_d4jlp"]
+[ext_resource type="Resource" path="res://data/furniture/globe.tres" id="4_85w82"]
+[ext_resource type="Resource" path="res://data/furniture/desk_study.tres" id="5_e4sl8"]
+[ext_resource type="Resource" path="res://data/furniture/desk_old.tres" id="6_hpmup"]
+[ext_resource type="Resource" path="res://data/furniture/books_floor.tres" id="7_ghj07"]
+[ext_resource type="Resource" path="res://data/furniture/wardrobe_short.tres" id="8_547o0"]
+[ext_resource type="Resource" path="res://data/furniture/bookshelf_b.tres" id="9_srsxr"]
+[ext_resource type="Resource" path="res://data/furniture/drawers_row.tres" id="10_7v416"]
+[ext_resource type="Resource" path="res://data/furniture/cabinet_low.tres" id="11_002k0"]
+[ext_resource type="Resource" path="res://data/furniture/rug_green.tres" id="12_pnk44"]
+[ext_resource type="Resource" path="res://data/furniture/rug_blue_small.tres" id="13_lsank"]
+[ext_resource type="Script" path="res://scripts/resources/room_theme.gd" id="14_ri7qi"]
+[ext_resource type="Resource" path="res://data/furniture/chair_wood.tres" id="15_hh3md"]
+[ext_resource type="Resource" path="res://data/furniture/lamp_blue.tres" id="16_adxiq"]
+[ext_resource type="Resource" path="res://data/furniture/globe_silver.tres" id="17_vgx1l"]
+[ext_resource type="Resource" path="res://data/furniture/blackboard.tres" id="18_0lf5o"]
+[ext_resource type="Resource" path="res://data/furniture/corkboard.tres" id="19_ys7lh"]
+[ext_resource type="Resource" path="res://data/furniture/poster_board.tres" id="20_f7abi"]
+[ext_resource type="Resource" path="res://data/furniture/window_blue.tres" id="21_c47ep"]
+
+[resource]
+script = ExtResource("14_ri7qi")
+display_name = "Study"
+wallpaper = 6
+floor_pattern = 3
+north_pieces = Array[ExtResource("1_md35s")]([ExtResource("8_547o0"), ExtResource("9_srsxr"), ExtResource("10_7v416"), ExtResource("11_002k0")])
+wall_decor = Array[ExtResource("1_md35s")]([ExtResource("18_0lf5o"), ExtResource("19_ys7lh"), ExtResource("20_f7abi"), ExtResource("21_c47ep")])
+side_pieces = Array[ExtResource("1_md35s")]([ExtResource("4_85w82"), ExtResource("16_adxiq"), ExtResource("3_d4jlp"), ExtResource("17_vgx1l")])
+center_pieces = Array[ExtResource("1_md35s")]([ExtResource("5_e4sl8"), ExtResource("6_hpmup")])
+rugs = Array[ExtResource("1_md35s")]([ExtResource("12_pnk44"), ExtResource("13_lsank")])
+feature_pieces = Array[ExtResource("1_md35s")]([])
+feature_flank = Array[ExtResource("1_md35s")]([])
+accent_pieces = Array[ExtResource("1_md35s")]([ExtResource("2_r6m6h"), ExtResource("3_d4jlp"), ExtResource("4_85w82")])
+set_in_front_of_feature = false
+seat_south = ExtResource("15_hh3md")
+floor_clutter = Array[ExtResource("1_md35s")]([ExtResource("7_ghj07"), ExtResource("7_ghj07")])

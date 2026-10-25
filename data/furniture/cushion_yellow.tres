@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3 uid="uid://c8dfuxdv40dok"]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_80a67"]
+[ext_resource type="Texture2D" uid="uid://b4ebvtjxmfga7" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_g781w"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dxhtf"]
+atlas = ExtResource("2_g781w")
+region = Rect2(466, 2372, 26, 26)
+
+[resource]
+script = ExtResource("1_80a67")
+display_name = "Cushion Yellow"
+texture = SubResource("AtlasTexture_dxhtf")
+kind = 3
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = false
+light_color = Color(0, 0, 0, 0)

@@ -1,0 +1,1602 @@
+{
+ "wallpapers": [
+  "red",
+  "yellow",
+  "mint",
+  "wood_light",
+  "wood_mid",
+  "wood_red",
+  "grey",
+  "beige",
+  "stripes_brown",
+  "stripes_purple"
+ ],
+ "floors": [
+  "checker_brown",
+  "checker_dark",
+  "herringbone",
+  "grey_tiles",
+  "red_brick",
+  "teal_tiles",
+  "yellow_tiles",
+  "stone",
+  "old_wood"
+ ],
+ "floor_row0": 12,
+ "furniture": {
+  "bookshelf_a": {
+   "rect": [
+    320,
+    2188,
+    64,
+    68
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "bookshelf_b": {
+   "rect": [
+    384,
+    2188,
+    64,
+    68
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "bookshelf_c": {
+   "rect": [
+    448,
+    2188,
+    64,
+    68
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "bookshelf_d": {
+   "rect": [
+    320,
+    2284,
+    64,
+    68
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "bookshelf_e": {
+   "rect": [
+    448,
+    2284,
+    64,
+    68
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "fireplace": {
+   "rect": [
+    128,
+    2176,
+    64,
+    80
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": [
+    1.0,
+    0.55,
+    0.2
+   ]
+  },
+  "wardrobe": {
+   "rect": [
+    228,
+    1544,
+    54,
+    78
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "wardrobe_dark": {
+   "rect": [
+    228,
+    1640,
+    54,
+    78
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "wardrobe_glass": {
+   "rect": [
+    358,
+    1554,
+    54,
+    64
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "wardrobe_short": {
+   "rect": [
+    422,
+    1554,
+    54,
+    64
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "wardrobe_purple": {
+   "rect": [
+    6,
+    1454,
+    52,
+    74
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "cabinet_glass": {
+   "rect": [
+    458,
+    2002,
+    46,
+    62
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "china_cabinet": {
+   "rect": [
+    448,
+    1894,
+    32,
+    74
+   ],
+   "kind": "north",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "dresser_wide": {
+   "rect": [
+    160,
+    1768,
+    96,
+    44
+   ],
+   "kind": "north",
+   "footprint": [
+    3,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "dresser": {
+   "rect": [
+    104,
+    1770,
+    50,
+    42
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "drawers_row": {
+   "rect": [
+    0,
+    1834,
+    96,
+    40
+   ],
+   "kind": "north",
+   "footprint": [
+    3,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "cabinet_low": {
+   "rect": [
+    38,
+    1898,
+    54,
+    46
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "vanity": {
+   "rect": [
+    68,
+    1558,
+    56,
+    60
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "bed_double_purple": {
+   "rect": [
+    162,
+    1474,
+    60,
+    62
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    2
+   ],
+   "hide": true,
+   "light": null
+  },
+  "bed_purple": {
+   "rect": [
+    128,
+    1474,
+    32,
+    62
+   ],
+   "kind": "north",
+   "footprint": [
+    1,
+    2
+   ],
+   "hide": true,
+   "light": null
+  },
+  "sofa_red": {
+   "rect": [
+    256,
+    576,
+    96,
+    52
+   ],
+   "kind": "north",
+   "footprint": [
+    3,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "sofa_grey": {
+   "rect": [
+    32,
+    2314,
+    98,
+    56
+   ],
+   "kind": "north",
+   "footprint": [
+    3,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "sofa_beige": {
+   "rect": [
+    222,
+    2304,
+    100,
+    64
+   ],
+   "kind": "north",
+   "footprint": [
+    3,
+    1
+   ],
+   "hide": true,
+   "light": null
+  },
+  "stove": {
+   "rect": [
+    288,
+    2752,
+    64,
+    80
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": [
+    1.0,
+    0.5,
+    0.25
+   ]
+  },
+  "pantry_shelf": {
+   "rect": [
+    160,
+    448,
+    64,
+    64
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "broken_cabinet": {
+   "rect": [
+    260,
+    1928,
+    50,
+    46
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "broken_wardrobe": {
+   "rect": [
+    224,
+    1984,
+    40,
+    42
+   ],
+   "kind": "north",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "tv_old": {
+   "rect": [
+    96,
+    276,
+    32,
+    44
+   ],
+   "kind": "north",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": [
+    0.55,
+    0.75,
+    1.0
+   ]
+  },
+  "sideboard": {
+   "rect": [
+    160,
+    1898,
+    64,
+    42
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "sideboard_lamp": {
+   "rect": [
+    160,
+    1848,
+    64,
+    40
+   ],
+   "kind": "north",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": [
+    1.0,
+    0.85,
+    0.6
+   ]
+  },
+  "plant_tree": {
+   "rect": [
+    386,
+    1444,
+    28,
+    46
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "plant_small": {
+   "rect": [
+    4,
+    1580,
+    24,
+    28
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "palm": {
+   "rect": [
+    426,
+    1408,
+    46,
+    62
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "floorlamp_red": {
+   "rect": [
+    352,
+    1712,
+    30,
+    48
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": [
+    1.0,
+    0.45,
+    0.35
+   ]
+  },
+  "floorlamp_blue": {
+   "rect": [
+    384,
+    1712,
+    30,
+    66
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": [
+    0.55,
+    0.7,
+    1.0
+   ]
+  },
+  "floorlamp_cream": {
+   "rect": [
+    352,
+    1774,
+    30,
+    50
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": [
+    1.0,
+    0.85,
+    0.6
+   ]
+  },
+  "lamp_red": {
+   "rect": [
+    452,
+    1654,
+    24,
+    34
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": [
+    1.0,
+    0.45,
+    0.35
+   ]
+  },
+  "lamp_beige": {
+   "rect": [
+    452,
+    1716,
+    24,
+    32
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": [
+    1.0,
+    0.85,
+    0.6
+   ]
+  },
+  "lamp_blue": {
+   "rect": [
+    452,
+    1782,
+    24,
+    34
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": [
+    0.55,
+    0.7,
+    1.0
+   ]
+  },
+  "vase_a": {
+   "rect": [
+    2,
+    2136,
+    30,
+    32
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "vase_b": {
+   "rect": [
+    34,
+    2136,
+    30,
+    32
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "globe": {
+   "rect": [
+    418,
+    1154,
+    26,
+    42
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "globe_silver": {
+   "rect": [
+    450,
+    1154,
+    26,
+    42
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "chair_high": {
+   "rect": [
+    388,
+    1986,
+    24,
+    44
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "chair_high_red": {
+   "rect": [
+    420,
+    1986,
+    24,
+    44
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "chair_wood": {
+   "rect": [
+    130,
+    994,
+    28,
+    28
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "box_small": {
+   "rect": [
+    354,
+    340,
+    30,
+    26
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "box_small_b": {
+   "rect": [
+    386,
+    354,
+    30,
+    26
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "china_cabinet_small": {
+   "rect": [
+    482,
+    1906,
+    30,
+    62
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "cabinet_small": {
+   "rect": [
+    0,
+    1898,
+    32,
+    40
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "mirror_stand": {
+   "rect": [
+    268,
+    2128,
+    40,
+    64
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "fruit_green": {
+   "rect": [
+    2,
+    1712,
+    30,
+    34
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "fruit_red": {
+   "rect": [
+    34,
+    1710,
+    28,
+    36
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "fruit_purple": {
+   "rect": [
+    66,
+    1710,
+    28,
+    36
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "broken_chair": {
+   "rect": [
+    352,
+    1926,
+    32,
+    52
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "broken_chair_b": {
+   "rect": [
+    320,
+    1990,
+    32,
+    52
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "broken_crate": {
+   "rect": [
+    226,
+    1890,
+    30,
+    24
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "broken_stool": {
+   "rect": [
+    226,
+    1920,
+    30,
+    42
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "broken_drawer": {
+   "rect": [
+    320,
+    1930,
+    32,
+    42
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "nightstand_lamp": {
+   "rect": [
+    384,
+    1652,
+    32,
+    44
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": [
+    1.0,
+    0.85,
+    0.6
+   ]
+  },
+  "nightstand_plant": {
+   "rect": [
+    416,
+    1656,
+    32,
+    40
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "basket": {
+   "rect": [
+    2,
+    2200,
+    30,
+    32
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "jar_green": {
+   "rect": [
+    34,
+    2200,
+    30,
+    32
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "chair_dining_r": {
+   "rect": [
+    196,
+    684,
+    26,
+    50
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "chair_dining_l": {
+   "rect": [
+    226,
+    684,
+    26,
+    50
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "stool_round": {
+   "rect": [
+    162,
+    692,
+    28,
+    44
+   ],
+   "kind": "side",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "table_big": {
+   "rect": [
+    26,
+    322,
+    76,
+    74
+   ],
+   "kind": "center",
+   "footprint": [
+    2,
+    2
+   ],
+   "hide": false,
+   "light": null
+  },
+  "table_light": {
+   "rect": [
+    186,
+    322,
+    76,
+    74
+   ],
+   "kind": "center",
+   "footprint": [
+    2,
+    2
+   ],
+   "hide": false,
+   "light": null
+  },
+  "desk_study": {
+   "rect": [
+    164,
+    1166,
+    56,
+    50
+   ],
+   "kind": "center",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "desk_old": {
+   "rect": [
+    262,
+    1796,
+    54,
+    52
+   ],
+   "kind": "center",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "bench": {
+   "rect": [
+    234,
+    432,
+    76,
+    42
+   ],
+   "kind": "center",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "flowers_table": {
+   "rect": [
+    104,
+    1718,
+    50,
+    42
+   ],
+   "kind": "center",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "rug_red_wide": {
+   "rect": [
+    228,
+    488,
+    120,
+    80
+   ],
+   "kind": "rug",
+   "footprint": [
+    4,
+    3
+   ],
+   "hide": false,
+   "light": null
+  },
+  "rug_red_tall": {
+   "rect": [
+    424,
+    516,
+    80,
+    120
+   ],
+   "kind": "rug",
+   "footprint": [
+    3,
+    4
+   ],
+   "hide": false,
+   "light": null
+  },
+  "rug_blue_tall": {
+   "rect": [
+    424,
+    356,
+    80,
+    120
+   ],
+   "kind": "rug",
+   "footprint": [
+    3,
+    4
+   ],
+   "hide": false,
+   "light": null
+  },
+  "rug_red_small": {
+   "rect": [
+    360,
+    636,
+    48,
+    36
+   ],
+   "kind": "rug",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "rug_blue_small": {
+   "rect": [
+    362,
+    508,
+    48,
+    36
+   ],
+   "kind": "rug",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "rug_green": {
+   "rect": [
+    360,
+    572,
+    48,
+    36
+   ],
+   "kind": "rug",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "rug_beige": {
+   "rect": [
+    6,
+    1348,
+    86,
+    56
+   ],
+   "kind": "rug",
+   "footprint": [
+    3,
+    2
+   ],
+   "hide": false,
+   "light": null
+  },
+  "books_floor": {
+   "rect": [
+    420,
+    908,
+    56,
+    46
+   ],
+   "kind": "rug",
+   "footprint": [
+    2,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "cushion_blue": {
+   "rect": [
+    402,
+    2372,
+    26,
+    26
+   ],
+   "kind": "rug",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "cushion_yellow": {
+   "rect": [
+    466,
+    2372,
+    26,
+    26
+   ],
+   "kind": "rug",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "cushion_grey": {
+   "rect": [
+    354,
+    2420,
+    28,
+    28
+   ],
+   "kind": "rug",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "window_curtains": {
+   "rect": [
+    140,
+    782,
+    72,
+    52
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "window_red": {
+   "rect": [
+    230,
+    782,
+    50,
+    40
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "window_white": {
+   "rect": [
+    294,
+    782,
+    50,
+    40
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "window_blue": {
+   "rect": [
+    104,
+    434,
+    50,
+    30
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "painting_green": {
+   "rect": [
+    12,
+    724,
+    42,
+    28
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "painting_landscape": {
+   "rect": [
+    260,
+    724,
+    56,
+    26
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "painting_sea": {
+   "rect": [
+    12,
+    788,
+    42,
+    28
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "painting_cat": {
+   "rect": [
+    76,
+    788,
+    42,
+    28
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "portrait_monster": {
+   "rect": [
+    4,
+    2260,
+    26,
+    30
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "portrait_skull": {
+   "rect": [
+    36,
+    2260,
+    26,
+    30
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "painting_abstract": {
+   "rect": [
+    68,
+    2260,
+    26,
+    30
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "painting_hill": {
+   "rect": [
+    4,
+    2324,
+    26,
+    30
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "painting_fire": {
+   "rect": [
+    4,
+    2388,
+    26,
+    30
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "painting_flower": {
+   "rect": [
+    4,
+    2452,
+    26,
+    30
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "mirror_small": {
+   "rect": [
+    360,
+    850,
+    24,
+    32
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "garland": {
+   "rect": [
+    324,
+    1516,
+    54,
+    20
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "corkboard": {
+   "rect": [
+    6,
+    1312,
+    52,
+    26
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "blackboard": {
+   "rect": [
+    420,
+    1294,
+    56,
+    46
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  },
+  "poster_board": {
+   "rect": [
+    416,
+    1232,
+    62,
+    42
+   ],
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ],
+   "hide": false,
+   "light": null
+  }
+ }
+}

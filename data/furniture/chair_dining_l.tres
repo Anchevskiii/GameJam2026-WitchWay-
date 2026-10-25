@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3 uid="uid://celgqdsc4i2a0"]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_6tvgf"]
+[ext_resource type="Texture2D" uid="uid://b4ebvtjxmfga7" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_typnp"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4lq62"]
+atlas = ExtResource("2_typnp")
+region = Rect2(226, 684, 26, 50)
+
+[resource]
+script = ExtResource("1_6tvgf")
+display_name = "Chair Dining L"
+texture = SubResource("AtlasTexture_4lq62")
+kind = 1
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = false
+light_color = Color(0, 0, 0, 0)

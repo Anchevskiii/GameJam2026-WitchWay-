@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_qivj2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_sqqml"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c8lyx"]
+atlas = ExtResource("2_sqqml")
+region = Rect2(324, 1516, 54, 20)
+
+[resource]
+script = ExtResource("1_qivj2")
+display_name = "Garland"
+texture = SubResource("AtlasTexture_c8lyx")
+kind = 4
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = false
+light_color = Color(0, 0, 0, 0)

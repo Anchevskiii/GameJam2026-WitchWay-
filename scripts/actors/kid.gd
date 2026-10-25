@@ -97,7 +97,6 @@ func get_scared(from: Vector2, _by: String = "") -> bool:
 	if _run_dir == Vector2.ZERO:
 		_run_dir = Vector2.RIGHT.rotated(randf() * TAU)
 	_say("AAAH!", 0.9)
-	AudioManager.play("npc_yelp", -6.0, randf_range(1.3, 1.6))
 	_drop_candy(1)
 	return true
 

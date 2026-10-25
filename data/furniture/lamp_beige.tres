@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_crsre"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_480gi"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_k4cr5"]
+atlas = ExtResource("2_480gi")
+region = Rect2(452, 1716, 24, 32)
+
+[resource]
+script = ExtResource("1_crsre")
+display_name = "Lamp Beige"
+texture = SubResource("AtlasTexture_k4cr5")
+kind = 1
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = false
+light_color = Color(1, 0.85, 0.6, 1)

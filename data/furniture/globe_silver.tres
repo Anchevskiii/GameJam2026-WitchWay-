@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_es35l"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_msfrv"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qwv07"]
+atlas = ExtResource("2_msfrv")
+region = Rect2(450, 1154, 26, 42)
+
+[resource]
+script = ExtResource("1_es35l")
+display_name = "Globe Silver"
+texture = SubResource("AtlasTexture_qwv07")
+kind = 1
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = false
+light_color = Color(0, 0, 0, 0)

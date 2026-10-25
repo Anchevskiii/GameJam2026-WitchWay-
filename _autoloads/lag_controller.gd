@@ -53,6 +53,14 @@ func lag_amount() -> float:
 	return clampf(inverse_lerp(lag_start_load, 100.0, GameManager.current_cpu_overload), 0.0, 1.0)
 
 
+## Triggers an immediate short hit-stop freeze on the world viewport (e.g. when the player gets scared).
+func trigger_scare_freeze(duration: float = 0.09) -> void:
+	if GameManager.is_game_over:
+		return
+	_freeze_left = maxf(_freeze_left, duration)
+	_set_frozen(true)
+
+
 func _set_frozen(frozen: bool) -> void:
 	is_frozen = frozen
 	if is_instance_valid(_viewport):

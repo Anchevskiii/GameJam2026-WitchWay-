@@ -1,57 +1,56 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/levels/room_base.tscn" id="1_base"]
 [ext_resource type="Resource" path="res://data/npcs/cardboard_ghost.tres" id="2_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/cupboard.png" id="3_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/couch.png" id="4_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/bookshelf.png" id="5_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/tv.png" id="6_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/table.png" id="7_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/lamp.png" id="8_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/clock.png" id="9_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/armchair.png" id="10_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/plant.png" id="11_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/crate.png" id="12_r"]
 [ext_resource type="Texture2D" path="res://assets/sprites/objects/cobweb.png" id="13_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/rug.png" id="14_r"]
 [ext_resource type="Texture2D" path="res://assets/sprites/objects/pumpkin.png" id="15_r"]
 [ext_resource type="Texture2D" path="res://assets/sprites/objects/candles.png" id="16_r"]
+[ext_resource type="Resource" path="res://data/furniture/books_floor.tres" id="f_books_floor"]
+[ext_resource type="Resource" path="res://data/furniture/bookshelf_a.tres" id="f_bookshelf_a"]
+[ext_resource type="Resource" path="res://data/furniture/chair_dining_l.tres" id="f_chair_dining_l"]
+[ext_resource type="Resource" path="res://data/furniture/chair_dining_r.tres" id="f_chair_dining_r"]
+[ext_resource type="Resource" path="res://data/furniture/china_cabinet.tres" id="f_china_cabinet"]
+[ext_resource type="Resource" path="res://data/furniture/cushion_yellow.tres" id="f_cushion_yellow"]
+[ext_resource type="Resource" path="res://data/furniture/dresser.tres" id="f_dresser"]
+[ext_resource type="Resource" path="res://data/furniture/fireplace.tres" id="f_fireplace"]
+[ext_resource type="Resource" path="res://data/furniture/floorlamp_red.tres" id="f_floorlamp_red"]
+[ext_resource type="Resource" path="res://data/furniture/flowers_table.tres" id="f_flowers_table"]
+[ext_resource type="Resource" path="res://data/furniture/nightstand_lamp.tres" id="f_nightstand_lamp"]
+[ext_resource type="Resource" path="res://data/furniture/painting_landscape.tres" id="f_painting_landscape"]
+[ext_resource type="Resource" path="res://data/furniture/palm.tres" id="f_palm"]
+[ext_resource type="Resource" path="res://data/furniture/plant_tree.tres" id="f_plant_tree"]
+[ext_resource type="Resource" path="res://data/furniture/portrait_skull.tres" id="f_portrait_skull"]
+[ext_resource type="Resource" path="res://data/furniture/rug_beige.tres" id="f_rug_beige"]
+[ext_resource type="Resource" path="res://data/furniture/rug_red_wide.tres" id="f_rug_red_wide"]
+[ext_resource type="Resource" path="res://data/furniture/sofa_red.tres" id="f_sofa_red"]
+[ext_resource type="Resource" path="res://data/furniture/tv_old.tres" id="f_tv_old"]
+[ext_resource type="Resource" path="res://data/furniture/vase_a.tres" id="f_vase_a"]
+[ext_resource type="Resource" path="res://data/furniture/wardrobe.tres" id="f_wardrobe"]
+[ext_resource type="Resource" path="res://data/furniture/window_curtains.tres" id="f_window_curtains"]
+[ext_resource type="Resource" path="res://data/furniture/window_white.tres" id="f_window_white"]
+[ext_resource type="Resource" path="res://data/themes/living_room.tres" id="theme"]
 
 [node name="LivingRoom" instance=ExtResource("1_base")]
 room_title = "The Living Room"
 objective = "BOO the cardboard ghost from BEHIND (SPACE), or hide (E) and jump out. Try scaring the kid too."
 layout = "######################
-#o..................o#
-#..w..K..v..L.....O..#
-#....................#
-#.......c...A........#
-#.................Z..#
-#........r......g....#
+##3#####4###1######2##
+#Q.W+LB+.H+L.VS++vCR+#
+#......k......e......#
+#.......r............#
+#.......AT+Z.........#
+#...........y........#
+#...............g....#
 #....................D
 #..P..&..............#
-#...Q......t..c....Q.#
-#o.....u.............#
+#p..Q.......u...N..Q.#
+#o..................L#
 ######################"
 npc_legend = {
 "g": ExtResource("2_r")
 }
-hide_legend = {
-"w": ExtResource("3_r"),
-"c": ExtResource("4_r"),
-"K": ExtResource("5_r")
-}
-decor_legend = {
-"v": ExtResource("6_r"),
-"t": ExtResource("7_r"),
-"L": ExtResource("8_r"),
-"O": ExtResource("9_r"),
-"A": ExtResource("10_r"),
-"Q": ExtResource("11_r"),
-"Z": ExtResource("12_r")
-}
 floor_decor_legend = {
 "o": ExtResource("13_r"),
-"r": ExtResource("14_r"),
 "u": ExtResource("15_r")
 }
 light_legend = {
@@ -61,3 +60,31 @@ is_safe_room = true
 ambient_color = Color(1, 0.95, 0.88, 1)
 intro_lines = Array[String](["Welcome to the Haunted House! This is the Living Room. It's the only room with someone living in it. You.", "Move with WASD, run with SHIFT. You are wearing our complimentary Very Scary Mask.", "Monsters only get scared if they don't see you coming. The yellow cone is where they're looking.", "Sneak up behind the Cardboard Ghost and press SPACE. Or hide in the cupboard (E) and jump out with SPACE.", "Every scare makes the house GLITCH. Glitch it all the way and it crashes - exits stop rendering.", "Other kids are trick-or-treating here too. Scare one three times and... well. Their candy restores your sanity.", "Monsters that spot you chase you. Duck into a hiding spot and their scare misses."])
 revisit_lines = Array[String](["Welcome back to the Living Room. Your progress has been saved. Your dignity has not.", "Sanity restored. Every third floor is a Living Room. Management is very generous."])
+furniture_legend = {
+"Q": ExtResource("f_plant_tree"),
+"W": ExtResource("f_wardrobe"),
+"L": ExtResource("f_floorlamp_red"),
+"B": ExtResource("f_bookshelf_a"),
+"H": ExtResource("f_fireplace"),
+"V": ExtResource("f_tv_old"),
+"S": ExtResource("f_sofa_red"),
+"v": ExtResource("f_vase_a"),
+"C": ExtResource("f_china_cabinet"),
+"R": ExtResource("f_dresser"),
+"k": ExtResource("f_books_floor"),
+"e": ExtResource("f_rug_beige"),
+"r": ExtResource("f_rug_red_wide"),
+"A": ExtResource("f_chair_dining_r"),
+"T": ExtResource("f_flowers_table"),
+"Z": ExtResource("f_chair_dining_l"),
+"y": ExtResource("f_cushion_yellow"),
+"p": ExtResource("f_palm"),
+"N": ExtResource("f_nightstand_lamp")
+}
+wall_decor_legend = {
+"1": ExtResource("f_window_curtains"),
+"2": ExtResource("f_painting_landscape"),
+"3": ExtResource("f_portrait_skull"),
+"4": ExtResource("f_window_white")
+}
+default_theme = ExtResource("theme")

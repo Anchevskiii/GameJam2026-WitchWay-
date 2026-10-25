@@ -37,6 +37,8 @@ var _ghost_reached_lawn: bool = false
 const GHOST_TARGET_POS: Vector2 = Vector2(930.0, 520.0)
 
 func _ready() -> void:
+	# Let clicks on the empty background reach _unhandled_input so they can skip the intro.
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_setup_buttons()
 	_check_save_state()
 	_setup_intro_initial_state()
@@ -77,8 +79,10 @@ func _setup_intro_initial_state() -> void:
 
 	_ghost_reached_lawn = false
 
-	# Menu UI hidden initially
+	# Menu UI hidden initially - not just transparent, so invisible buttons can't be clicked.
 	if main_layout:
+		main_layout.visible = false
+		main_layout.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		main_layout.modulate.a = 0.0
 
 func _process(delta: float) -> void:
@@ -117,6 +121,7 @@ func _play_intro_animation() -> void:
 	_intro_tween.tween_property(ghost_sprite, "scale", Vector2(2.4, 2.4), 1.5).set_delay(3.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	# 5. Fade in Main Menu UI
+	_intro_tween.chain().tween_callback(_reveal_menu)
 	_intro_tween.chain().tween_property(main_layout, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
 	_intro_tween.chain().tween_callback(func() -> void:
 		_ghost_reached_lawn = true
@@ -160,7 +165,16 @@ func _skip_intro() -> void:
 		ghost_sprite.modulate.a = 1.0
 
 	if main_layout:
+		_reveal_menu()
 		main_layout.modulate.a = 1.0
+
+
+## Makes the menu interactive only once the intro actually shows it.
+func _reveal_menu() -> void:
+	if main_layout == null:
+		return
+	main_layout.visible = true
+	main_layout.mouse_filter = Control.MOUSE_FILTER_STOP
 
 func _setup_buttons() -> void:
 	if new_game_button:

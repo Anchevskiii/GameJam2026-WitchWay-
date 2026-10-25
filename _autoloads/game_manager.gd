@@ -17,6 +17,12 @@ extends Node
 ## Seconds the meter holds after the last gain before it starts draining.
 @export var glitch_hold_time: float = 2.5
 
+@export_group("Glitch Display")
+## The GLITCH bar never reads 0: the house is always a little broken.
+@export var min_glitch_display: float = 10.0
+## The GLITCH bar moves in steps of this many percent.
+@export var glitch_display_step: float = 5.0
+
 @export_group("Difficulty")
 ## Every monster's wind-up is multiplied by this (lower = they scare you faster).
 @export var monster_windup_scale: float = 0.7
@@ -47,6 +53,11 @@ var is_game_active: bool = false
 var is_safe_room: bool = false
 ## Set by the current Room. Multiplies every prop's load weight ("this room is unoptimized").
 var cpu_load_multiplier: float = 1.0
+## Set by the current Room. Deeper floors restore sanity more slowly.
+var sanity_regen_scale: float = 1.0
+## Keys the exit needs on this floor (set by the Room; 0 = the exit isn't locked) and keys found.
+var keys_needed: int = 0
+var keys_found: int = 0
 
 # Run statistics, shown on the game over screen.
 var stats_npcs_scared: int = 0
@@ -119,6 +130,26 @@ func refill_sanity() -> void:
 	restore_sanity(max_sanity)
 
 
+func set_keys_needed(count: int) -> void:
+	keys_needed = count
+	keys_found = 0
+	EventBus.keys_changed.emit(keys_found, keys_needed)
+
+
+## A key was found. The last one wakes the house up.
+func add_key() -> void:
+	if keys_found >= keys_needed:
+		return
+	keys_found += 1
+	EventBus.keys_changed.emit(keys_found, keys_needed)
+	if keys_found == keys_needed:
+		EventBus.house_awakened.emit()
+
+
+func has_all_keys() -> bool:
+	return keys_found >= keys_needed
+
+
 func trigger_game_over() -> void:
 	if is_game_over:
 		return
@@ -183,3 +214,15 @@ func advance_level() -> void:
 ## Only clears the CPU meter (used when walking into a new room; sanity carries over).
 func reset_cpu_load() -> void:
 	_set_cpu_load(0.0)
+
+
+## The GLITCH bar value, and the screen glitch strength, are driven by this.
+## The real meter is rounded up in steps (so the bar never sits on 0), but it only
+## reaches 100% when the house actually crashes.
+func glitch_level() -> float:
+	var pct: float = current_cpu_overload / maxf(max_cpu_overload, 1.0) * 100.0
+	var step: float = maxf(glitch_display_step, 0.1)
+	var stepped: float = ceilf(pct / step) * step
+	if pct < 100.0:
+		stepped = minf(stepped, 100.0 - step)
+	return clampf(maxf(stepped, min_glitch_display), min_glitch_display, 100.0)

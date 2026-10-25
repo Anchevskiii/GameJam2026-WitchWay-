@@ -35,4 +35,13 @@ signal room_change_requested(scene_path: String)
 # Item and progression signals
 signal item_collected(item_name: String)
 signal level_completed()
+
+# Haunted house signals (traps, jumpscares, the escape)
+## Something loud happened (creaky board, snapping trap): monsters within `radius` come to look.
+signal noise_made(position: Vector2, radius: float)
+## Show a full-screen jumpscare. `face` = file name in assets/sprites/ui/ (jumpscare_<face>.png).
+signal jumpscare_requested(face: String, damage: float)
+signal keys_changed(found: int, needed: int)
+## The last key was taken: the house wakes up and the Stalker comes for you.
+signal house_awakened()
 signal checkpoint_saved()

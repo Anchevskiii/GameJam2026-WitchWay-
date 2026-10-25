@@ -8,7 +8,10 @@ extends StaticBody2D
 ## requires_cpu_overload = true: the door "fails to render" as CPU load climbs:
 ##   50% flicker -> 75% missing texture -> 90% jitter/z-fight -> 100% GONE (walkable)
 ## (GONE is triggered by EventBus.glitch_mode_toggled, emitted the moment load hits 100%.)
-## After `rerender_delay` seconds it comes back solid. It re-arms once load drops
+## Locked: on floors with keys (GameManager.keys_needed) the exit stays shut - and an
+## overloaded door refuses to vanish - until every key has been found.
+## After `rerender_delay` seconds it comes back solid - or later, if the player is far away:
+## the timer always covers the walk from where the player is when the door vanishes. It re-arms once load drops
 ## below `rearm_below_load`, so the player has to push the meter up again.
 
 enum Stage { NORMAL, FLICKER, MISSING, JITTER, GONE }
@@ -23,6 +26,12 @@ const MISSING_TEXTURE: Texture2D = preload("res://assets/sprites/environment/mis
 ## Seconds the door stays gone before it re-renders.
 @export var rerender_delay: float = 4.0
 @export var rearm_below_load: float = 70.0
+## Extra time on top of the walk: detours around furniture and monsters (x) plus a flat bonus.
+@export var walk_time_factor: float = 1.6
+@export var walk_time_bonus: float = 2.5
+
+## Set by Room; used to measure the walk from the player to this door.
+var room: Room = null
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision: CollisionShape2D = $CollisionShape2D
@@ -36,13 +45,19 @@ var _used: bool = false
 
 
 func _ready() -> void:
-	countdown_label.visible = false
+	if countdown_label:
+		var unshaded := CanvasItemMaterial.new()
+		unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		countdown_label.material = unshaded
+		countdown_label.visible = false
 	exit_area.body_entered.connect(_on_exit_area_body_entered)
 	# React to the moment load HITS 100% (an event). Polling the value would miss it,
 	# because GameManager starts decaying it again in the very same frame.
 	EventBus.glitch_mode_toggled.connect(_on_glitch_mode_toggled)
-	if not requires_cpu_overload:
+	EventBus.keys_changed.connect(_on_keys_changed)
+	if not requires_cpu_overload and GameManager.has_all_keys():
 		_show_as_open_doorway()
+	_update_lock_label()
 
 
 func _process(delta: float) -> void:
@@ -103,19 +118,75 @@ func _animate_stage() -> void:
 
 
 func _on_glitch_mode_toggled(is_active: bool) -> void:
-	if is_active and requires_cpu_overload and _armed and stage != Stage.GONE:
+	if not (is_active and requires_cpu_overload and _armed and stage != Stage.GONE):
+		return
+	if not GameManager.has_all_keys():
+		Narrator.say_event("door_locked", {}, true)  # the crash doesn't help a locked door
+		return
+	_vanish()
+
+
+func _on_keys_changed(_found: int, _needed: int) -> void:
+	_update_lock_label()
+	if not GameManager.has_all_keys():
+		return
+	if not requires_cpu_overload:
+		if collision and not collision.disabled:
+			AudioManager.play("creak_door", 1.5, 0.92)
+			_show_as_open_doorway()
+			for body in exit_area.get_overlapping_bodies():
+				_on_exit_area_body_entered(body)  # already standing in the doorway
+		return
+	# Keys are done. Make sure a previous re-render can't leave the door permanently
+	# unarmed, and open it right away if the house is already crashing.
+	_armed = true
+	if stage != Stage.GONE and GameManager.current_cpu_overload >= GameManager.max_cpu_overload:
 		_vanish()
+
+
+## Label above the door: which keys are missing, or that only the crash is left.
+func _update_lock_label() -> void:
+	if stage == Stage.GONE:
+		return
+	if not GameManager.has_all_keys():
+		countdown_label.visible = true
+		countdown_label.text = "LOCKED %d/%d KEYS" % [GameManager.keys_found, GameManager.keys_needed]
+		countdown_label.modulate = Color.WHITE
+		return
+	if requires_cpu_overload:
+		countdown_label.visible = true
+		countdown_label.text = "UNLOCKED - CRASH TO OPEN"
+		countdown_label.modulate = Color(0.5, 1.0, 0.6)
+	else:
+		countdown_label.visible = false
+		countdown_label.modulate = Color.WHITE
 
 
 func _vanish() -> void:
 	stage = Stage.GONE
-	_gone_time_left = rerender_delay
+	_gone_time_left = maxf(rerender_delay, _time_to_reach())
 	sprite.visible = false
 	collision.set_deferred("disabled", true)
 	countdown_label.visible = true
+	countdown_label.modulate = Color.WHITE
 	AudioManager.play("glitch")
 	EventBus.bug_triggered.emit("door_not_rendered")
 	Narrator.say_event("door_gone", {}, true)
+	# If the player was already standing in the doorway when it vanished, let them
+	# through now - body_entered will not fire again for a body that is already inside.
+	for body in exit_area.get_overlapping_bodies():
+		_on_exit_area_body_entered(body)
+
+
+## Seconds a player walking (not sprinting) needs to get here, with some slack.
+func _time_to_reach() -> float:
+	var player: PlayerController = get_tree().get_first_node_in_group("player") as PlayerController
+	if room == null or player == null:
+		return 0.0
+	var tiles: int = room.walking_tiles(player.global_position, global_position)
+	if tiles < 0:
+		return 0.0
+	return tiles * Room.TILE_SIZE / player.walk_speed * walk_time_factor + walk_time_bonus
 
 
 func _rerender() -> void:
@@ -127,20 +198,21 @@ func _rerender() -> void:
 	sprite.offset = Vector2.ZERO
 	collision.set_deferred("disabled", false)
 	countdown_label.visible = false
+	_update_lock_label()
 	AudioManager.play("rerender")
 	Narrator.say_event("door_back")
 
 
 func _show_as_open_doorway() -> void:
 	# Door swung open against the frame: squash it to a thin strip on the hinge side.
-	collision.disabled = true
+	collision.set_deferred("disabled", true)
 	sprite.scale = Vector2(0.2, 1.0)
 	sprite.position = Vector2(-13.0, 0.0)
 	sprite.modulate = Color(0.8, 0.8, 0.8)
 
 
 func is_passable() -> bool:
-	return not requires_cpu_overload or stage == Stage.GONE
+	return GameManager.has_all_keys() and (not requires_cpu_overload or stage == Stage.GONE)
 
 
 func _on_exit_area_body_entered(body: Node2D) -> void:

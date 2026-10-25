@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3 uid="uid://7dt6dtiyx581"]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_oc4j8"]
+[ext_resource type="Texture2D" uid="uid://b4ebvtjxmfga7" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_s6w3h"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0ug3c"]
+atlas = ExtResource("2_s6w3h")
+region = Rect2(96, 276, 32, 44)
+
+[resource]
+script = ExtResource("1_oc4j8")
+display_name = "Tv Old"
+texture = SubResource("AtlasTexture_0ug3c")
+kind = 0
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = true
+light_color = Color(0.55, 0.75, 1, 1)

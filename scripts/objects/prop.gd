@@ -14,7 +14,7 @@ const SCENE_PATH: String = "res://scenes/objects/prop.tscn"
 ## Oldest props get deleted above this count (their CPU load still decays normally).
 const MAX_PROPS: int = 60
 ## Candy is picked up when the player gets this close.
-const PICKUP_RADIUS: float = 20.0
+const PICKUP_RADIUS: float = 36.0
 
 static var _live_props: Array[Prop] = []
 
@@ -23,6 +23,8 @@ static var _live_props: Array[Prop] = []
 @export var knock_speed: float = 90.0
 
 var _spawn_impulse: Vector2 = Vector2.ZERO
+var _reachability_checked: bool = false
+var _rest_timer: float = 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -83,15 +85,44 @@ func _register() -> void:
 
 ## Candy: picked up by walking over it. A distance check (not a collision) so it also
 ## works for candy that has come to rest and gone to sleep in the physics engine.
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if data == null or data.sanity_restore <= 0.0:
 		return
+
+	# Ensure dropped candy is never trapped inside or on top of solid furniture/walls
+	if not _reachability_checked:
+		if linear_velocity.length() < 15.0:
+			_rest_timer += delta
+			if _rest_timer >= 0.25:
+				_reachability_checked = true
+				_ensure_candy_reachable()
+		else:
+			_rest_timer = 0.0
+
 	var player: Node2D = get_tree().get_first_node_in_group("player") as Node2D
 	if player and not player.get("is_hidden") and global_position.distance_to(player.global_position) < PICKUP_RADIUS:
 		GameManager.restore_sanity(data.sanity_restore)
 		FloatingText.spawn(self, global_position, "+%d SANITY" % roundi(data.sanity_restore), Color(0.5, 1.0, 0.55), 18)
 		AudioManager.play("pop", -4.0, 1.5)
 		queue_free()
+
+
+func _ensure_candy_reachable() -> void:
+	var space := get_world_2d().direct_space_state
+	var point_query := PhysicsPointQueryParameters2D.new()
+	point_query.position = global_position
+	point_query.collision_mask = 1  # walls & solid furniture
+	var hits := space.intersect_point(point_query, 1)
+	if not hits.is_empty():
+		for dist in [24.0, 36.0, 48.0, 64.0]:
+			for step in 8:
+				var test_pos: Vector2 = global_position + Vector2.RIGHT.rotated(step * PI / 4.0) * dist
+				point_query.position = test_pos
+				if space.intersect_point(point_query, 1).is_empty():
+					global_position = test_pos
+					linear_velocity = Vector2.ZERO
+					sleeping = true
+					return
 
 
 func _on_body_entered(body: Node) -> void:

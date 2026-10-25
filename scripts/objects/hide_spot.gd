@@ -31,13 +31,17 @@ var _player: Node2D = null
 func _ready() -> void:
 	add_to_group("hide_spots")
 	_prompt = Label.new()
+	var unshaded := CanvasItemMaterial.new()
+	unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	_prompt.material = unshaded
 	_prompt.add_theme_font_size_override("font_size", 18)
-	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
-	_prompt.add_theme_constant_override("outline_size", 5)
+	_prompt.add_theme_color_override("font_color", Color(1.0, 0.98, 0.78))
+	_prompt.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
+	_prompt.add_theme_constant_override("outline_size", 6)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.size = Vector2(260, 24)
 	_prompt.position = Vector2(-130, -58)
-	_prompt.z_index = 30
+	_prompt.z_index = 60
 	_prompt.visible = false
 	add_child(_prompt)
 
@@ -105,11 +109,16 @@ func _start_peek() -> void:
 	_peek.flip_h = _peek_side < 0.0
 
 	# Start hidden behind the furniture, slide out past its edge, hold, slide back in.
-	var furniture_half: Vector2 = furniture_sprite.texture.get_size() * 0.5
-	var top_y: float = -furniture_half.y + head_height * _peek.scale.y * 0.5 + 2.0
-	var hidden_x: float = _peek_side * (furniture_half.x - tex.get_width() * 0.5 * _peek.scale.x)
+	# Work in this node's space: the furniture sprite may be offset (3/4-view furniture
+	# stands on its footprint and rises above it).
+	var rect: Rect2 = furniture_sprite.get_rect()
+	rect.position += furniture_sprite.global_position - global_position
+	var center_x: float = rect.get_center().x
+	var half_w: float = rect.size.x * 0.5
+	var top_y: float = rect.position.y + head_height * _peek.scale.y * 0.5 + 2.0
+	var hidden_x: float = center_x + _peek_side * (half_w - tex.get_width() * 0.5 * _peek.scale.x)
 	# Slide out until most of the head is past the edge - it should be noticeable.
-	var out_x: float = _peek_side * (furniture_half.x + tex.get_width() * 0.3 * _peek.scale.x)
+	var out_x: float = center_x + _peek_side * (half_w + tex.get_width() * 0.3 * _peek.scale.x)
 	_peek.position = Vector2(hidden_x, top_y)
 	_peek.visible = true
 	var tween: Tween = _peek.create_tween()
@@ -129,6 +138,9 @@ func _find_sprite(node: Node) -> Sprite2D:
 
 # ---------------------------------------------------------------- prompt / wobble
 
+## True when PlayerController picks this HideSpot as the single active interaction target.
+var is_active_target: bool = false
+
 func _update_prompt() -> void:
 	if _player == null:
 		return
@@ -138,7 +150,7 @@ func _update_prompt() -> void:
 		_prompt.visible = true
 	else:
 		_prompt.text = "[E] HIDE"
-		_prompt.visible = not occupied and is_player_in_reach() and not _player.get("is_hidden")
+		_prompt.visible = is_active_target and not _player.get("is_hidden")
 
 
 ## Little wobble of the furniture so it's clear someone just moved in/out.

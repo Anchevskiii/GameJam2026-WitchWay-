@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="RoomTheme" load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_752ca"]
+[ext_resource type="Resource" path="res://data/furniture/box_small.tres" id="2_o2yfs"]
+[ext_resource type="Resource" path="res://data/furniture/box_small_b.tres" id="3_a3jjr"]
+[ext_resource type="Resource" path="res://data/furniture/broken_crate.tres" id="4_luodc"]
+[ext_resource type="Resource" path="res://data/furniture/jar_green.tres" id="5_lemlm"]
+[ext_resource type="Resource" path="res://data/furniture/books_floor.tres" id="6_n2mo6"]
+[ext_resource type="Resource" path="res://data/furniture/wardrobe_dark.tres" id="7_snjeg"]
+[ext_resource type="Resource" path="res://data/furniture/broken_cabinet.tres" id="8_ucylc"]
+[ext_resource type="Resource" path="res://data/furniture/broken_wardrobe.tres" id="9_hh3sw"]
+[ext_resource type="Resource" path="res://data/furniture/drawers_row.tres" id="10_nn4x4"]
+[ext_resource type="Script" path="res://scripts/resources/room_theme.gd" id="11_t4tv2"]
+[ext_resource type="Resource" path="res://data/furniture/broken_chair.tres" id="12_080vm"]
+[ext_resource type="Resource" path="res://data/furniture/broken_chair_b.tres" id="13_c0lfs"]
+[ext_resource type="Resource" path="res://data/furniture/broken_stool.tres" id="14_by8pj"]
+[ext_resource type="Resource" path="res://data/furniture/broken_drawer.tres" id="15_lidnf"]
+[ext_resource type="Resource" path="res://data/furniture/basket.tres" id="16_pk833"]
+[ext_resource type="Resource" path="res://data/furniture/painting_abstract.tres" id="17_gbsjj"]
+[ext_resource type="Resource" path="res://data/furniture/portrait_skull.tres" id="18_f53vb"]
+
+[resource]
+script = ExtResource("11_t4tv2")
+display_name = "Storage Room"
+wallpaper = 7
+floor_pattern = 7
+north_pieces = Array[ExtResource("1_752ca")]([ExtResource("7_snjeg"), ExtResource("8_ucylc"), ExtResource("9_hh3sw"), ExtResource("10_nn4x4")])
+wall_decor = Array[ExtResource("1_752ca")]([ExtResource("17_gbsjj"), ExtResource("18_f53vb")])
+side_pieces = Array[ExtResource("1_752ca")]([ExtResource("12_080vm"), ExtResource("13_c0lfs"), ExtResource("4_luodc"), ExtResource("14_by8pj"), ExtResource("15_lidnf"), ExtResource("2_o2yfs"), ExtResource("3_a3jjr"), ExtResource("16_pk833"), ExtResource("5_lemlm")])
+center_pieces = Array[ExtResource("1_752ca")]([])
+rugs = Array[ExtResource("1_752ca")]([])
+feature_pieces = Array[ExtResource("1_752ca")]([])
+feature_flank = Array[ExtResource("1_752ca")]([])
+accent_pieces = Array[ExtResource("1_752ca")]([ExtResource("2_o2yfs"), ExtResource("3_a3jjr"), ExtResource("4_luodc"), ExtResource("5_lemlm")])
+set_in_front_of_feature = false
+floor_clutter = Array[ExtResource("1_752ca")]([ExtResource("6_n2mo6")])

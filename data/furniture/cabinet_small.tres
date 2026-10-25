@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_g1yna"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_x0f35"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_k0fec"]
+atlas = ExtResource("2_x0f35")
+region = Rect2(0, 1898, 32, 40)
+
+[resource]
+script = ExtResource("1_g1yna")
+display_name = "Cabinet Small"
+texture = SubResource("AtlasTexture_k0fec")
+kind = 1
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = true
+light_color = Color(0, 0, 0, 0)

@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="RoomTheme" load_steps=26 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_wieob"]
+[ext_resource type="Resource" path="res://data/furniture/floorlamp_red.tres" id="2_ku55q"]
+[ext_resource type="Resource" path="res://data/furniture/palm.tres" id="3_yhlog"]
+[ext_resource type="Resource" path="res://data/furniture/vase_a.tres" id="4_c3ble"]
+[ext_resource type="Resource" path="res://data/furniture/flowers_table.tres" id="5_44hfw"]
+[ext_resource type="Resource" path="res://data/furniture/plant_tree.tres" id="6_cmwaq"]
+[ext_resource type="Resource" path="res://data/furniture/fireplace.tres" id="7_l10cw"]
+[ext_resource type="Resource" path="res://data/furniture/cushion_yellow.tres" id="8_pkk86"]
+[ext_resource type="Resource" path="res://data/furniture/cushion_blue.tres" id="9_ju8kv"]
+[ext_resource type="Resource" path="res://data/furniture/sofa_red.tres" id="10_cs2mh"]
+[ext_resource type="Resource" path="res://data/furniture/sofa_grey.tres" id="11_hqhlr"]
+[ext_resource type="Resource" path="res://data/furniture/sofa_beige.tres" id="12_xmct6"]
+[ext_resource type="Resource" path="res://data/furniture/cabinet_low.tres" id="13_vxvm0"]
+[ext_resource type="Resource" path="res://data/furniture/tv_old.tres" id="14_vr7l4"]
+[ext_resource type="Resource" path="res://data/furniture/dresser.tres" id="15_xvolo"]
+[ext_resource type="Resource" path="res://data/furniture/rug_red_wide.tres" id="16_ceb51"]
+[ext_resource type="Resource" path="res://data/furniture/rug_beige.tres" id="17_ruav6"]
+[ext_resource type="Script" path="res://scripts/resources/room_theme.gd" id="18_hsaku"]
+[ext_resource type="Resource" path="res://data/furniture/chair_dining_l.tres" id="19_3jiet"]
+[ext_resource type="Resource" path="res://data/furniture/chair_dining_r.tres" id="20_jiqew"]
+[ext_resource type="Resource" path="res://data/furniture/window_white.tres" id="21_bw5d0"]
+[ext_resource type="Resource" path="res://data/furniture/painting_landscape.tres" id="22_bw4hs"]
+[ext_resource type="Resource" path="res://data/furniture/painting_sea.tres" id="23_26i1y"]
+[ext_resource type="Resource" path="res://data/furniture/portrait_skull.tres" id="24_tdjex"]
+[ext_resource type="Resource" path="res://data/furniture/painting_cat.tres" id="25_x52gw"]
+
+[resource]
+script = ExtResource("18_hsaku")
+display_name = "Living Room"
+wallpaper = 8
+floor_pattern = 0
+north_pieces = Array[ExtResource("1_wieob")]([ExtResource("10_cs2mh"), ExtResource("11_hqhlr"), ExtResource("12_xmct6"), ExtResource("13_vxvm0"), ExtResource("14_vr7l4"), ExtResource("15_xvolo")])
+wall_decor = Array[ExtResource("1_wieob")]([ExtResource("21_bw5d0"), ExtResource("22_bw4hs"), ExtResource("23_26i1y"), ExtResource("24_tdjex"), ExtResource("25_x52gw")])
+side_pieces = Array[ExtResource("1_wieob")]([ExtResource("6_cmwaq"), ExtResource("3_yhlog"), ExtResource("4_c3ble")])
+center_pieces = Array[ExtResource("1_wieob")]([ExtResource("5_44hfw")])
+rugs = Array[ExtResource("1_wieob")]([ExtResource("16_ceb51"), ExtResource("17_ruav6")])
+feature_pieces = Array[ExtResource("1_wieob")]([ExtResource("7_l10cw")])
+feature_flank = Array[ExtResource("1_wieob")]([ExtResource("2_ku55q"), ExtResource("6_cmwaq")])
+accent_pieces = Array[ExtResource("1_wieob")]([ExtResource("2_ku55q"), ExtResource("3_yhlog"), ExtResource("4_c3ble")])
+set_in_front_of_feature = true
+seat_west = ExtResource("20_jiqew")
+seat_east = ExtResource("19_3jiet")
+floor_clutter = Array[ExtResource("1_wieob")]([ExtResource("8_pkk86"), ExtResource("9_ju8kv")])

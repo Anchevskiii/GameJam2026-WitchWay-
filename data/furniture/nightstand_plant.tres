@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_uwba8"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_guebh"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d87yi"]
+atlas = ExtResource("2_guebh")
+region = Rect2(416, 1656, 32, 40)
+
+[resource]
+script = ExtResource("1_uwba8")
+display_name = "Nightstand Plant"
+texture = SubResource("AtlasTexture_d87yi")
+kind = 1
+footprint = Vector2i(1, 1)
+hideable = false
+searchable = true
+light_color = Color(0, 0, 0, 0)

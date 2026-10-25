@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_jib4v"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_yofw7"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nfb4f"]
+atlas = ExtResource("2_yofw7")
+region = Rect2(6, 1454, 52, 74)
+
+[resource]
+script = ExtResource("1_jib4v")
+display_name = "Wardrobe Purple"
+texture = SubResource("AtlasTexture_nfb4f")
+kind = 0
+footprint = Vector2i(2, 1)
+hideable = true
+searchable = false
+light_color = Color(0, 0, 0, 0)

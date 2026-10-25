@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_1nl8j"]
+[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_aanc7"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tsovn"]
+atlas = ExtResource("2_aanc7")
+region = Rect2(128, 1474, 32, 62)
+
+[resource]
+script = ExtResource("1_1nl8j")
+display_name = "Bed Purple"
+texture = SubResource("AtlasTexture_tsovn")
+kind = 0
+footprint = Vector2i(1, 2)
+hideable = true
+searchable = false
+light_color = Color(0, 0, 0, 0)

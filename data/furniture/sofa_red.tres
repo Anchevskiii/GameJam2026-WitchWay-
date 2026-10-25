@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3 uid="uid://bgbf7lpxy5eey"]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_4t23f"]
+[ext_resource type="Texture2D" uid="uid://b4ebvtjxmfga7" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_8vwoy"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vc57x"]
+atlas = ExtResource("2_8vwoy")
+region = Rect2(256, 576, 96, 52)
+
+[resource]
+script = ExtResource("1_4t23f")
+display_name = "Sofa Red"
+texture = SubResource("AtlasTexture_vc57x")
+kind = 0
+footprint = Vector2i(3, 1)
+hideable = true
+searchable = false
+light_color = Color(0, 0, 0, 0)
