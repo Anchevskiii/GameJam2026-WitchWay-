@@ -128,19 +128,38 @@ func _on_glitch_mode_toggled(is_active: bool) -> void:
 
 func _on_keys_changed(_found: int, _needed: int) -> void:
 	_update_lock_label()
-	if GameManager.has_all_keys() and not requires_cpu_overload and collision and not collision.disabled:
-		AudioManager.play("creak", 0.0, 0.7)
-		_show_as_open_doorway()
-		for body in exit_area.get_overlapping_bodies():
-			_on_exit_area_body_entered(body)  # already standing in the doorway
+	if not GameManager.has_all_keys():
+		return
+	if not requires_cpu_overload:
+		if collision and not collision.disabled:
+			AudioManager.play("creak", 0.0, 0.7)
+			_show_as_open_doorway()
+			for body in exit_area.get_overlapping_bodies():
+				_on_exit_area_body_entered(body)  # already standing in the doorway
+		return
+	# Keys are done. Make sure a previous re-render can't leave the door permanently
+	# unarmed, and open it right away if the house is already crashing.
+	_armed = true
+	if stage != Stage.GONE and GameManager.current_cpu_overload >= GameManager.max_cpu_overload:
+		_vanish()
 
 
-## "LOCKED 1/3" over the door while keys are missing.
+## Label above the door: which keys are missing, or that only the crash is left.
 func _update_lock_label() -> void:
 	if stage == Stage.GONE:
 		return
-	countdown_label.visible = not GameManager.has_all_keys()
-	countdown_label.text = "LOCKED %d/%d KEYS" % [GameManager.keys_found, GameManager.keys_needed]
+	if not GameManager.has_all_keys():
+		countdown_label.visible = true
+		countdown_label.text = "LOCKED %d/%d KEYS" % [GameManager.keys_found, GameManager.keys_needed]
+		countdown_label.modulate = Color.WHITE
+		return
+	if requires_cpu_overload:
+		countdown_label.visible = true
+		countdown_label.text = "UNLOCKED - CRASH TO OPEN"
+		countdown_label.modulate = Color(0.5, 1.0, 0.6)
+	else:
+		countdown_label.visible = false
+		countdown_label.modulate = Color.WHITE
 
 
 func _vanish() -> void:
@@ -149,9 +168,14 @@ func _vanish() -> void:
 	sprite.visible = false
 	collision.set_deferred("disabled", true)
 	countdown_label.visible = true
+	countdown_label.modulate = Color.WHITE
 	AudioManager.play("glitch")
 	EventBus.bug_triggered.emit("door_not_rendered")
 	Narrator.say_event("door_gone", {}, true)
+	# If the player was already standing in the doorway when it vanished, let them
+	# through now - body_entered will not fire again for a body that is already inside.
+	for body in exit_area.get_overlapping_bodies():
+		_on_exit_area_body_entered(body)
 
 
 ## Seconds a player walking (not sprinting) needs to get here, with some slack.

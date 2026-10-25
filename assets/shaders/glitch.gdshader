@@ -19,10 +19,11 @@ void fragment() {
 	if (rand(vec2(band, t)) < intensity * 0.3) {
 		uv.x += (rand(vec2(t, band)) - 0.5) * 0.09 * intensity;
 	}
-	// Blocks of the picture jump to the wrong place.
+	// Blocks of the picture jump to the wrong place. The jump distance also scales
+	// with intensity, so a calm house only twitches instead of teleporting chunks.
 	vec2 block = floor(uv * vec2(16.0, 9.0));
 	if (rand(block + t) < intensity * 0.05) {
-		uv += (vec2(rand(block + 1.7), rand(block.yx + 3.1)) - 0.5) * 0.06;
+		uv += (vec2(rand(block + 1.7), rand(block.yx + 3.1)) - 0.5) * 0.15 * intensity;
 	}
 
 	// RGB split.
@@ -33,9 +34,10 @@ void fragment() {
 
 	// Scanlines.
 	c.rgb *= 1.0 - 0.1 * intensity * step(0.5, fract(uv.y * 120.0));
-	// Magenta "missing texture" stripes.
+	// Magenta "missing texture" stripes. At low intensity they are faint hints.
 	if (rand(vec2(t, band * 0.37)) < intensity * 0.025) {
-		c.rgb = mix(c.rgb, vec3(1.0, 0.0, 0.86), 0.6);
+		float magenta = clamp(intensity * 2.4, 0.0, 1.0) * 0.6;
+		c.rgb = mix(c.rgb, vec3(1.0, 0.0, 0.86), magenta);
 	}
 	c.a = 1.0;
 	COLOR = c;

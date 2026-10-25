@@ -40,7 +40,7 @@ func _ready() -> void:
 	room_label.get_parent().add_child(_keys_label)
 	room_label.get_parent().move_child(_keys_label, room_label.get_index())
 	EventBus.keys_changed.connect(_on_keys_changed)
-	EventBus.house_awakened.connect(func() -> void: _keys_label.text = "ALL KEYS - GET OUT!")
+	EventBus.house_awakened.connect(_on_house_awakened)
 	_on_sanity_changed(GameManager.current_sanity, GameManager.max_sanity)
 	_on_cpu_overload_changed(GameManager.current_cpu_overload, GameManager.max_cpu_overload)
 
@@ -53,31 +53,48 @@ func _on_sanity_changed(current: float, max_val: float) -> void:
 	sanity_bar.modulate = Color(1, 1, 1) if pct > 25 else Color(1, 0.6, 0.6)
 
 
-func _on_cpu_overload_changed(current: float, max_val: float) -> void:
-	cpu_bar.max_value = max_val
-	cpu_bar.value = current
-	var pct: int = int((current / maxf(max_val, 1.0)) * 100.0)
+func _on_cpu_overload_changed(_current: float, _max_val: float) -> void:
+	var level: float = GameManager.glitch_level()
+	cpu_bar.max_value = 100.0
+	cpu_bar.value = level
+	var pct: int = int(level)
 	# The glitch meter in words: scaring things makes the house glitch; at 100% it crashes.
 	if pct >= 100:
 		cpu_label.text = "CRASHED!"
 		_cpu_fill.bg_color = CPU_OVERLOAD
-	elif pct >= 75:
+	elif pct >= 90:
 		cpu_label.text = "%d%% CRASHING" % pct
+		_cpu_fill.bg_color = CPU_HOT
+	elif pct >= 80:
+		cpu_label.text = "%d%% SEVERE" % pct
 		_cpu_fill.bg_color = CPU_HOT
 	elif pct >= 50:
 		cpu_label.text = "%d%% LAGGING" % pct
 		_cpu_fill.bg_color = CPU_WARM
-	elif pct >= 20:
+	elif pct >= 25:
 		cpu_label.text = "%d%% FLICKERING" % pct
 		_cpu_fill.bg_color = CPU_CALM
 	else:
-		cpu_label.text = "STABLE"
+		cpu_label.text = "%d%% STABLE" % pct
 		_cpu_fill.bg_color = CPU_CALM
 
 
 func _on_keys_changed(found: int, needed: int) -> void:
 	_keys_label.visible = needed > 0
-	_keys_label.text = "KEYS %d/%d" % [found, needed]
+	if needed <= 0:
+		return
+	var has_all: bool = found >= needed
+	if has_all:
+		_keys_label.text = "KEYS: ALL FOUND (%d/%d)" % [found, needed]
+	else:
+		_keys_label.text = "KEYS: %d/%d - LOCKED" % [found, needed]
+	_keys_label.add_theme_color_override("font_color",
+		Color(0.4, 1.0, 0.5) if has_all else Color(1.0, 0.85, 0.3))
+
+
+func _on_house_awakened() -> void:
+	_keys_label.text = "KEYS: ALL FOUND (%d/%d)" % [GameManager.keys_found, GameManager.keys_needed]
+	_keys_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.5))
 
 
 func _on_room_entered(room_title: String, objective: String) -> void:
