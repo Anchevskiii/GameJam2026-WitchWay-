@@ -78,6 +78,7 @@ var _flicker_duration: float = 0.0
 
 func _ready() -> void:
 	add_to_group("player")
+	_apply_player_profile()
 	if flashlight_beam:
 		flashlight_beam.texture = _beam_texture()
 		flashlight_beam.texture_scale = 1.35
@@ -87,6 +88,17 @@ func _ready() -> void:
 	_update_flashlight_state()
 	if flashlight_pivot:
 		flashlight_pivot.rotation = _facing_direction.angle()
+
+
+## Swaps the player's sprite to the character preset saved in the Customization menu.
+func _apply_player_profile() -> void:
+	var profile: Dictionary = SaveManager.load_player_profile()
+	var preset_id: int = int(profile.get("preset_id", PlayerPresets.DEFAULT_ID))
+	if not PlayerPresets.is_valid(preset_id):
+		preset_id = PlayerPresets.DEFAULT_ID
+	if player_sprite:
+		player_sprite.texture = PlayerPresets.texture(preset_id)
+		_normal_texture = player_sprite.texture
 
 
 func _physics_process(delta: float) -> void:
