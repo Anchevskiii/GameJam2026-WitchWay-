@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://cb5xq8nm47k21"]
+[gd_scene load_steps=17 format=3 uid="uid://cb5xq8nm47k21"]
 
 [ext_resource type="Texture2D" uid="uid://b2nbh13mm8jfv" path="res://assets/sprites/environment/wood_floor.png" id="1_floor_tex"]
 [ext_resource type="Texture2D" uid="uid://dsiulb4c3cdn" path="res://assets/sprites/environment/stone_wall.png" id="2_wall_tex"]
@@ -6,8 +6,8 @@
 [ext_resource type="Texture2D" uid="uid://c4mevibaitldj" path="res://assets/sprites/objects/table.png" id="4_table_tex"]
 [ext_resource type="Script" path="res://scripts/objects/wardrobe_interactable.gd" id="5_wardrobe_logic"]
 [ext_resource type="Script" path="res://scripts/components/interactable.gd" id="6_interactable"]
-[ext_resource type="PackedScene" uid="uid://df7x9kmq12n8e" path="res://scenes/actors/base_entity.tscn" id="7_ghost"]
-[ext_resource type="PackedScene" uid="uid://c5q2t4x96lmpe" path="res://scenes/actors/player.tscn" id="8_player"]
+[ext_resource type="PackedScene" uid="uid://df7yakmq12n8e" path="res://scenes/actors/base_entity.tscn" id="7_ghost"]
+[ext_resource type="PackedScene" uid="uid://c5q2t4ya6lmpe" path="res://scenes/actors/player.tscn" id="8_player"]
 [ext_resource type="PackedScene" uid="uid://bvkmq8nx41e7q" path="res://scenes/ui/hud.tscn" id="9_hud"]
 [ext_resource type="PackedScene" uid="uid://c6nmq8nx41e7q" path="res://scenes/ui/game_over.tscn" id="10_game_over"]
 [ext_resource type="PackedScene" uid="uid://d3pmq8nx41e7q" path="res://scenes/ui/pause_menu.tscn" id="11_pause_menu"]
@@ -21,11 +21,11 @@ size = Vector2(32, 512)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wardrobe"]
 size = Vector2(48, 32)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_table"]
-size = Vector2(40, 28)
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_interact_zone"]
 size = Vector2(64, 48)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_table"]
+size = Vector2(40, 28)
 
 [node name="TutorialRoom" type="Node2D"]
 
@@ -42,7 +42,6 @@ region_rect = Rect2(0, 0, 768, 512)
 
 [node name="TopWall" type="StaticBody2D" parent="Walls"]
 position = Vector2(0, -256)
-collision_layer = 1
 collision_mask = 2
 
 [node name="Sprite2D" type="Sprite2D" parent="Walls/TopWall"]
@@ -56,7 +55,6 @@ shape = SubResource("RectangleShape2D_wall_h")
 
 [node name="BottomWall" type="StaticBody2D" parent="Walls"]
 position = Vector2(0, 256)
-collision_layer = 1
 collision_mask = 2
 
 [node name="Sprite2D" type="Sprite2D" parent="Walls/BottomWall"]
@@ -70,7 +68,6 @@ shape = SubResource("RectangleShape2D_wall_h")
 
 [node name="LeftWall" type="StaticBody2D" parent="Walls"]
 position = Vector2(-384, 0)
-collision_layer = 1
 collision_mask = 2
 
 [node name="Sprite2D" type="Sprite2D" parent="Walls/LeftWall"]
@@ -84,7 +81,6 @@ shape = SubResource("RectangleShape2D_wall_v")
 
 [node name="RightWall" type="StaticBody2D" parent="Walls"]
 position = Vector2(384, 0)
-collision_layer = 1
 collision_mask = 2
 
 [node name="Sprite2D" type="Sprite2D" parent="Walls/RightWall"]
@@ -100,7 +96,6 @@ shape = SubResource("RectangleShape2D_wall_v")
 
 [node name="Wardrobe" type="StaticBody2D" parent="Props"]
 position = Vector2(-320, -180)
-collision_layer = 1
 collision_mask = 2
 script = ExtResource("5_wardrobe_logic")
 
@@ -121,7 +116,6 @@ shape = SubResource("RectangleShape2D_interact_zone")
 
 [node name="Table" type="StaticBody2D" parent="Props"]
 position = Vector2(240, -140)
-collision_layer = 1
 collision_mask = 2
 
 [node name="Sprite2D" type="Sprite2D" parent="Props/Table"]

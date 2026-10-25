@@ -1,14 +1,15 @@
-[gd_scene load_steps=11 format=3 uid="uid://c6nmq8nx41main"]
+[gd_scene load_steps=12 format=3 uid="uid://c1f0h8ytwkekj"]
 
 [ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_main_script"]
 [ext_resource type="Texture2D" uid="uid://c5e3apxjwhxtn" path="res://assets/sprites/environment/menu_background.png" id="2_bg_tex"]
 [ext_resource type="Texture2D" uid="uid://buwrq6un7e85" path="res://assets/sprites/entities/ghost/Png_animation/Ghost1.png" id="3_ghost_tex"]
 [ext_resource type="Texture2D" uid="uid://crajfoxoxruvf" path="res://assets/sprites/environment/forest_path_bg.png" id="4_forest_bg"]
 [ext_resource type="Texture2D" uid="uid://sxgn25p37ovo" path="res://assets/sprites/environment/forest_foreground_left.png" id="5_tree_left"]
-[ext_resource type="Material" uid="uid://tree_wind_mat_left" path="res://assets/shaders/tree_wind_left.tres" id="6_wind_left"]
+[ext_resource type="Material" path="res://assets/shaders/tree_wind_left.tres" id="6_wind_left"]
 [ext_resource type="Texture2D" uid="uid://d33gty0cljkhw" path="res://assets/sprites/environment/forest_foreground_right.png" id="7_tree_right"]
-[ext_resource type="Material" uid="uid://tree_wind_mat_right" path="res://assets/shaders/tree_wind_right.tres" id="8_wind_right"]
-[ext_resource type="PackedScene" uid="uid://df7x9kmq12set" path="res://scenes/ui/settings_menu.tscn" id="9_settings_menu"]
+[ext_resource type="Material" path="res://assets/shaders/tree_wind_right.tres" id="8_wind_right"]
+[ext_resource type="FontFile" uid="uid://kssr6fgeu1hi" path="res://assets/fonts/Blackcraft.ttf" id="9_jv3yk"]
+[ext_resource type="PackedScene" uid="uid://df7yakmq12set" path="res://scenes/ui/settings_menu.tscn" id="9_settings_menu"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_panel"]
 content_margin_left = 32.0
@@ -110,8 +111,8 @@ scale_amount_max = 3.5
 color = Color(0.85, 0.8, 0.95, 0.25)
 
 [node name="TreeOverlayLeft" type="TextureRect" parent="."]
-material = ExtResource("6_wind_left")
 texture_filter = 1
+material = ExtResource("6_wind_left")
 layout_mode = 0
 offset_right = 537.0
 offset_bottom = 720.0
@@ -119,8 +120,8 @@ mouse_filter = 2
 texture = ExtResource("5_tree_left")
 
 [node name="TreeOverlayRight" type="TextureRect" parent="."]
-material = ExtResource("8_wind_right")
 texture_filter = 1
+material = ExtResource("8_wind_right")
 layout_mode = 0
 offset_left = 743.0
 offset_right = 1280.0
@@ -144,13 +145,19 @@ theme_override_constants/separation = 20
 [node name="TitleBox" type="VBoxContainer" parent="MainLayout"]
 layout_mode = 2
 
+[node name="TitleSpacer" type="Control" parent="MainLayout/TitleBox"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
 [node name="TitleLabel" type="Label" parent="MainLayout/TitleBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.92, 0.85, 1)
+theme_override_colors/font_color = Color(0.96, 0.6608, 0.144, 1)
 theme_override_colors/font_shadow_color = Color(0.08, 0.04, 0.12, 1)
 theme_override_constants/shadow_offset_x = 4
 theme_override_constants/shadow_offset_y = 4
-theme_override_font_sizes/font_size = 64
+theme_override_fonts/font = ExtResource("9_jv3yk")
+theme_override_font_sizes/font_size = 72
 text = "Witch Way?"
 horizontal_alignment = 1
 
@@ -214,3 +221,4 @@ theme_override_font_sizes/font_size = 12
 text = "v0.1.0-alpha"
 
 [node name="SettingsMenu" parent="." instance=ExtResource("9_settings_menu")]
+visible = false

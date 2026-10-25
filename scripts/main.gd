@@ -27,7 +27,9 @@ func _ready() -> void:
 	EventBus.level_completed.connect(_on_level_completed)
 	# Fresh start, death and "Restart" all reload Main: resume at the last Living Room.
 	GameManager.current_level = GameManager.checkpoint_level
+	AudioManager.stop_room_music()
 	_load_room(GameManager.scene_for_level(GameManager.current_level))
+	AudioManager.stop_menu_music()
 	AudioManager.start_room_ambience(1.4)
 
 

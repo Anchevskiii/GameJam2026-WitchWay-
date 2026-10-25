@@ -124,7 +124,6 @@ text = "0%"
 custom_minimum_size = Vector2(240, 10)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_cpu_fill")
-value = 0.0
 show_percentage = false
 
 [node name="RoomLabel" type="Label" parent="Control/PanelContainer/VBoxContainer"]

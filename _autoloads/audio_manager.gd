@@ -3,7 +3,14 @@ extends Node
 ## Manages ambient loops, muffled distant room sounds, and sound effects (jumpscares, triggers).
 ## Attached as Autoload singleton: AudioManager
 
+const MENU_MUSIC: AudioStream = preload("res://assets/audio/music/menu_music.mp3")
+const MENU_MUSIC_VOLUME_DB: float = -6.0
+const ROOM_MUSIC_VOLUME_DB: float = -6.0
+
 var _music_player: AudioStreamPlayer
+var _room_music_player: AudioStreamPlayer
+var _room_music_volume_db: float = ROOM_MUSIC_VOLUME_DB
+var _room_music_ducked: bool = false
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _scare_player: AudioStreamPlayer
 var _muffled_player: AudioStreamPlayer
@@ -14,6 +21,8 @@ const SFX_POOL_SIZE: int = 8
 const MUFFLED_BUS: StringName = &"MuffledRoom"
 const AMBIENT_MIN_COOLDOWN: float = 4.0
 const SCARE_SOUND_COOLDOWN: float = 2.0
+const UI_BUTTON_SFX: String = "button"
+const UI_BUTTON_VOLUME_DB: float = -4.0
 
 var _muffled_busy_until: float = 0.0
 var _scare_busy_until: float = 0.0
@@ -25,10 +34,17 @@ var _fade_tween: Tween = null
 
 func _ready() -> void:
 	_setup_muffled_bus()
+	get_tree().node_added.connect(_on_node_added)
 
 	_music_player = AudioStreamPlayer.new()
 	_music_player.bus = "Music"
+	_music_player.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_music_player)
+
+	_room_music_player = AudioStreamPlayer.new()
+	_room_music_player.bus = "Music"
+	_room_music_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_room_music_player)
 
 	_echo_loop_player = AudioStreamPlayer.new()
 	_echo_loop_player.bus = "Music"
@@ -49,8 +65,22 @@ func _ready() -> void:
 	for i in range(SFX_POOL_SIZE):
 		var player := AudioStreamPlayer.new()
 		player.bus = "SFX"
+		player.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(player)
 		_sfx_players.append(player)
+
+	_load_sfx(UI_BUTTON_SFX)
+
+
+func _on_node_added(node: Node) -> void:
+	if node is BaseButton:
+		var button: BaseButton = node as BaseButton
+		if not button.pressed.is_connected(_on_ui_button_pressed):
+			button.pressed.connect(_on_ui_button_pressed)
+
+
+func _on_ui_button_pressed() -> void:
+	play(UI_BUTTON_SFX, UI_BUTTON_VOLUME_DB)
 
 
 ## Creates a dedicated audio bus with a LowPassFilter + Reverb so screams and laughs sound
@@ -140,6 +170,7 @@ func fade_out_room_ambience(fade_out_duration: float = 0.9) -> void:
 func play_music(stream: AudioStream, volume_db: float = 0.0) -> void:
 	if not stream:
 		return
+	_loop_music(stream)
 	if _music_player.stream == stream and _music_player.playing:
 		return
 	_music_player.stream = stream
@@ -149,6 +180,55 @@ func play_music(stream: AudioStream, volume_db: float = 0.0) -> void:
 
 func stop_music() -> void:
 	_music_player.stop()
+
+
+## Plays the shared menu theme on the main menu and in the in-game pause menu.
+func play_menu_music() -> void:
+	play_music(MENU_MUSIC, MENU_MUSIC_VOLUME_DB)
+
+
+func stop_menu_music() -> void:
+	_music_player.stop()
+
+
+## Plays a room's soundtrack, or stops it when the room has no music.
+func play_room_music(stream: AudioStream, volume_db: float = ROOM_MUSIC_VOLUME_DB) -> void:
+	if stream == null:
+		stop_room_music()
+		return
+	_loop_music(stream)
+	_room_music_volume_db = volume_db
+	_room_music_ducked = false
+	if _room_music_player.stream == stream and _room_music_player.playing:
+		_room_music_player.volume_db = volume_db
+		return
+	_room_music_player.stop()
+	_room_music_player.stream = stream
+	_room_music_player.volume_db = volume_db
+	_room_music_player.play()
+
+
+## Silences the current room track while a menu is open, without losing its playback position.
+func pause_room_music() -> void:
+	if _room_music_player.playing:
+		_room_music_ducked = true
+		_room_music_player.volume_db = -80.0
+
+
+func resume_room_music() -> void:
+	if _room_music_ducked:
+		_room_music_ducked = false
+		_room_music_player.volume_db = _room_music_volume_db
+
+
+func stop_room_music() -> void:
+	_room_music_ducked = false
+	_room_music_player.stop()
+
+
+func _loop_music(stream: AudioStream) -> void:
+	if stream is AudioStreamMP3:
+		(stream as AudioStreamMP3).loop = true
 
 
 func play_sfx(stream: AudioStream, volume_db: float = 0.0, pitch_scale: float = 1.0) -> void:

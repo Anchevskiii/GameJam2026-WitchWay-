@@ -1,9 +1,9 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=6 format=3 uid="uid://b8hyw8wb87hgh"]
 
 [ext_resource type="Script" path="res://scripts/levels/room.gd" id="1_room"]
-[ext_resource type="TileSet" path="res://assets/sprites/environment/house_tileset.tres" id="2_tiles"]
-[ext_resource type="PackedScene" uid="uid://c5q2t4x96lmpe" path="res://scenes/actors/player.tscn" id="3_player"]
-[ext_resource type="TileSet" path="res://assets/sprites/interiors/interior_tileset.tres" id="4_interior"]
+[ext_resource type="TileSet" uid="uid://vqvp4b51v6nw" path="res://assets/sprites/environment/house_tileset.tres" id="2_tiles"]
+[ext_resource type="PackedScene" uid="uid://c5q2t4ya6lmpe" path="res://scenes/actors/player.tscn" id="3_player"]
+[ext_resource type="TileSet" uid="uid://bitwdxgotapv1" path="res://assets/sprites/interiors/interior_tileset.tres" id="4_interior"]
 [ext_resource type="Script" path="res://scripts/fx/fake_wall_glitch.gd" id="5_fake"]
 
 [node name="Room" type="Node2D"]

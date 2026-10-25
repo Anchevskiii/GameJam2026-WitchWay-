@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://df7x9kmq12n8e"]
+[gd_scene load_steps=6 format=3 uid="uid://df7yakmq12n8e"]
 
 [ext_resource type="Script" path="res://scripts/actors/base_entity.gd" id="1_entity_script"]
 [ext_resource type="Texture2D" uid="uid://buwrq6un7e85" path="res://assets/sprites/entities/ghost/Png_animation/Ghost1.png" id="2_ghost_tex"]
@@ -12,7 +12,6 @@ radius = 42.0
 
 [node name="BaseEntity" type="CharacterBody2D"]
 collision_layer = 4
-collision_mask = 1
 script = ExtResource("1_entity_script")
 entity_name = "Ghost"
 move_speed = 55.0
@@ -30,7 +29,6 @@ collision_mask = 2
 script = ExtResource("3_scare_script")
 source_name = "Ghost Aura"
 instant_scare_amount = 20.0
-is_continuous = true
 continuous_scare_rate = 14.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ScareSource"]

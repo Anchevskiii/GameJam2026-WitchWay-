@@ -41,8 +41,14 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_setup_buttons()
 	_check_save_state()
+	_play_menu_music()
 	_setup_intro_initial_state()
 	_play_intro_animation()
+
+
+func _play_menu_music() -> void:
+	AudioManager.stop_room_music()
+	AudioManager.play_menu_music()
 
 func _setup_intro_initial_state() -> void:
 	# Forest path starts slightly zoomed in
@@ -192,15 +198,17 @@ func _check_save_state() -> void:
 
 func _on_new_game_pressed() -> void:
 	GameManager.start_new_run()
-	if start_level_scene:
-		get_tree().change_scene_to_packed(start_level_scene)
-	else:
-		get_tree().change_scene_to_file("res://scenes/main.tscn")
+	_start_game()
 
 func _on_continue_pressed() -> void:
 	var progress: Dictionary = SaveManager.load_progress()
 	# The save holds the last Living Room reached; Main starts at GameManager's checkpoint.
 	GameManager.start_from_checkpoint(int(progress.get("highest_level", 0)))
+	_start_game()
+
+func _start_game() -> void:
+	AudioManager.stop_menu_music()
+	AudioManager.stop_room_music()
 	if start_level_scene:
 		get_tree().change_scene_to_packed(start_level_scene)
 	else:
@@ -211,4 +219,6 @@ func _on_settings_pressed() -> void:
 		settings_menu.open()
 
 func _on_quit_pressed() -> void:
+	AudioManager.stop_menu_music()
+	AudioManager.stop_room_music()
 	get_tree().quit()

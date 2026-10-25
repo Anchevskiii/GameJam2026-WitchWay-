@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="FurnitureData" load_steps=4 format=3 uid="uid://cyw0gs0oxm3c1"]
 
 [ext_resource type="Script" path="res://scripts/resources/furniture_data.gd" id="1_jmgs8"]
-[ext_resource type="Texture2D" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_2u5sy"]
+[ext_resource type="Texture2D" uid="uid://b4ebvtjxmfga7" path="res://assets/sprites/interiors/limezu/Interiors_free_32x32.png" id="2_2u5sy"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_qpbbe"]
 atlas = ExtResource("2_2u5sy")

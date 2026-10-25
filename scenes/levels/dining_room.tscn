@@ -1,6 +1,6 @@
-[gd_scene load_steps=33 format=3]
+[gd_scene load_steps=33 format=3 uid="uid://dde65o58d8x3o"]
 
-[ext_resource type="PackedScene" path="res://scenes/levels/room_base.tscn" id="1_base"]
+[ext_resource type="PackedScene" uid="uid://b8hyw8wb87hgh" path="res://scenes/levels/room_base.tscn" id="1_base"]
 [ext_resource type="Resource" path="res://data/npcs/bat.tres" id="2_r"]
 [ext_resource type="Resource" path="res://data/npcs/witch.tres" id="3_r"]
 [ext_resource type="Resource" path="res://data/npcs/big_jack.tres" id="4_r"]
@@ -8,29 +8,29 @@
 [ext_resource type="Resource" path="res://data/npcs/tired_vampire.tres" id="6_r"]
 [ext_resource type="Resource" path="res://data/npcs/ghost.tres" id="7_r"]
 [ext_resource type="Resource" path="res://data/npcs/jack_o_lantern.tres" id="8_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/dining_table.png" id="11_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/cobweb.png" id="15_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/pumpkin.png" id="17_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/bones.png" id="18_r"]
-[ext_resource type="Texture2D" path="res://assets/sprites/objects/candles.png" id="19_r"]
-[ext_resource type="Resource" path="res://data/furniture/cabinet_glass.tres" id="f_cabinet_glass"]
-[ext_resource type="Resource" path="res://data/furniture/chair_dining_l.tres" id="f_chair_dining_l"]
-[ext_resource type="Resource" path="res://data/furniture/chair_dining_r.tres" id="f_chair_dining_r"]
-[ext_resource type="Resource" path="res://data/furniture/cushion_yellow.tres" id="f_cushion_yellow"]
-[ext_resource type="Resource" path="res://data/furniture/drawers_row.tres" id="f_drawers_row"]
-[ext_resource type="Resource" path="res://data/furniture/dresser_wide.tres" id="f_dresser_wide"]
-[ext_resource type="Resource" path="res://data/furniture/floorlamp_cream.tres" id="f_floorlamp_cream"]
-[ext_resource type="Resource" path="res://data/furniture/fruit_red.tres" id="f_fruit_red"]
-[ext_resource type="Resource" path="res://data/furniture/garland.tres" id="f_garland"]
-[ext_resource type="Resource" path="res://data/furniture/painting_fire.tres" id="f_painting_fire"]
-[ext_resource type="Resource" path="res://data/furniture/painting_green.tres" id="f_painting_green"]
-[ext_resource type="Resource" path="res://data/furniture/plant_tree.tres" id="f_plant_tree"]
-[ext_resource type="Resource" path="res://data/furniture/portrait_monster.tres" id="f_portrait_monster"]
-[ext_resource type="Resource" path="res://data/furniture/rug_red_wide.tres" id="f_rug_red_wide"]
-[ext_resource type="Resource" path="res://data/furniture/sideboard_lamp.tres" id="f_sideboard_lamp"]
-[ext_resource type="Resource" path="res://data/furniture/table_light.tres" id="f_table_light"]
-[ext_resource type="Resource" path="res://data/furniture/wardrobe.tres" id="f_wardrobe"]
-[ext_resource type="Resource" path="res://data/furniture/window_red.tres" id="f_window_red"]
+[ext_resource type="Texture2D" uid="uid://cfod52lrtgfth" path="res://assets/sprites/objects/dining_table.png" id="11_r"]
+[ext_resource type="Texture2D" uid="uid://d1prb4k4cler8" path="res://assets/sprites/objects/cobweb.png" id="15_r"]
+[ext_resource type="Texture2D" uid="uid://b7muno1xwbnld" path="res://assets/sprites/objects/pumpkin.png" id="17_r"]
+[ext_resource type="Texture2D" uid="uid://o56w27wp6vv" path="res://assets/sprites/objects/bones.png" id="18_r"]
+[ext_resource type="Texture2D" uid="uid://d3k5g2ttff160" path="res://assets/sprites/objects/candles.png" id="19_r"]
+[ext_resource type="Resource" uid="uid://bveo3elfvy1ta" path="res://data/furniture/cabinet_glass.tres" id="f_cabinet_glass"]
+[ext_resource type="Resource" uid="uid://celgqdsc4i2a0" path="res://data/furniture/chair_dining_l.tres" id="f_chair_dining_l"]
+[ext_resource type="Resource" uid="uid://dgjnp1mxbmo85" path="res://data/furniture/chair_dining_r.tres" id="f_chair_dining_r"]
+[ext_resource type="Resource" uid="uid://c8dfuxdv40dok" path="res://data/furniture/cushion_yellow.tres" id="f_cushion_yellow"]
+[ext_resource type="Resource" uid="uid://b82c6g00e168o" path="res://data/furniture/drawers_row.tres" id="f_drawers_row"]
+[ext_resource type="Resource" uid="uid://bvctlcrasmaeo" path="res://data/furniture/dresser_wide.tres" id="f_dresser_wide"]
+[ext_resource type="Resource" uid="uid://dwmcbhuurcrah" path="res://data/furniture/floorlamp_cream.tres" id="f_floorlamp_cream"]
+[ext_resource type="Resource" uid="uid://bo8mxhy18uii2" path="res://data/furniture/fruit_red.tres" id="f_fruit_red"]
+[ext_resource type="Resource" uid="uid://seutxa0cl2h7" path="res://data/furniture/garland.tres" id="f_garland"]
+[ext_resource type="Resource" uid="uid://d4ertkalrokm7" path="res://data/furniture/painting_fire.tres" id="f_painting_fire"]
+[ext_resource type="Resource" uid="uid://cna8kvyfsrc4m" path="res://data/furniture/painting_green.tres" id="f_painting_green"]
+[ext_resource type="Resource" uid="uid://bslb1accciw8h" path="res://data/furniture/plant_tree.tres" id="f_plant_tree"]
+[ext_resource type="Resource" uid="uid://dnon0fd4fenei" path="res://data/furniture/portrait_monster.tres" id="f_portrait_monster"]
+[ext_resource type="Resource" uid="uid://doqbne1fxbf5n" path="res://data/furniture/rug_red_wide.tres" id="f_rug_red_wide"]
+[ext_resource type="Resource" uid="uid://higkeyb485ta" path="res://data/furniture/sideboard_lamp.tres" id="f_sideboard_lamp"]
+[ext_resource type="Resource" uid="uid://02lqt7qdo7c7" path="res://data/furniture/table_light.tres" id="f_table_light"]
+[ext_resource type="Resource" uid="uid://dsli0v2ef80wo" path="res://data/furniture/wardrobe.tres" id="f_wardrobe"]
+[ext_resource type="Resource" uid="uid://bnsxxmkpfgncv" path="res://data/furniture/window_red.tres" id="f_window_red"]
 [ext_resource type="Resource" path="res://data/themes/dining.tres" id="theme"]
 
 [node name="DiningRoom" instance=ExtResource("1_base")]
@@ -51,46 +51,38 @@ layout = "################################
 #o.P..........Q....#..n.......Q#
 ################################"
 npc_legend = {
-"b": ExtResource("2_r"),
-"h": ExtResource("3_r"),
 "G": ExtResource("4_r"),
-"w": ExtResource("5_r"),
-"v": ExtResource("6_r"),
+"b": ExtResource("2_r"),
 "g": ExtResource("7_r"),
-"j": ExtResource("8_r")
+"h": ExtResource("3_r"),
+"j": ExtResource("8_r"),
+"v": ExtResource("6_r"),
+"w": ExtResource("5_r")
 }
 decor_legend = {
 "T": ExtResource("11_r")
 }
 floor_decor_legend = {
+"n": ExtResource("18_r"),
 "o": ExtResource("15_r"),
-"u": ExtResource("17_r"),
-"n": ExtResource("18_r")
+"u": ExtResource("17_r")
 }
 light_legend = {
 "c": ExtResource("19_r")
 }
-exit_requires_cpu_overload = true
-door_open_time = 6.0
-cpu_load_multiplier = 1.5
-npc_wander_scale = 0.0
-npcs_hide = false
-npcs_chase = false
-ambient_color = Color(0.05, 0.045, 0.08, 1)
-intro_lines = Array[String](["The Dining Room. Built in one weekend. Completely unoptimized.", "Every scare makes the house glitch. Glitch it to 100% and it crashes - the exit door stops rendering.", "Surprise one dinner guest while nobody's looking, or jump out of a cupboard. Panicking guests scare each other, and every dropped prop costs CPU."])
 furniture_legend = {
-"Q": ExtResource("f_plant_tree"),
-"K": ExtResource("f_cabinet_glass"),
-"S": ExtResource("f_dresser_wide"),
+"A": ExtResource("f_chair_dining_r"),
 "H": ExtResource("f_sideboard_lamp"),
-"R": ExtResource("f_drawers_row"),
-"W": ExtResource("f_wardrobe"),
+"K": ExtResource("f_cabinet_glass"),
 "L": ExtResource("f_floorlamp_cream"),
 "M": ExtResource("f_table_light"),
-"A": ExtResource("f_chair_dining_r"),
+"Q": ExtResource("f_plant_tree"),
+"R": ExtResource("f_drawers_row"),
+"S": ExtResource("f_dresser_wide"),
+"W": ExtResource("f_wardrobe"),
 "Z": ExtResource("f_chair_dining_l"),
-"r": ExtResource("f_rug_red_wide"),
 "f": ExtResource("f_fruit_red"),
+"r": ExtResource("f_rug_red_wide"),
 "y": ExtResource("f_cushion_yellow")
 }
 wall_decor_legend = {
@@ -101,4 +93,11 @@ wall_decor_legend = {
 "5": ExtResource("f_painting_green")
 }
 default_theme = ExtResource("theme")
+exit_requires_cpu_overload = true
+door_open_time = 6.0
+cpu_load_multiplier = 1.5
+npc_wander_scale = 0.0
+npcs_hide = false
+npcs_chase = false
 traps = [[Vector2i(10, 9), "creak"], [Vector2i(14, 4), "bear"]]
+intro_lines = Array[String](["The Dining Room. Built in one weekend. Completely unoptimized.", "Every scare makes the house glitch. Glitch it to 100% and it crashes - the exit door stops rendering.", "Surprise one dinner guest while nobody's looking, or jump out of a cupboard. Panicking guests scare each other, and every dropped prop costs CPU."])
