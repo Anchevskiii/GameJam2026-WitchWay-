@@ -44,19 +44,20 @@ func _on_jumpscare_requested(face: String, damage: float) -> void:
 	var texture: Texture2D = load(FACE_PATH % face) if ResourceLoader.exists(FACE_PATH % face) else null
 	if texture == null:
 		return
+	var js_sfx: String = "scream" if randf() < 0.5 else "jumpscare_hit"
+	AudioManager.play_scare(js_sfx, -1.0, 1.0, true)
 	_face.texture = texture
 	_face.visible = true
 	_face.modulate = Color.WHITE
 	_face.pivot_offset = get_viewport().get_visible_rect().size * 0.5
-	_face.scale = Vector2.ONE * 0.35
+	_face.scale = Vector2.ONE * 0.55
 	_face.position = Vector2.ZERO
 	_flash.color.a = 0.85
-	AudioManager.play("scream", 3.0)
 	GameManager.scare_player(damage, "Jumpscare")
 
 	var tween: Tween = create_tween()
-	tween.tween_property(_flash, "color:a", 0.0, 0.25)
-	tween.parallel().tween_property(_face, "scale", Vector2.ONE * 1.25, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_flash, "color:a", 0.0, 0.22)
+	tween.parallel().tween_property(_face, "scale", Vector2.ONE * 1.25, 0.07).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	# Shake while it's on screen.
 	for i in int(hold_time / 0.03):
 		tween.tween_property(_face, "position", Vector2(randf_range(-18, 18), randf_range(-12, 12)), 0.03)

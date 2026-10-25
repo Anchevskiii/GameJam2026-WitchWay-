@@ -23,7 +23,7 @@ func _on_stepped() -> void:
 	if now < _ready_at:
 		return
 	_ready_at = now + cooldown
-	AudioManager.play("creak", 0.0, randf_range(0.85, 1.15))
+	AudioManager.play("creak_door", 0.5, randf_range(0.88, 1.15))
 	FloatingText.spawn(self, global_position + Vector2(0, -16), "*CREAK*", Color(0.85, 0.7, 0.5), 16)
 	EventBus.noise_made.emit(global_position, noise_radius)
 	Narrator.say_event("creaky_board")

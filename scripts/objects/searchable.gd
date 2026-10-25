@@ -21,6 +21,8 @@ const KEY_TEXTURE: Texture2D = preload("res://assets/sprites/objects/key.png")
 var searched: bool = false
 ## 0..1 while the player is searching (drawn as a ring).
 var progress: float = 0.0
+## Global cooldown timestamp (seconds) after an empty-drawer poltergeist sound triggers.
+static var _empty_sfx_cooldown_until: float = 0.0
 
 var _prompt: Label
 var _player: Node2D = null
@@ -28,22 +30,31 @@ var _player: Node2D = null
 
 func _ready() -> void:
 	add_to_group("searchables")
+	var unshaded := CanvasItemMaterial.new()
+	unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	material = unshaded
+	z_index = 60
 	_prompt = Label.new()
-	_prompt.add_theme_font_size_override("font_size", 16)
-	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
-	_prompt.add_theme_constant_override("outline_size", 5)
+	_prompt.material = unshaded
+	_prompt.add_theme_font_size_override("font_size", 17)
+	_prompt.add_theme_color_override("font_color", Color(1.0, 0.98, 0.78))
+	_prompt.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
+	_prompt.add_theme_constant_override("outline_size", 6)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.size = Vector2(200, 22)
 	_prompt.position = Vector2(-100, -54)
-	_prompt.z_index = 30
+	_prompt.z_index = 60
 	_prompt.visible = false
 	add_child(_prompt)
 
 
+## True when PlayerController picks this Searchable as the single active interaction target.
+var is_active_target: bool = false
+
 func _process(_delta: float) -> void:
 	if _player == null:
 		_player = get_tree().get_first_node_in_group("player") as Node2D
-	_prompt.visible = not searched and is_player_in_reach()
+	_prompt.visible = not searched and (is_active_target or progress > 0.0)
 	_prompt.text = "SEARCHING..." if progress > 0.0 else "Hold E: search"
 	queue_redraw()
 
@@ -54,14 +65,15 @@ func is_player_in_reach() -> bool:
 
 func _draw() -> void:
 	if progress > 0.0 and not searched:
-		draw_arc(Vector2(0, -30), 10.0, -PI / 2, -PI / 2 + TAU * progress, 24, Color(1, 0.9, 0.5), 3.0)
+		draw_circle(Vector2(0, -30), 12.0, Color(0.0, 0.0, 0.0, 0.65))
+		draw_arc(Vector2(0, -30), 12.0, 0.0, TAU, 24, Color(0.0, 0.0, 0.0, 0.95), 5.5)
+		draw_arc(Vector2(0, -30), 12.0, -PI / 2, -PI / 2 + TAU * progress, 24, Color(1.0, 0.96, 0.45, 1.0), 3.8)
 
 
 ## Called by the player when the search is done.
 func open() -> void:
 	searched = true
 	progress = 0.0
-	AudioManager.play("drawer")
 	var top: Vector2 = global_position + Vector2(0, -24)
 	match contents:
 		Contents.KEY:
@@ -71,6 +83,7 @@ func open() -> void:
 			_show_key(top)
 			Narrator.say_event("key_found" if not GameManager.has_all_keys() else "last_key", {}, true)
 		Contents.CANDY:
+			AudioManager.play("pop", -3.0, 1.15)
 			for i in 2:
 				Prop.spawn(CANDY, top + Vector2(0, 30), Vector2(randf_range(-60, 60), randf_range(40, 90)), get_tree())
 			FloatingText.spawn(self, top, "candy!", Color(1.0, 0.6, 0.85), 16)
@@ -78,6 +91,10 @@ func open() -> void:
 			EventBus.jumpscare_requested.emit("ghoul", scare_damage)
 			EventBus.noise_made.emit(global_position, 200.0)
 		_:
+			var now: float = Time.get_ticks_msec() / 1000.0
+			if now >= _empty_sfx_cooldown_until and randf() < 0.30:
+				_empty_sfx_cooldown_until = now + 5.0
+				AudioManager.play("poltergeist", -3.5, randf_range(0.96, 1.04))
 			FloatingText.spawn(self, top, "nothing...", Color(0.7, 0.7, 0.75), 14)
 
 

@@ -1,20 +1,37 @@
 class_name Dread
 extends Node
 
-## The house gets in your head. Below `heartbeat_below` sanity (or with the Stalker near)
-## a heartbeat thumps, faster the worse it gets. Below `hallucinate_below` you hear whispers
-## and glimpse shadow figures standing near you that vanish a moment later.
+## The house gets in your head:
+##   - Random distant muffled horror sounds from other rooms across the house:
+##     `woman_scream`, `evil_laugh`, and `evil_laugh_deep` (uncut, played through the
+##     MuffledRoom low-pass + reverb bus so they sound like they come through walls),
+##     plus occasional creaking doors (`creak_door`) at a low frequency.
+##   - Below `heartbeat_below` sanity (or with the Stalker near) a heartbeat thumps.
+##   - Below `hallucinate_below` you glimpse shadow figures standing near you that vanish.
 ## Created by Room (one per room). Safe rooms stay calm.
 
 const SHADOW_TEXTURE: Texture2D = preload("res://assets/sprites/characters/stalker.png")
+const MUFFLED_DISTANT_POOL: Array[String] = [
+	"woman_scream",
+	"evil_laugh",
+	"evil_laugh_deep",
+]
 
 @export var heartbeat_below: float = 45.0
-@export var hallucinate_below: float = 30.0
+@export var hallucinate_below: float = 35.0
 ## The Stalker counts as "close" within this many pixels.
 @export var stalker_near: float = 360.0
 
 var _beat_left: float = 1.0
 var _vision_left: float = 6.0
+var _distant_left: float = 14.0
+var _creak_left: float = 28.0
+var _last_distant: String = ""
+
+
+func _ready() -> void:
+	_distant_left = randf_range(12.0, 22.0)
+	_creak_left = randf_range(24.0, 42.0)
 
 
 func _process(delta: float) -> void:
@@ -35,10 +52,32 @@ func _process(delta: float) -> void:
 			_beat_left = lerpf(1.3, 0.45, fear)
 			AudioManager.play("heartbeat", lerpf(-16.0, 0.0, fear))
 
+	# Distant muffled screams & evil laughs from another room across the house (uncut, never overlapping)
+	_distant_left -= delta
+	if _distant_left <= 0.0:
+		var pick: String = MUFFLED_DISTANT_POOL[randi() % MUFFLED_DISTANT_POOL.size()]
+		if pick == _last_distant:
+			pick = MUFFLED_DISTANT_POOL[randi() % MUFFLED_DISTANT_POOL.size()]
+		var vol_db: float = randf_range(-4.0, 0.0)
+		var pitch: float = randf_range(0.94, 1.04)
+		if AudioManager.play_muffled_distant(pick, vol_db, pitch):
+			_last_distant = pick
+			var min_wait: float = lerpf(14.0, 22.0, clampf(sanity_pct / 100.0, 0.0, 1.0))
+			var max_wait: float = lerpf(24.0, 36.0, clampf(sanity_pct / 100.0, 0.0, 1.0))
+			_distant_left = randf_range(min_wait, max_wait)
+		else:
+			_distant_left = randf_range(6.0, 10.0)
+
+	# Occasional creaking door in the distance (low frequency)
+	_creak_left -= delta
+	if _creak_left <= 0.0:
+		_creak_left = randf_range(26.0, 48.0)
+		AudioManager.play_muffled_distant("creak_door", randf_range(-5.0, -1.5), randf_range(0.9, 1.08))
+
 	if sanity_pct < hallucinate_below:
 		_vision_left -= delta
 		if _vision_left <= 0.0:
-			_vision_left = randf_range(5.0, 11.0)
+			_vision_left = randf_range(6.0, 12.0)
 			_show_shadow(player)
 
 
@@ -50,7 +89,6 @@ func _show_shadow(player: Node2D) -> void:
 	shadow.modulate = Color(0, 0, 0, 0)
 	shadow.global_position = player.global_position + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(150.0, 230.0)
 	player.get_parent().add_child(shadow)
-	AudioManager.play("whisper", -6.0)
 	var tween: Tween = shadow.create_tween()
 	tween.tween_property(shadow, "modulate:a", 0.6, 0.25)
 	tween.tween_interval(0.5)

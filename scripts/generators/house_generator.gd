@@ -54,7 +54,7 @@ const THEME: String = "res://data/themes/%s.tres"
 const ROOM_THEMES: Array[String] = ["library", "bedroom", "study", "kitchen", "storage", "living_room", "dining"]
 const DARK_ROOM_THEMES: Array[String] = ["storage", "library", "bedroom", "storage", "study"]
 ## Layout letters handed out to the furniture used on a floor (none clash with NPCs/specials).
-const CHAR_POOL: String = "0123456789ABCEHIJKLMNOQRSUVWYZadefiklpqstvxyz!$%=?@^~*-_;:<>,|"
+const CHAR_POOL: String = "0123456789ABCEHIJKLNOQRSUVWYZadefiklpqstvxyz!$%=?@^~*-_;:<>,|"
 
 const DARK_TITLES: Array[String] = ["The Basement (Lights Not Included)", "The Attic of Unloaded Textures",
 	"The Servants' Corridor", "The Cellar, Probably", "The Unrendered Wing", "The Laundry Room of Regret"]
@@ -912,7 +912,7 @@ func _settings(tier: int, kind: Kind, party_loot: float) -> Dictionary:
 			"exit_requires_cpu_overload": true,
 			"door_open_time": 6.0,
 			"flashlight_works": true,
-			"ambient_color": Color(0.82, 0.76, 0.88),
+			"ambient_color": Color(0.05, 0.045, 0.08),
 			"npc_load_radius": 0.0,
 			"npc_wander_scale": 0.25,
 			"npcs_hide": false,

@@ -8,7 +8,7 @@ extends Node
 ## Attached to: Player (CharacterBody2D) in scenes/actors/player.tscn
 
 ## Sanity restored per second while standing still.
-@export var still_regen_rate: float = 2.0
+@export var still_regen_rate: float = 18.0
 ## Regeneration multiplier while hiding in a cupboard.
 @export var hidden_regen_multiplier: float = 2.0
 ## Seconds the player must stand still before regeneration starts.

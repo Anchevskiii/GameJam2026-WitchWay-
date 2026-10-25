@@ -76,7 +76,7 @@ cpu_load_multiplier = 1.5
 npc_wander_scale = 0.0
 npcs_hide = false
 npcs_chase = false
-ambient_color = Color(0.82, 0.76, 0.88, 1)
+ambient_color = Color(0.05, 0.045, 0.08, 1)
 intro_lines = Array[String](["The Dining Room. Built in one weekend. Completely unoptimized.", "Every scare makes the house glitch. Glitch it to 100% and it crashes - the exit door stops rendering.", "Surprise one dinner guest while nobody's looking, or jump out of a cupboard. Panicking guests scare each other, and every dropped prop costs CPU."])
 furniture_legend = {
 "Q": ExtResource("f_plant_tree"),

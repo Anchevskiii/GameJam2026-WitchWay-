@@ -3,8 +3,8 @@ extends CharacterBody2D
 
 ## Top-down player controller: movement, flashlight, the masked BOO and hiding.
 ##   SPACE  BOO! Only scares monsters that don't see you coming (from behind / around a corner).
-##   E      hide in a nearby cupboard/couch (monsters can't see you). E again sneaks out,
-##          SPACE jumps out with a lunge - a jump-out ALWAYS surprises and reaches further.
+##   E      hide in a nearby cupboard/couch (monsters can't see you) or hold E to search a drawer.
+##          E again sneaks out of hiding, SPACE jumps out with a lunge - a jump-out ALWAYS surprises.
 ## The walk animation is handled by the StumbleAnimator child node.
 ## Attached to: CharacterBody2D in scenes/actors/player.tscn
 
@@ -26,9 +26,9 @@ const MASK_TEXTURE: Texture2D = preload("res://assets/sprites/characters/player_
 
 @export_group("Mask scare")
 ## How close a monster must be for a BOO to reach it, in pixels.
-@export var boo_range: float = 80.0
+@export var boo_range: float = 105.0
 ## Jumping out of a hiding spot reaches further (measured from the hiding spot).
-@export var jump_out_range: float = 170.0
+@export var jump_out_range: float = 190.0
 ## Speed of the lunge when jumping out of hiding.
 @export var jump_out_speed: float = 520.0
 ## Seconds between BOOs, so the player can't spam.
@@ -42,12 +42,20 @@ const MASK_TEXTURE: Texture2D = preload("res://assets/sprites/characters/player_
 @onready var camera: Camera2D = $Camera2D
 @onready var glow_light: PointLight2D = $GlowLight
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var mask_bar: ProgressBar = get_node_or_null("MaskBar")
+@onready var chills_ring: PointLight2D = get_node_or_null("ChillsRing")
 @onready var _normal_texture: Texture2D = player_sprite.texture
 
 ## True while hiding in a cupboard/couch. Monsters can't see a hidden player.
 var is_hidden: bool = false
+## True while wearing the picked-up disguise mask powerup.
+var is_masked: bool = false
+var mask_time_left: float = 0.0
+var _face_mask: Sprite2D = null
+var _mask_type: int = 0
 var _hide_spot: HideSpot = null
 var _pre_hide_position: Vector2
+var _hidden_pass_cooldown: float = 0.0
 
 var _facing_direction: Vector2 = Vector2.DOWN
 var _is_flashlight_on: bool = true
@@ -60,6 +68,8 @@ var _snared_left: float = 0.0
 ## The drawer/cabinet being searched (E held), or null.
 var _searching: Searchable = null
 var _search_time: float = 0.0
+## The single best interactable target (HideSpot or Searchable) currently focused by the player.
+var _active_interact_target: Node2D = null
 
 var _flicker_timer: float = 0.0
 var _is_flickering: bool = false
@@ -68,7 +78,11 @@ var _flicker_duration: float = 0.0
 
 func _ready() -> void:
 	add_to_group("player")
+	if flashlight_beam:
+		flashlight_beam.texture = _beam_texture()
+		flashlight_beam.texture_scale = 1.35
 	EventBus.game_over_triggered.connect(_on_game_over)
+	EventBus.player_scared.connect(_on_player_scared)
 	_reset_flicker_timer()
 	_update_flashlight_state()
 	if flashlight_pivot:
@@ -80,6 +94,10 @@ func _physics_process(delta: float) -> void:
 		velocity = velocity.lerp(Vector2.ZERO, friction * delta)
 		move_and_slide()
 		return
+
+	_handle_mask(delta)
+	_handle_ghost_chills()
+	_update_best_interact_target()
 
 	# Input is polled here (not _unhandled_input) so it also works inside the world SubViewport.
 	if Input.is_action_just_pressed("toggle_flashlight"):
@@ -97,26 +115,34 @@ func _physics_process(delta: float) -> void:
 		return
 	if is_hidden:
 		velocity = Vector2.ZERO
+		_hidden_pass_cooldown -= delta
+		if _hidden_pass_cooldown <= 0.0:
+			for npc in get_tree().get_nodes_in_group("npcs"):
+				var n: Npc = npc as Npc
+				if is_instance_valid(n) and n.state != Npc.State.DONE and n.state != Npc.State.HIDING and global_position.distance_to(n.global_position) < 165.0:
+					_hidden_pass_cooldown = randf_range(8.5, 13.0)
+					AudioManager.play("haunted_pass", -3.5, randf_range(0.95, 1.05))
+					break
 		if Input.is_action_just_pressed("scare"):
 			_jump_out()
 		elif Input.is_action_just_pressed("interact"):
 			_leave_hiding_spot()
 		return
-	if Input.is_action_just_pressed("interact"):
-		var taken: HideSpot = _occupied_hide_spot_in_reach()
-		if taken:
-			(taken.occupant as Npc).ambush()  # someone's already in there...
+	if Input.is_action_just_pressed("interact") and is_instance_valid(_active_interact_target):
+		if _active_interact_target is HideSpot:
+			var spot: HideSpot = _active_interact_target as HideSpot
+			if spot.occupied and spot.occupant is Npc:
+				(spot.occupant as Npc).ambush()  # someone's already in there...
+			elif spot.is_free_for(self):
+				_hide_in(spot)
 			return
-		var spot: HideSpot = _nearest_hide_spot()
-		if spot:
-			_hide_in(spot)
-			return
-		var drawer: Searchable = _nearest_searchable()
-		if drawer:
-			_searching = drawer
-			_search_time = 0.0
-			velocity = Vector2.ZERO
-			return
+		elif _active_interact_target is Searchable:
+			var drawer: Searchable = _active_interact_target as Searchable
+			if not drawer.searched:
+				_searching = drawer
+				_search_time = 0.0
+				velocity = Vector2.ZERO
+				return
 	if Input.is_action_just_pressed("scare") and _boo_cooldown_left <= 0.0:
 		_boo(global_position, boo_range, false)
 
@@ -124,6 +150,131 @@ func _physics_process(delta: float) -> void:
 	_handle_direction(delta)
 	_handle_flashlight_flicker(delta)
 	move_and_slide()
+
+
+## Selects at most ONE interactable object (either a HideSpot or a Searchable) that is in reach,
+## choosing the one the player is closest to and facing towards.
+func _update_best_interact_target() -> void:
+	var best_target: Node2D = null
+	var best_score: float = INF
+
+	if not is_hidden and _searching == null:
+		for node in get_tree().get_nodes_in_group("hide_spots"):
+			var spot: HideSpot = node as HideSpot
+			if not spot.is_player_in_reach():
+				spot.is_active_target = false
+				continue
+			var valid: bool = spot.is_free_for(self) or (spot.occupied and spot.occupant is Npc)
+			if not valid:
+				spot.is_active_target = false
+				continue
+			var score: float = _interaction_score(spot.global_position)
+			if score < best_score:
+				best_score = score
+				best_target = spot
+
+		for node in get_tree().get_nodes_in_group("searchables"):
+			var drawer: Searchable = node as Searchable
+			if drawer.searched or not drawer.is_player_in_reach():
+				drawer.is_active_target = false
+				continue
+			var score: float = _interaction_score(drawer.global_position)
+			if score < best_score:
+				best_score = score
+				best_target = drawer
+
+	_active_interact_target = best_target
+	for node in get_tree().get_nodes_in_group("hide_spots"):
+		(node as HideSpot).is_active_target = (node == best_target)
+	for node in get_tree().get_nodes_in_group("searchables"):
+		(node as Searchable).is_active_target = (node == best_target)
+
+
+## Lower score = better match. Combines distance with an alignment bonus for the direction the player faces.
+func _interaction_score(target_pos: Vector2) -> float:
+	var to_target: Vector2 = target_pos - global_position
+	var dist: float = to_target.length()
+	if dist < 0.01:
+		return 0.0
+	var alignment: float = _facing_direction.dot(to_target / dist)  # -1 (behind) to +1 (directly in front)
+	return dist - alignment * 18.0
+
+
+func _handle_mask(delta: float) -> void:
+	if not is_masked:
+		return
+	mask_time_left -= delta
+	if mask_bar:
+		mask_bar.visible = true
+		mask_bar.value = mask_time_left
+	# While wearing the disguise mask, kids nearby get startled on sight!
+	for kid in get_tree().get_nodes_in_group("kids"):
+		var k: Kid = kid as Kid
+		if k.is_scareable() and global_position.distance_to(k.global_position) < 65.0:
+			k.get_scared(global_position, "a masked figure")
+	if mask_time_left <= 0.0:
+		is_masked = false
+		_set_face_mask(false)
+		if mask_bar:
+			mask_bar.visible = false
+
+
+## Shows the current mask over the player's face (the jack-o'-lantern covers the whole head).
+func _set_face_mask(on: bool, type: int = -1) -> void:
+	if type >= 0:
+		_mask_type = type
+	if _face_mask == null:
+		_face_mask = Sprite2D.new()
+		_face_mask.z_index = 1
+		player_sprite.add_child(_face_mask)
+	_face_mask.texture = MaskTypes.texture(_mask_type)
+	_face_mask.position = Vector2(0, MaskTypes.offset_y(_mask_type))
+	_face_mask.visible = on
+
+
+## Called when picking up a MaskPickup item in the world.
+func activate_disguise_mask(duration: float = 10.0, type: int = 0) -> void:
+	is_masked = true
+	mask_time_left = duration
+	_set_face_mask(true, type)
+	if mask_bar:
+		mask_bar.max_value = duration
+		mask_bar.value = duration
+		mask_bar.visible = true
+
+
+func _handle_ghost_chills() -> void:
+	if chills_ring == null:
+		return
+	var ghost_near: bool = false
+	for ghost in get_tree().get_nodes_in_group("ghosts"):
+		if is_instance_valid(ghost) and global_position.distance_to((ghost as Node2D).global_position) < 160.0:
+			ghost_near = true
+			break
+	chills_ring.visible = ghost_near
+	if ghost_near:
+		chills_ring.energy = 0.45 + sin(Time.get_ticks_msec() * 0.007) * 0.3
+
+
+func is_facing_target(target_pos: Vector2) -> bool:
+	if not _is_flashlight_on or not _flashlight_available:
+		return false
+	var dir_to_target: Vector2 = (target_pos - global_position).normalized()
+	return _facing_direction.dot(dir_to_target) > 0.48
+
+
+## Returns true if the target position is illuminated by the player's flashlight beam
+## or right next to the player's personal glow.
+func is_illuminating(target_pos: Vector2) -> bool:
+	var dist: float = global_position.distance_to(target_pos)
+	if dist <= 32.0:
+		return true
+	if not _is_flashlight_on or not _flashlight_available or dist > 158.0:
+		return false
+	if _is_flickering and flashlight_beam and flashlight_beam.energy <= 0.05:
+		return false
+	var dir_to_target: Vector2 = (target_pos - global_position).normalized()
+	return _facing_direction.dot(dir_to_target) > 0.52
 
 
 func _handle_movement(delta: float) -> void:
@@ -161,7 +312,7 @@ func _handle_flashlight_flicker(delta: float) -> void:
 			flashlight_beam.energy = flashlight_energy
 			_reset_flicker_timer()
 		else:
-			# Random subtle jitter around 50-75% energy, never completely zero
+			# Random subtle jitter around 45-75% energy, never completely zero
 			flashlight_beam.energy = flashlight_energy * randf_range(0.45, 0.75)
 	else:
 		_flicker_timer -= delta
@@ -190,7 +341,7 @@ func set_flashlight_available(available: bool) -> void:
 
 func _boo(origin: Vector2, reach: float, from_hiding: bool) -> void:
 	_boo_cooldown_left = boo_cooldown
-	AudioManager.play("whoosh", -8.0, randf_range(0.95, 1.1))
+	AudioManager.play("player_boo", 1.5, randf_range(0.95, 1.06))
 	_put_on_mask()
 	_spawn_boo_text()
 	EventBus.player_booed.emit(origin, reach, from_hiding)
@@ -198,18 +349,24 @@ func _boo(origin: Vector2, reach: float, from_hiding: bool) -> void:
 
 ## Swap to the masked sprite for a moment.
 func _put_on_mask() -> void:
-	player_sprite.texture = MASK_TEXTURE
-	get_tree().create_timer(mask_time).timeout.connect(func() -> void: player_sprite.texture = _normal_texture)
+	_set_face_mask(true, MaskTypes.random_type() if not is_masked else _mask_type)
+	get_tree().create_timer(mask_time).timeout.connect(func() -> void:
+		if not is_masked:
+			_set_face_mask(false))
 
 
 func _spawn_boo_text() -> void:
 	var label := Label.new()
+	var unshaded := CanvasItemMaterial.new()
+	unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	label.material = unshaded
 	label.text = "BOO!"
 	label.add_theme_font_size_override("font_size", 26)
+	label.add_theme_color_override("font_color", Color(1.0, 0.96, 0.45))
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 6)
 	label.position = global_position + Vector2(-32, -64)
-	label.z_index = 30
+	label.z_index = 60
 	get_parent().add_child(label)
 	var tween: Tween = label.create_tween()
 	tween.tween_property(label, "position:y", label.position.y - 18.0, 0.5)
@@ -244,45 +401,13 @@ func _process_search(delta: float) -> void:
 		drawer.open()
 
 
-func _nearest_searchable() -> Searchable:
-	var best: Searchable = null
-	var best_dist: float = INF
-	for node in get_tree().get_nodes_in_group("searchables"):
-		var drawer: Searchable = node as Searchable
-		var dist: float = global_position.distance_to(drawer.global_position)
-		if not drawer.searched and drawer.is_player_in_reach() and dist < best_dist:
-			best = drawer
-			best_dist = dist
-	return best
-
-
 # ---------------------------------------------------------------- hiding
-
-func _nearest_hide_spot() -> HideSpot:
-	var best: HideSpot = null
-	var best_dist: float = INF
-	for spot in get_tree().get_nodes_in_group("hide_spots"):
-		var hide_spot: HideSpot = spot as HideSpot
-		var dist: float = global_position.distance_to(hide_spot.global_position)
-		if hide_spot.is_player_in_reach() and hide_spot.is_free_for(self) and dist < best_dist:
-			best = hide_spot
-			best_dist = dist
-	return best
-
-
-## A cupboard in reach that a monster is hiding in, if any.
-func _occupied_hide_spot_in_reach() -> HideSpot:
-	for spot in get_tree().get_nodes_in_group("hide_spots"):
-		var hide_spot: HideSpot = spot as HideSpot
-		if hide_spot.occupied and hide_spot.occupant is Npc and hide_spot.is_player_in_reach():
-			return hide_spot
-	return null
-
 
 func _hide_in(spot: HideSpot) -> void:
 	is_hidden = true
 	_hide_spot = spot
 	_pre_hide_position = global_position
+	_hidden_pass_cooldown = 1.4
 	spot.set_occupied(true, self)  # your head peeks out now and then
 	velocity = Vector2.ZERO
 	player_sprite.visible = false
@@ -296,7 +421,7 @@ func _unhide() -> void:
 	is_hidden = false
 	_hide_spot.set_occupied(false)
 	player_sprite.visible = true
-	glow_light.energy = 0.9
+	glow_light.energy = 0.42
 	_update_flashlight_state()
 	collision_shape.set_deferred("disabled", false)
 	global_position = _pre_hide_position
@@ -326,6 +451,39 @@ func _jump_out() -> void:
 
 # ---------------------------------------------------------------- game over
 
+## Visual & camera feedback right on the player when scared by an entity or trap:
+##   - brief hit-stop freeze
+##   - camera screen shake
+##   - crimson glow/flash on the player sprite and personal light
+##   - floating "-X SANITY" text right above the player's head
+func _on_player_scared(amount: float, _source_name: String) -> void:
+	if GameManager.is_game_over:
+		return
+	FloatingText.spawn(self, global_position + Vector2(0, -44), "-%d SANITY" % roundi(amount), Color(1.0, 0.28, 0.32), 18)
+	LagController.trigger_scare_freeze(0.085)
+
+	if player_sprite:
+		player_sprite.modulate = Color(1.0, 0.22, 0.25, 1.0)
+		var stween: Tween = create_tween()
+		stween.tween_property(player_sprite, "modulate", Color.WHITE, 0.42)
+
+	if glow_light:
+		var base_color: Color = Color(1.0, 0.85, 0.65, 1.0)
+		var base_energy: float = 0.35 if is_hidden else 0.42
+		glow_light.color = Color(1.0, 0.15, 0.2, 1.0)
+		glow_light.energy = 1.65
+		var ltween: Tween = create_tween()
+		ltween.tween_property(glow_light, "color", base_color, 0.45)
+		ltween.parallel().tween_property(glow_light, "energy", base_energy, 0.45)
+
+	if camera:
+		var ctween: Tween = create_tween()
+		var strength: float = clampf(amount * 0.45, 5.0, 12.0)
+		for i in 7:
+			ctween.tween_property(camera, "offset", Vector2(randf_range(-strength, strength), randf_range(-strength, strength)), 0.032)
+		ctween.tween_property(camera, "offset", Vector2.ZERO, 0.04)
+
+
 func _on_game_over() -> void:
 	_can_move = false
 	var puddle := Sprite2D.new()
@@ -337,3 +495,31 @@ func _on_game_over() -> void:
 	puddle.create_tween().tween_property(puddle, "scale", Vector2.ONE * 2.0, 1.2)
 	AudioManager.play("sad_trombone")
 	Narrator.say_event("death", {}, true)
+
+
+static var _beam_tex: ImageTexture = null
+
+
+## A wide soft cone that starts as a glow around the whole body instead of a single point.
+static func _beam_texture() -> ImageTexture:
+	if _beam_tex != null:
+		return _beam_tex
+	var size: int = 256
+	var c: int = size / 2
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	for py in size:
+		for px in size:
+			var u: float = float(px - c)
+			var v: float = float(py - c)
+			var body: float = clampf(1.0 - Vector2(u, v).length() / 13.0, 0.0, 1.0) * 0.55
+			var cone: float = 0.0
+			if u > 0.0:
+				var half: float = 12.0 + u * 0.58
+				var side: float = clampf(1.0 - absf(v) / half, 0.0, 1.0)
+				side = side * side * (3.0 - 2.0 * side)
+				var reach: float = clampf(1.0 - u / float(c * 0.88), 0.0, 1.0)
+				cone = side * pow(reach, 1.15) * clampf(u / 8.0 + 0.45, 0.0, 1.0)
+			var val: float = maxf(body, cone)
+			img.set_pixel(px, py, Color(val, val, val, 1.0))
+	_beam_tex = ImageTexture.create_from_image(img)
+	return _beam_tex

@@ -8,12 +8,18 @@ extends SubViewportContainer
 
 const MISSING_TEXTURE: Texture2D = preload("res://assets/sprites/environment/missing_texture.png")
 
-## Glitch shown at 0% meter (a little) and at 100% (a lot).
-@export var calm_intensity: float = 0.04
+## Glitch strength at each meter milestone: calm -> 25% -> 50% -> 80% -> 90% -> 100%.
+@export var calm_intensity: float = 0.0
+@export var flicker_intensity: float = 0.05
+@export var heavy_intensity: float = 0.12
+@export var severe_intensity: float = 0.25
+@export var critical_intensity: float = 0.36
 @export var max_intensity: float = 0.42
 ## Seconds between random bursts when calm, and at 100% meter.
 @export var burst_interval_calm: float = 7.0
 @export var burst_interval_max: float = 0.8
+## Burst strength when calm, and at 100% meter.
+@export var burst_strength_calm: float = 0.02
 @export var burst_strength: float = 0.6
 
 @onready var world: SubViewport = $World
@@ -30,26 +36,39 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if _material == null:
 		return
-	var meter: float = clampf(GameManager.current_cpu_overload / GameManager.max_cpu_overload, 0.0, 1.0)
-	var intensity: float = lerpf(calm_intensity, max_intensity, meter * meter)
+	var level: float = clampf(GameManager.glitch_level() / 100.0, 0.0, 1.0)
+	var intensity: float = _intensity_for(level)
 
 	_next_burst -= delta
 	if _next_burst <= 0.0:
-		_start_burst(meter)
+		_start_burst(level)
 	if _burst_left > 0.0:
 		_burst_left -= delta
-		intensity = maxf(intensity, burst_strength)
+		intensity = maxf(intensity, lerpf(burst_strength_calm, burst_strength, level * level))
 
 	_material.set_shader_parameter("intensity", intensity)
 
 
-func _start_burst(meter: float) -> void:
+## Keeps the screen in step with the milestones shown on the GLITCH bar.
+func _intensity_for(level: float) -> float:
+	if level < 0.25:
+		return lerpf(calm_intensity, flicker_intensity, inverse_lerp(0.0, 0.25, level))
+	if level < 0.5:
+		return lerpf(flicker_intensity, heavy_intensity, inverse_lerp(0.25, 0.5, level))
+	if level < 0.8:
+		return lerpf(heavy_intensity, severe_intensity, inverse_lerp(0.5, 0.8, level))
+	if level < 0.9:
+		return lerpf(severe_intensity, critical_intensity, inverse_lerp(0.8, 0.9, level))
+	return lerpf(critical_intensity, max_intensity, inverse_lerp(0.9, 1.0, level))
+
+
+func _start_burst(level: float) -> void:
 	_burst_left = randf_range(0.08, 0.25)
-	_next_burst = lerpf(burst_interval_calm, burst_interval_max, meter) * randf_range(0.5, 1.5)
+	_next_burst = lerpf(burst_interval_calm, burst_interval_max, level) * randf_range(0.5, 1.5)
 	_material.set_shader_parameter("seed", randf() * 100.0)
-	if meter > 0.2 or randf() < 0.5:
+	if level > 0.25 or randf() < 0.05:
 		_flash_missing_texture()
-	if meter > 0.4:
+	if level > 0.5:
 		_monster_afterimage()
 
 

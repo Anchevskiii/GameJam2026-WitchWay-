@@ -17,6 +17,12 @@ extends Node
 ## Seconds the meter holds after the last gain before it starts draining.
 @export var glitch_hold_time: float = 2.5
 
+@export_group("Glitch Display")
+## The GLITCH bar never reads 0: the house is always a little broken.
+@export var min_glitch_display: float = 10.0
+## The GLITCH bar moves in steps of this many percent.
+@export var glitch_display_step: float = 5.0
+
 @export_group("Difficulty")
 ## Every monster's wind-up is multiplied by this (lower = they scare you faster).
 @export var monster_windup_scale: float = 0.7
@@ -208,3 +214,15 @@ func advance_level() -> void:
 ## Only clears the CPU meter (used when walking into a new room; sanity carries over).
 func reset_cpu_load() -> void:
 	_set_cpu_load(0.0)
+
+
+## The GLITCH bar value, and the screen glitch strength, are driven by this.
+## The real meter is rounded up in steps (so the bar never sits on 0), but it only
+## reaches 100% when the house actually crashes.
+func glitch_level() -> float:
+	var pct: float = current_cpu_overload / maxf(max_cpu_overload, 1.0) * 100.0
+	var step: float = maxf(glitch_display_step, 0.1)
+	var stepped: float = ceilf(pct / step) * step
+	if pct < 100.0:
+		stepped = minf(stepped, 100.0 - step)
+	return clampf(maxf(stepped, min_glitch_display), min_glitch_display, 100.0)

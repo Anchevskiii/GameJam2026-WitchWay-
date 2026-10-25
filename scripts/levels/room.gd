@@ -29,8 +29,12 @@ const WALL_TILE: Vector2i = Vector2i(2, 0)
 const NPC_SCENE: PackedScene = preload("res://scenes/actors/npc.tscn")
 const DOOR_SCENE: PackedScene = preload("res://scenes/objects/bugs/glitch_door.tscn")
 const KID_SCENE: PackedScene = preload("res://scenes/actors/kid.tscn")
+const MASK_SCENE: PackedScene = preload("res://scenes/objects/mask_pickup.tscn")
+const LAMP_SCENE: PackedScene = preload("res://scenes/objects/wall_lamp.tscn")
 ## Kids that start within this distance of each other form one group.
 const KID_GROUP_RANGE: float = 130.0
+const MASK_RESPAWN_DELAY: float = 14.0
+const ENTITY_CHECK_INTERVAL: float = 7.0
 const GLOW_TEXTURE: Texture2D = preload("res://assets/sprites/environment/light_radial.tres")
 const FALLBACK_THEME: RoomTheme = preload("res://data/themes/living_room.tres")
 ## Layout of assets/sprites/interiors/house_interior.png (see the build script).
@@ -90,8 +94,8 @@ static var _visited_scenes: Dictionary = {}
 ## Multiplies prop CPU weights in this room.
 @export var cpu_load_multiplier: float = 1.0
 @export var flashlight_works: bool = true
-## CanvasModulate colour. White = normal lighting, near-black = darkness room.
-@export var ambient_color: Color = Color(1, 1, 1)
+## CanvasModulate colour. Darkened on haunted floors so rooms feel eerie and other rooms aren't visible.
+@export var ambient_color: Color = Color(0.05, 0.045, 0.08)
 ## > 0: NPCs are invisible/missing-texture until the player is this close (pixels).
 @export var npc_load_radius: float = 0.0
 ## Multiplies every NPC's wander radius. 0 = everyone stays in their spot (dinner party).
@@ -141,6 +145,8 @@ func _ready() -> void:
 
 	props_root.add_to_group("prop_layer")
 	actors_root.add_to_group("actors_root")
+	if not is_safe_room and (ambient_color.r > 0.12 or ambient_color.g > 0.12):
+		ambient_color = Color(0.05, 0.045, 0.08, 1.0)
 	canvas_modulate.color = ambient_color
 
 	GameManager.is_safe_room = is_safe_room
@@ -155,6 +161,8 @@ func _ready() -> void:
 	_build_from_layout()
 	_build_wall_outlines()
 	_spawn_traps()
+	_spawn_initial_masks()
+	_spawn_wall_lamps()
 	_group_kids()
 	add_child(Dread.new())
 	EventBus.house_awakened.connect(_on_house_awakened)
@@ -166,6 +174,63 @@ func _ready() -> void:
 	for line in (revisit_lines if revisit else intro_lines):
 		Narrator.say(line)
 	_visited_scenes[scene_file_path] = true
+
+
+var _entity_spawn_timer: float = 0.0
+
+
+func _process(delta: float) -> void:
+	if is_safe_room or GameManager.is_game_over:
+		return
+	_entity_spawn_timer += delta
+	if _entity_spawn_timer >= ENTITY_CHECK_INTERVAL:
+		_entity_spawn_timer = 0.0
+		_check_respawn_entities()
+
+
+## Periodically spawns a replacement monster away from the player when most monsters are disabled,
+## ensuring the player never runs out of targets (especially on CPU overload floors).
+## Higher levels dynamically have more entities active simultaneously.
+func _check_respawn_entities() -> void:
+	if npc_legend.is_empty() or not is_instance_valid(player):
+		return
+	var npcs: Array[Node] = get_tree().get_nodes_in_group("npcs")
+	var active_count: int = 0
+	for n in npcs:
+		var npc: Npc = n as Npc
+		if is_instance_valid(npc) and npc.state != Npc.State.DONE:
+			active_count += 1
+
+	var desired_count: int = 2 + mini(GameManager.current_level, 6)
+	if exit_requires_cpu_overload:
+		desired_count += 2
+	if active_count >= desired_count:
+		return
+
+	var spawn_candidates: Array[Vector2i] = []
+	for y in range(1, _rows.size() - 1):
+		for x in range(1, _rows[y].length() - 1):
+			if _rows[y][x] == ".":
+				var world_p: Vector2 = cell_to_world(Vector2i(x, y))
+				if world_p.distance_to(player.global_position) > 200.0:
+					spawn_candidates.append(Vector2i(x, y))
+	if spawn_candidates.is_empty():
+		return
+	var cell: Vector2i = spawn_candidates[randi() % spawn_candidates.size()]
+	var npc: Npc = NPC_SCENE.instantiate()
+	var keys: Array = npc_legend.keys()
+	var k: String = keys[randi() % keys.size()]
+	npc.data = npc_legend[k]
+	npc.load_in_radius = npc_load_radius
+	npc.wander_scale = maxf(npc_wander_scale, 0.7)
+	npc.can_hide = npcs_hide
+	npc.can_chase = true
+	npc.windup_scale = npc_windup_scale
+	npc.damage_scale = npc_damage_scale
+	npc.speed_scale = npc_speed_scale
+	npc.sight_scale = npc_sight_scale
+	npc.position = cell_to_world(cell)
+	actors_root.add_child(npc)
 
 
 ## Copies HouseGenerator's output (property name -> value) onto this room.
@@ -370,6 +435,8 @@ func _spawn_from_legend(ch: String, cell: Vector2i) -> void:
 		glow.energy = 0.9
 		glow.color = Color(1.0, 0.75, 0.4)
 		_spawn_floor_decor(light_legend[ch], cell).add_child(glow)
+	elif ch == "M":
+		_spawn_mask_at(cell_to_world(cell))
 	else:
 		push_warning("Room '%s': unknown layout character '%s' at %s" % [room_title, ch, cell])
 
@@ -424,12 +491,21 @@ func _spawn_furniture(piece: FurnitureData, cell: Vector2i) -> void:
 		body.add_child(drawer)
 	if piece.emits_light():
 		var glow := PointLight2D.new()
+		glow.name = "PointLight2D"
 		glow.texture = GLOW_TEXTURE
-		glow.texture_scale = 0.6
+		glow.texture_scale = 0.65
 		glow.energy = 0.9
 		glow.color = piece.light_color
 		glow.position = Vector2(0, -piece.texture.get_height() * 0.6)
-		body.add_child(glow)
+		if is_safe_room:
+			body.add_child(glow)
+		else:
+			var lamp_controller := WallLamp.new()
+			lamp_controller.light_energy = 0.9
+			lamp_controller.light_color = piece.light_color
+			lamp_controller.light_scale = 0.65
+			lamp_controller.add_child(glow)
+			body.add_child(lamp_controller)
 	decor_root.add_child(body)
 
 
@@ -539,10 +615,92 @@ func _spawn_traps() -> void:
 		decor_root.add_child(trap)
 
 
+## Spawns disguise masks on haunted floors (and respawns them elsewhere after being picked up).
+func _spawn_initial_masks() -> void:
+	if is_safe_room:
+		return
+	var existing: int = 0
+	for c in decor_root.get_children():
+		if c is MaskPickup:
+			existing += 1
+	var target_count: int = 2 if procedural else 1
+	for i in maxi(0, target_count - existing):
+		_respawn_mask(player.global_position if is_instance_valid(player) else Vector2.ZERO)
+
+
+func _spawn_mask_at(world_pos: Vector2) -> void:
+	var mask_item: MaskPickup = MASK_SCENE.instantiate()
+	mask_item.position = world_pos
+	mask_item.collected.connect(_on_mask_collected)
+	decor_root.add_child(mask_item)
+
+
+func _on_mask_collected(from_pos: Vector2) -> void:
+	get_tree().create_timer(MASK_RESPAWN_DELAY).timeout.connect(_respawn_mask.bind(from_pos))
+
+
+func _respawn_mask(old_pos: Vector2) -> void:
+	if GameManager.is_game_over or not is_instance_valid(player):
+		return
+	var occupied: Array[Vector2] = []
+	for g in ["npcs", "kids"]:
+		for n in get_tree().get_nodes_in_group(g):
+			occupied.append((n as Node2D).global_position)
+	var best: Array[Vector2i] = []
+	for y in range(1, _rows.size() - 1):
+		for x in range(1, _rows[y].length() - 1):
+			if _rows[y][x] != ".":
+				continue
+			var wp: Vector2 = cell_to_world(Vector2i(x, y))
+			if wp.distance_to(player.global_position) < 160.0 or wp.distance_to(old_pos) < 140.0:
+				continue
+			var clear: bool = true
+			for o in occupied:
+				if wp.distance_to(o) < 100.0:
+					clear = false
+					break
+			if clear:
+				best.append(Vector2i(x, y))
+	if best.is_empty():
+		get_tree().create_timer(10.0).timeout.connect(_respawn_mask.bind(old_pos))
+		return
+	_spawn_mask_at(cell_to_world(best[randi() % best.size()]))
+
+
+## Spawns flickering wall sconces on bare back-wall stretches so some rooms have eerie wall lighting.
+func _spawn_wall_lamps() -> void:
+	if is_safe_room:
+		return
+	var placed: Array[Vector2] = []
+	for y in range(1, _rows.size() - 1):
+		for x in range(2, _rows[y].length() - 2):
+			var cell := Vector2i(x, y)
+			# Bare wall face (not already holding a window/painting) with open floor below
+			if _char_at(cell) != "#" or not _is_wall_face(cell):
+				continue
+			if _char_at(cell + Vector2i.LEFT) != "#" or _char_at(cell + Vector2i.RIGHT) != "#":
+				continue
+			var wp: Vector2 = cell_to_world(cell)
+			var too_close: bool = false
+			for p in placed:
+				if wp.distance_to(p) < 220.0:
+					too_close = true
+					break
+			if too_close or randf() > 0.28:
+				continue
+			var lamp: WallLamp = LAMP_SCENE.instantiate()
+			if _is_wall(_char_at(cell + Vector2i.UP)):
+				lamp.position = Vector2(wp.x, cell.y * TILE_SIZE + 8.0)
+			else:
+				lamp.position = Vector2(wp.x, (cell.y + 1) * TILE_SIZE - 16.0)
+			decor_root.add_child(lamp)
+			placed.append(wp)
+
+
 ## The last key was taken: lights fail, everything hears it, and the Stalker comes -
 ## from behind you (the side away from the exit), so it chases rather than blocks.
 func _on_house_awakened() -> void:
-	AudioManager.play("slam", 2.0)
+	AudioManager.play("slam", 1.5)
 	Narrator.say_event("house_awake", {}, true)
 	var dark: Color = ambient_color * Color(0.6, 0.55, 0.6)
 	var tween: Tween = create_tween()
@@ -578,3 +736,30 @@ func _group_kids() -> void:
 
 static func cell_to_world(cell: Vector2i) -> Vector2:
 	return Vector2(cell * TILE_SIZE) + Vector2.ONE * TILE_SIZE * 0.5
+
+
+## Picks a floor tile in this room well away from `avoid_pos` (and preferentially near a wall/corner)
+## so an entity can relocate/reset after its cooldown or disabled state expires.
+func get_random_relocate_point(avoid_pos: Vector2, min_dist: float = 170.0) -> Vector2:
+	var corner_spots: Array[Vector2] = []
+	var floor_spots: Array[Vector2] = []
+	for y in range(1, _rows.size() - 1):
+		for x in range(1, _rows[y].length() - 1):
+			if _rows[y][x] != ".":
+				continue
+			var wp: Vector2 = cell_to_world(Vector2i(x, y))
+			if wp.distance_to(avoid_pos) < min_dist:
+				continue
+			var wall_neighbors: int = 0
+			for d in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+				if _is_wall(_char_at(Vector2i(x, y) + d)):
+					wall_neighbors += 1
+			if wall_neighbors >= 2:
+				corner_spots.append(wp)
+			else:
+				floor_spots.append(wp)
+	if not corner_spots.is_empty():
+		return corner_spots[randi() % corner_spots.size()]
+	if not floor_spots.is_empty():
+		return floor_spots[randi() % floor_spots.size()]
+	return avoid_pos + Vector2.RIGHT.rotated(randf() * TAU) * min_dist
