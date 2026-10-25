@@ -222,7 +222,7 @@ func _check_save_state() -> void:
 		var level: int = int(progress.get("highest_level", 0))
 		if level > 0:
 			continue_button.disabled = false
-			continue_button.text = "CONTINUE - FLOOR %d" % (level + 1)
+			continue_button.text = "CONTINUE - FLOOR %d" % GameManager.floor_number(level + 1)
 		else:
 			continue_button.disabled = true
 			continue_button.text = "CONTINUE"

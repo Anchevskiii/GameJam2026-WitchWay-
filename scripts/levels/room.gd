@@ -756,15 +756,27 @@ func _find_alcove_cell() -> Vector2i:
 	var options: Array[Vector2i] = []
 	for y in range(2, _rows.size() - 2):
 		for x in range(2, _rows[y].length() - 2):
-			if _char_at(Vector2i(x, y)) != ".":
+			var cell := Vector2i(x, y)
+			if _char_at(cell) != ".":
 				continue
-			var has_wall: bool = (_char_at(Vector2i(x, y - 1)) == "#" or _char_at(Vector2i(x - 1, y)) == "#" or _char_at(Vector2i(x + 1, y)) == "#")
-			var front_open: bool = _char_at(Vector2i(x, y + 1)) == "."
-			if has_wall and front_open and cell_to_world(Vector2i(x, y)).distance_to(player.global_position) > 200.0:
-				options.append(Vector2i(x, y))
+			if _is_doorway(cell):
+				continue
+			var has_wall: bool = (_char_at(cell + Vector2i.UP) == "#" or _char_at(cell + Vector2i.LEFT) == "#" or _char_at(cell + Vector2i.RIGHT) == "#")
+			var front_open: bool = _char_at(cell + Vector2i.DOWN) == "."
+			if has_wall and front_open and cell_to_world(cell).distance_to(player.global_position) > 200.0:
+				options.append(cell)
 	if options.is_empty():
 		return Vector2i(-1, -1)
 	return options[randi() % options.size()]
+
+
+## True if this floor cell sits in a wall gap (a doorway/passage between rooms).
+func _is_doorway(cell: Vector2i) -> bool:
+	var left: bool = _looks_like_wall(_char_at(cell + Vector2i.LEFT))
+	var right: bool = _looks_like_wall(_char_at(cell + Vector2i.RIGHT))
+	var up: bool = _looks_like_wall(_char_at(cell + Vector2i.UP))
+	var down: bool = _looks_like_wall(_char_at(cell + Vector2i.DOWN))
+	return (left and right) or (up and down)
 
 
 ## Loose candy on the floor: few on early floors, more the deeper you go.

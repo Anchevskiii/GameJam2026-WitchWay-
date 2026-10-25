@@ -1,4 +1,38 @@
-# README.md
+# Witch Way? — It's a Feature, Not a Bug: Halloween Edition
+
+> GameJam 2026 — oddajna različica
+
+## Zagon (za organizatorje)
+1. Prenesi repozitorij (ali `git clone https://github.com/Anchevskiii/GameJam2026-WitchWay-.git`).
+2. Odpri mapo `Build/`.
+3. Dvoklikni `WitchWay.exe` — igra se zažene brez Godota ali dodatnih knjižnic (Windows 10/11, 64-bit).
+
+## Kontrole
+| Tipka | Dejanje |
+| --- | --- |
+| W / A / S / D ali puščice | Premikanje |
+| E | Interakcija / iskanje / odpri |
+| F | Svetilka (flashlight) |
+| Space | Prestraši (scare) |
+| Shift | Sprint |
+| Q | Glitch mode (crash hiše na zahtevo) |
+| R | Nosi masko |
+| Esc | Premor / nazaj |
+
+## Povezave
+- **Dokumentacija:** `Documentation/WitchWay_ItsAFeatureNotABug_Dokumentacija.md`
+- **Video:** *(placeholder — dopolni s povezavo na 30s video)*
+- **Repozitorij:** https://github.com/Anchevskiii/GameJam2026-WitchWay-
+
+## Struktura repozitorija
+```text
+README.md           — ta datoteka (zagon, kontrole, povezave)
+Build/              — Windows .exe (WitchWay.exe, samostojen)
+Documentation/      — dokumentacija ekipe
+... (koren)         — izvorni Godot 4.3 projekt (assets/, scenes/, scripts/, project.godot)
+```
+
+---
 
 ## 1. Povzetek projekta (Game Design Document)
 **Ime igre:** It's a Feature, Not a Bug: Halloween Edition  
