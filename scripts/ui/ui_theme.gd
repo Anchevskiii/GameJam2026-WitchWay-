@@ -84,6 +84,23 @@ static func build() -> Theme:
 	theme.set_color("font_color", "HSlider", TEXT)
 	theme.set_color("font_color", "HSeparator", PANEL_BORDER)
 
+	# VScrollBar for scrollable lists
+	var scroll_grabber := StyleBoxFlat.new()
+	scroll_grabber.bg_color = BUTTON_BORDER
+	scroll_grabber.set_corner_radius_all(0)
+	var scroll_grabber_hl := StyleBoxFlat.new()
+	scroll_grabber_hl.bg_color = BUTTON_HOVER_BORDER
+	scroll_grabber_hl.set_corner_radius_all(0)
+	var scroll_bg := StyleBoxFlat.new()
+	scroll_bg.bg_color = Color(0.04, 0.03, 0.07, 0.8)
+	scroll_bg.set_corner_radius_all(0)
+	scroll_bg.content_margin_left = 4.0
+	scroll_bg.content_margin_right = 4.0
+	theme.set_stylebox("scroll", "VScrollBar", scroll_bg)
+	theme.set_stylebox("grabber", "VScrollBar", scroll_grabber)
+	theme.set_stylebox("grabber_highlight", "VScrollBar", scroll_grabber_hl)
+	theme.set_stylebox("grabber_pressed", "VScrollBar", scroll_grabber_hl)
+
 	_theme = theme
 	return theme
 

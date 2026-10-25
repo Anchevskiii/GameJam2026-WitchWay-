@@ -156,6 +156,16 @@ offset_bottom = 420.0
 theme_override_font_sizes/font_size = 18
 text = "CONTINUE"
 
+[node name="ShopButton" type="Button" parent="MenuRoot"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 80.0
+offset_top = 440.0
+offset_right = 360.0
+offset_bottom = 500.0
+theme_override_font_sizes/font_size = 18
+text = "CANDY SHOP"
+
 [node name="QuitButton" type="Button" parent="MenuRoot"]
 unique_name_in_owner = true
 layout_mode = 0

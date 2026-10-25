@@ -44,7 +44,7 @@ func _ready() -> void:
 		body.add_child(collision)
 		add_child(body)
 	var title := Label.new()
-	title.text = "MERCHANT" if mode == "main" else "CANDY MACHINE"
+	title.text = "CASPER (TAVERN)" if mode == "main" else "CANDY DISPENSER"
 	title.material = unshaded
 	title.add_theme_font_size_override("font_size", 11)
 	title.add_theme_color_override("font_color", MERCHANT_TINT)
@@ -57,7 +57,7 @@ func _ready() -> void:
 	add_child(title)
 	_prompt = Label.new()
 	_prompt.material = unshaded
-	_prompt.text = "E: Shop"
+	_prompt.text = "E: Tavern Shop" if mode == "main" else "E: Candy Dispenser"
 	_prompt.add_theme_font_size_override("font_size", 17)
 	_prompt.add_theme_color_override("font_color", Color(1.0, 0.98, 0.78))
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)

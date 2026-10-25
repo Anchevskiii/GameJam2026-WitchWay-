@@ -23,6 +23,7 @@ extends Control
 @onready var menu_root: Control = $MenuRoot
 @onready var new_game_button: Button = %NewGameButton
 @onready var continue_button: Button = %ContinueButton
+@onready var shop_button: Button = %ShopButton
 @onready var quit_button: Button = %QuitButton
 @onready var cog_button: CogButton = %CogButton
 @onready var customize_button: Button = %CustomizeButton
@@ -196,6 +197,8 @@ func _setup_buttons() -> void:
 		new_game_button.pressed.connect(_on_new_game_pressed)
 	if continue_button:
 		continue_button.pressed.connect(_on_continue_pressed)
+	if shop_button:
+		shop_button.pressed.connect(_on_shop_pressed)
 	if quit_button:
 		quit_button.pressed.connect(_on_quit_pressed)
 	if cog_button:
@@ -250,6 +253,12 @@ func _on_continue_pressed() -> void:
 		get_tree().change_scene_to_packed(start_level_scene)
 	else:
 		get_tree().change_scene_to_file("res://scenes/main.tscn")
+
+func _on_shop_pressed() -> void:
+	AudioManager.play("pop", -6.0)
+	var shop_script: Script = load("res://scripts/ui/shop_ui.gd")
+	if shop_script:
+		shop_script.call("open", self, "main")
 
 func _on_settings_pressed() -> void:
 	if settings_menu:
