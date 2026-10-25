@@ -132,7 +132,7 @@ func _on_keys_changed(_found: int, _needed: int) -> void:
 		return
 	if not requires_cpu_overload:
 		if collision and not collision.disabled:
-			AudioManager.play("creak", 0.0, 0.7)
+			AudioManager.play("creak_door", 1.5, 0.92)
 			_show_as_open_doorway()
 			for body in exit_area.get_overlapping_bodies():
 				_on_exit_area_body_entered(body)  # already standing in the doorway

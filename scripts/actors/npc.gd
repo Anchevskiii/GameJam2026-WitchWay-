@@ -261,16 +261,25 @@ func _release_scare() -> void:
 		bubble.text = "?"  # the player ducked into a hiding spot or put on a mask - miss!
 		_enter(State.COOLDOWN)
 		return
-	AudioManager.play(data.scare_sound, -4.0)
 	var in_range: bool = is_instance_valid(_target) and global_position.distance_to(_target.global_position) <= data.scare_range
 	if in_range and _target == _player:
 		var is_ambush: bool = _ambush_windup
 		if _player and _player.has_method("is_facing_target") and _player.is_facing_target(global_position):
 			is_ambush = false
+		var scare_sfx: String = data.scare_sound
+		if scare_sfx == "boo" or scare_sfx.is_empty():
+			var terrifying_pool: Array[String] = ["squeak_scare", "woman_scream", "evil_laugh_deep", "poltergeist"]
+			scare_sfx = terrifying_pool[randi() % terrifying_pool.size()]
+		elif scare_sfx == "cackle":
+			scare_sfx = "evil_laugh" if randf() < 0.65 else "evil_laugh_deep"
+		AudioManager.play(scare_sfx, 1.5, randf_range(0.92, 1.08))
 		var dmg: float = (data.ambush_damage if is_ambush else data.scare_damage) * damage_scale
 		GameManager.scare_player(dmg, data.display_name)
 	elif in_range and _target is Kid:
+		AudioManager.play(data.scare_sound, -4.0)
 		(_target as Kid).get_scared(global_position, "a " + data.display_name)
+	else:
+		AudioManager.play("haunted_pass", -5.0, randf_range(0.9, 1.1))
 	_enter(State.COOLDOWN)
 
 

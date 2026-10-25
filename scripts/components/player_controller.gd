@@ -331,7 +331,7 @@ func set_flashlight_available(available: bool) -> void:
 
 func _boo(origin: Vector2, reach: float, from_hiding: bool) -> void:
 	_boo_cooldown_left = boo_cooldown
-	AudioManager.play("whoosh", -8.0, randf_range(0.95, 1.1))
+	AudioManager.play("player_boo", 1.5, randf_range(0.95, 1.06))
 	_put_on_mask()
 	_spawn_boo_text()
 	EventBus.player_booed.emit(origin, reach, from_hiding)
