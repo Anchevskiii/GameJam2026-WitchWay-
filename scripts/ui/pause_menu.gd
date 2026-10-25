@@ -17,6 +17,9 @@ var _is_paused: bool = false
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
+	var panel: Control = get_node_or_null("Panel")
+	if panel:
+		panel.theme = UiTheme.build()
 	if resume_button:
 		resume_button.pressed.connect(_on_resume_pressed)
 	if restart_button:

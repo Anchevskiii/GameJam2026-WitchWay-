@@ -1,12 +1,12 @@
 class_name MainMenu
 extends Control
 
-## Main Menu with animated cinematic intro:
-## Camera moves down the pixel-art haunted forest path with subtle walking sway,
-## the outer trees (with wind swaying branches) smoothly part outwards,
-## revealing the Victorian haunted mansion,
-## a ghost emerges from the front door and flies to hover on the right lawn near pumpkins,
-## and the title ("Witch Way?") and menu options fade into view.
+## Main menu with the animated cinematic intro:
+## Camera moves down the pixel-art haunted forest path, the outer trees part,
+## the Victorian mansion is revealed, a ghost emerges and drifts to the lawn.
+## The menu itself is now a set of standalone pixel buttons (New Game / Continue / Quit),
+## a spinning cog wheel (Settings) in the top-right, and the player's idle sprite standing
+## in front of the mansion door with a Customize button underneath.
 ## Attached to: Control node in scenes/ui/main_menu.tscn
 
 @export var start_level_scene: PackedScene = preload("res://scenes/main.tscn")
@@ -20,12 +20,17 @@ extends Control
 @onready var tree_left: TextureRect = $TreeOverlayLeft
 @onready var tree_right: TextureRect = $TreeOverlayRight
 
-@onready var main_layout: VBoxContainer = $MainLayout
+@onready var menu_root: Control = $MenuRoot
 @onready var new_game_button: Button = %NewGameButton
 @onready var continue_button: Button = %ContinueButton
-@onready var settings_button: Button = %SettingsButton
 @onready var quit_button: Button = %QuitButton
+@onready var cog_button: CogButton = %CogButton
+@onready var customize_button: Button = %CustomizeButton
+@onready var player_preview: Sprite2D = %PlayerPreview
+@onready var player_name_label: Label = %PlayerNameLabel
+
 @onready var settings_menu: SettingsMenu = $SettingsMenu
+@onready var customization_menu: CustomizationMenu = $CustomizationMenu
 
 var _intro_completed: bool = false
 var _intro_tween: Tween = null
@@ -37,9 +42,11 @@ var _ghost_reached_lawn: bool = false
 const GHOST_TARGET_POS: Vector2 = Vector2(930.0, 520.0)
 
 func _ready() -> void:
+	theme = UiTheme.build()
 	# Let clicks on the empty background reach _unhandled_input so they can skip the intro.
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_setup_buttons()
+	_refresh_player_profile()
 	_check_save_state()
 	_setup_intro_initial_state()
 	_play_intro_animation()
@@ -80,10 +87,10 @@ func _setup_intro_initial_state() -> void:
 	_ghost_reached_lawn = false
 
 	# Menu UI hidden initially - not just transparent, so invisible buttons can't be clicked.
-	if main_layout:
-		main_layout.visible = false
-		main_layout.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		main_layout.modulate.a = 0.0
+	if menu_root:
+		menu_root.visible = false
+		menu_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		menu_root.modulate.a = 0.0
 
 func _process(delta: float) -> void:
 	_time_elapsed += delta
@@ -120,19 +127,27 @@ func _play_intro_animation() -> void:
 	_intro_tween.tween_property(ghost_sprite, "position", GHOST_TARGET_POS, 1.5).set_delay(3.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	_intro_tween.tween_property(ghost_sprite, "scale", Vector2(2.4, 2.4), 1.5).set_delay(3.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
-	# 5. Fade in Main Menu UI
+	# 5. Fade in the menu UI
 	_intro_tween.chain().tween_callback(_reveal_menu)
-	_intro_tween.chain().tween_property(main_layout, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
+	_intro_tween.chain().tween_property(menu_root, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
 	_intro_tween.chain().tween_callback(func() -> void:
 		_ghost_reached_lawn = true
 		_intro_completed = true
 	)
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Skip intro immediately on any key press or mouse click
 	if not _intro_completed:
+		# Skip intro immediately on any key press or mouse click
 		if event is InputEventKey or (event is InputEventMouseButton and event.pressed):
 			_skip_intro()
+		return
+
+	# ESC closes any open full-screen menu on the main menu.
+	if event.is_action_pressed("pause_game"):
+		if customization_menu and customization_menu.visible:
+			customization_menu.close()
+		elif settings_menu and settings_menu.visible:
+			settings_menu.close()
 
 func _skip_intro() -> void:
 	if _intro_tween and _intro_tween.is_valid():
@@ -164,33 +179,62 @@ func _skip_intro() -> void:
 		ghost_sprite.scale = Vector2(2.4, 2.4)
 		ghost_sprite.modulate.a = 1.0
 
-	if main_layout:
+	if menu_root:
 		_reveal_menu()
-		main_layout.modulate.a = 1.0
+		menu_root.modulate.a = 1.0
 
 
 ## Makes the menu interactive only once the intro actually shows it.
 func _reveal_menu() -> void:
-	if main_layout == null:
+	if menu_root == null:
 		return
-	main_layout.visible = true
-	main_layout.mouse_filter = Control.MOUSE_FILTER_STOP
+	menu_root.visible = true
+	menu_root.mouse_filter = Control.MOUSE_FILTER_STOP
 
 func _setup_buttons() -> void:
 	if new_game_button:
 		new_game_button.pressed.connect(_on_new_game_pressed)
 	if continue_button:
 		continue_button.pressed.connect(_on_continue_pressed)
-	if settings_button:
-		settings_button.pressed.connect(_on_settings_pressed)
 	if quit_button:
 		quit_button.pressed.connect(_on_quit_pressed)
+	if cog_button:
+		cog_button.pressed.connect(_on_settings_pressed)
+	if customize_button:
+		customize_button.pressed.connect(_on_customize_pressed)
+	if customization_menu:
+		customization_menu.closed.connect(_refresh_player_profile)
 
 func _check_save_state() -> void:
-	if continue_button:
-		continue_button.disabled = not SaveManager.has_save_file()
+	if continue_button == null:
+		return
+	if SaveManager.has_save_file():
+		var progress: Dictionary = SaveManager.load_progress()
+		var level: int = int(progress.get("highest_level", 0))
+		if level > 0:
+			continue_button.disabled = false
+			continue_button.text = "CONTINUE - FLOOR %d" % (level + 1)
+		else:
+			continue_button.disabled = true
+			continue_button.text = "CONTINUE"
+	else:
+		continue_button.disabled = true
+		continue_button.text = "CONTINUE"
+
+## Shows the saved character + name in front of the mansion door.
+func _refresh_player_profile() -> void:
+	var profile: Dictionary = SaveManager.load_player_profile()
+	var preset_id: int = int(profile.get("preset_id", 0))
+	if not PlayerPresets.is_valid(preset_id):
+		preset_id = PlayerPresets.DEFAULT_ID
+	if player_preview:
+		player_preview.texture = PlayerPresets.texture(preset_id)
+	if player_name_label:
+		var player_name: String = String(profile.get("name", "")).strip_edges()
+		player_name_label.text = player_name if not player_name.is_empty() else "THE VISITOR"
 
 func _on_new_game_pressed() -> void:
+	AudioManager.play("pop", -6.0)
 	GameManager.start_new_run()
 	if start_level_scene:
 		get_tree().change_scene_to_packed(start_level_scene)
@@ -198,6 +242,7 @@ func _on_new_game_pressed() -> void:
 		get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 func _on_continue_pressed() -> void:
+	AudioManager.play("pop", -6.0)
 	var progress: Dictionary = SaveManager.load_progress()
 	# The save holds the last Living Room reached; Main starts at GameManager's checkpoint.
 	GameManager.start_from_checkpoint(int(progress.get("highest_level", 0)))
@@ -210,5 +255,11 @@ func _on_settings_pressed() -> void:
 	if settings_menu:
 		settings_menu.open()
 
+func _on_customize_pressed() -> void:
+	AudioManager.play("pop", -6.0)
+	if customization_menu:
+		customization_menu.open()
+
 func _on_quit_pressed() -> void:
+	AudioManager.play("pop", -6.0)
 	get_tree().quit()

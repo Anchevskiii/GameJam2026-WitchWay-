@@ -10,6 +10,12 @@ enum AfterScare {
 	FALL_APART,  ## pops into pieces (Jack-o'-lanterns)
 }
 
+enum Behavior {
+	PASSIVE,   ## always visible, slow/stationary, FOV cone always shown
+	AGGRESSIVE, ## lurks in corners/doorways, invisible until lit, FOV-triggered scare
+	HIDDEN,    ## hides inside furniture and ambushes when the player opens / hides
+}
+
 @export var display_name: String = "Monster"
 ## Animation frames (the 4 PNGs from assets/sprites/entities/<name>/Png_animation/).
 @export var frames: Array[Texture2D] = []
@@ -30,6 +36,10 @@ enum AfterScare {
 ## Ghost attributes: passes through walls and periodically phases in/out.
 @export var is_ghost: bool = false
 @export var can_pass_walls: bool = false
+
+@export_group("Behavior type")
+## Which of the three playstyles this monster uses (see the enum above).
+@export var behavior: Behavior = Behavior.PASSIVE
 
 @export_group("Scare duel")
 ## Harmless NPCs never wind up (training dummies).

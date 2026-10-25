@@ -40,33 +40,38 @@ custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
 [node name="ResumeButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(200, 38)
+custom_minimum_size = Vector2(220, 44)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Resume Game"
+theme_override_font_sizes/font_size = 14
+text = "RESUME"
 
 [node name="RestartButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(200, 38)
+custom_minimum_size = Vector2(220, 44)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Restart Level"
+theme_override_font_sizes/font_size = 14
+text = "RESTART"
 
 [node name="SettingsButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(200, 38)
+custom_minimum_size = Vector2(220, 44)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Settings"
+theme_override_font_sizes/font_size = 14
+text = "SETTINGS"
 
 [node name="MainMenuButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(200, 38)
+custom_minimum_size = Vector2(220, 44)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Main Menu"
+theme_override_font_sizes/font_size = 14
+text = "MAIN MENU"
 
 [node name="QuitButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(200, 38)
+custom_minimum_size = Vector2(220, 44)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Quit Game"
+theme_override_font_sizes/font_size = 14
+text = "QUIT"
 
 [node name="SettingsMenu" parent="." instance=ExtResource("2_settings_menu")]

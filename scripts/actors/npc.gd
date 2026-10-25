@@ -4,31 +4,41 @@ extends CharacterBody2D
 ## A haunted-house resident that tries to scare the player - and can be scared first.
 ## Attached to: CharacterBody2D root of scenes/actors/npc.tscn. Configure via `data` (NpcData).
 ##
+## Three behaviour types (NpcData.Behavior) decide how it plays:
+##   PASSIVE     always visible (and its FOV cone too), wanders slowly or stands still.
+##   AGGRESSIVE  lurks in corners/doorways, invisible until you light it with the flashlight;
+##               step into its FOV cone and it triggers and scares you.
+##   HIDDEN      hides inside furniture and jumps out only when you open / try to hide there.
+##
 ## Stealth scare duel:
-##   IDLE          wanders and looks around. It SEES the player (or a kid) only inside its view cone
-##                 (yellow), with no walls/furniture in between, and never while they hide or wear a mask.
-##                 Spotting the player or a trick-or-treating kid -> WINDUP
-##   CORNER_LURK   stands completely still in a dark corner/spot waiting for the player to approach.
-##   WINDUP        visible tell (grows, glows red, "BOO" bubble) while CHASING the target. If it
-##                 completes in range (and the player isn't hidden/masked), the target gets scared -> COOLDOWN
-##   HIDING        (hides_in_furniture) sits in a cupboard, head peeking out now and then.
-##                 Player gets close -> jumps out with a short wind-up. BOO the cupboard first
-##                 and the surprise is on it.
-##   PANIC         the player surprised it (BOO from behind / jumped out of hiding / masked)! Drops loot,
-##                 screams (nearby NPCs panic too) and runs around bumping into others
+##   IDLE          behaves according to its type. It SEES the player (or a kid) only inside its
+##                 view cone, with no walls/furniture in between, and never while they hide or wear
+##                 a mask. Spotting the player/kid -> WINDUP
+##   WINDUP        visible tell (grows, glows red, "BOO" bubble) while CHASING the target. If the
+##                 player leaves the FOV cone, the wind-up RESETS (back to IDLE) and re-entering
+##                 restarts the full prepare time. Completing in range scares them -> COOLDOWN
+##   HIDING        sits in a cupboard, head peeking out now and then (less on higher levels).
+##                 Player gets close / tries to hide there -> jumps out with a short wind-up.
+##   PANIC         the player surprised it (BOO from behind / jumped out of hiding / masked)! Drops
+##                 loot, screams (nearby NPCs panic too) and runs around bumping into others
 ##   DONE          DISABLED: greyed out and glitching with a countdown. Recovers after a while -> IDLE
 ## A BOO it can see coming does nothing (unless masked). Wind-ups pause while LagController.is_frozen.
+##
+## Level scaling (driven by GameManager.difficulty_tier): FOV cones are smaller on early floors and
+## grow with the level, entities move more/faster deeper in, the prepare-to-jumpscare window shrinks
+## from ~1s down to ~0.1s, FOV cones turn faster, and cooldown / disabled / damage scale with the level.
 
-enum State { IDLE, WINDUP, COOLDOWN, PANIC, DONE, HIDING, CORNER_LURK }
+enum State { IDLE, WINDUP, COOLDOWN, PANIC, DONE, HIDING }
 
 const MISSING_TEXTURE: Texture2D = preload("res://assets/sprites/environment/missing_texture.png")
 ## Panicking NPCs scare other NPCs within this distance.
 const BUMP_RADIUS: float = 34.0
 ## The NPC notices a player bumping right into it, even from behind.
 const TOUCH_SENSE: float = 20.0
-const CONE_COLOR: Color = Color(1.0, 0.9, 0.5, 0.07)
-const CONE_ALERT_COLOR: Color = Color(1.0, 0.25, 0.2, 0.16)
-const CONE_RAYS: int = 12
+const CONE_COLOR: Color = Color(0.9, 0.8, 0.4, 0.10)
+const CONE_ALERT_COLOR: Color = Color(0.95, 0.18, 0.15, 0.24)
+const CONE_RAYS: int = 28
+const FOV_SHADER: Shader = preload("res://assets/shaders/fov_cone.gdshader")
 
 @export var data: NpcData
 ## Darkness rooms: > 0 means the NPC is "not loaded" (invisible, then a missing-texture
@@ -71,6 +81,7 @@ var _frame: int = 0
 var _facing: float = 1.0
 var _look_timer: float = 0.0
 var _view_cone: Polygon2D = null
+var _fov_material: ShaderMaterial = null
 ## Hiding: the spot it walks to / sits in, and time since it last hid.
 var _hide_spot: HideSpot = null
 var _hide_walk_time: float = 0.0
@@ -86,6 +97,8 @@ var _ghost_phase_timer: float = 0.0
 var _is_phased: bool = false
 var _unshaded_mat: CanvasItemMaterial = null
 var _disappearing: bool = false
+## Until what time (seconds) this entity stays revealed after the player last lit it up.
+var _reveal_until: float = 0.0
 
 
 func _ready() -> void:
@@ -107,9 +120,14 @@ func _ready() -> void:
 		collision_mask = 0
 		add_to_group("ghosts")
 	_reset_visuals()
+	# Entities stay readable in dark rooms (unshaded) but not blindingly bright.
+	sprite.self_modulate = Color(0.74, 0.74, 0.8)
 	_facing = 1.0 if randf() > 0.5 else -1.0
-	_look_timer = randf_range(data.look_around_min, data.look_around_max)
+	_look_timer = _look_interval()
 	_build_view_cone()
+	# Aggressive lurkers creep into a corner/doorway to wait (but not when seated at a party).
+	if _is_aggressive() and can_chase and not GameManager.is_safe_room:
+		_relocate_to_spot(60.0)
 	EventBus.player_booed.connect(_on_player_booed)
 	EventBus.noise_made.connect(_on_noise_made)
 
@@ -155,17 +173,15 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 			if status_bar:
 				status_bar.visible = true
-				status_bar.max_value = data.recover_time
-				status_bar.value = maxf(0.0, data.recover_time - _state_time)
+				status_bar.max_value = _recover_time()
+				status_bar.value = maxf(0.0, _recover_time() - _state_time)
 				status_bar.modulate = Color(0.8, 0.4, 1.0)
 			sprite.visible = true
-			if _state_time >= data.recover_time:
+			if _state_time >= _recover_time():
 				_recover()
 		State.HIDING:
 			_process_hiding()
 			return  # sitting still inside the furniture: no physics movement
-		State.CORNER_LURK:
-			_process_corner_lurk()
 	move_and_slide()
 
 
@@ -180,6 +196,84 @@ func _update_ghost_phase(delta: float) -> void:
 		create_tween().tween_property(sprite, "modulate:a", target_alpha, 0.7)
 
 
+# ---------------------------------------------------------------- level scaling
+
+## Difficulty tier: 0 = first Living Room loop, then 1, 2, 3... Higher floors are meaner.
+func _tier() -> int:
+	return GameManager.difficulty_tier()
+
+
+## 0.0 .. 1.0 progress across the first 6 tiers (used to lerp every difficulty dial).
+func _tier_p() -> float:
+	return clampf(float(_tier()) / 6.0, 0.0, 1.0)
+
+
+## Passive entities move slower early on and faster deeper in.
+func _move_speed() -> float:
+	return data.move_speed * speed_scale * lerpf(0.7, 1.35, _tier_p())
+
+
+## How far a passive entity wanders: shorter early, longer later.
+func _wander_radius() -> float:
+	return data.wander_radius * wander_scale * lerpf(0.6, 1.4, _tier_p())
+
+
+## Seconds between direction changes. Higher floors = the FOV cone sweeps faster.
+func _look_interval() -> float:
+	return randf_range(data.look_around_min, data.look_around_max) * lerpf(1.6, 0.35, _tier_p())
+
+
+## FOV cone reach: smaller on early floors (easier to slip past), larger deeper in.
+func _fov_reach() -> float:
+	var base: float = 90.0 if _is_passive() else 110.0
+	var scaled: float = base * lerpf(0.85, 1.7, _tier_p())
+	return clampf(scaled * sight_scale, 60.0, 240.0)
+
+
+## FOV cone half-angle (degrees). Wider on higher floors.
+func _view_half_angle() -> float:
+	var base: float = 40.0 if _is_passive() else 50.0
+	return clampf(base * lerpf(0.9, 1.25, _tier_p()), 30.0, 80.0)
+
+
+## Prepare-to-jumpscare window: ~1s on early floors, shrinking to ~0.1s (near instant) deep in.
+## Hidden ambushers jump out with a shorter, snappier tell.
+func _windup_time() -> float:
+	if _ambush_windup:
+		return lerpf(0.5, 0.12, _tier_p()) * windup_scale
+	return lerpf(1.0, 0.1, _tier_p()) * windup_scale * GameManager.monster_windup_scale
+
+
+## How long an entity stays disabled (DONE) before recovering: shorter on higher floors.
+func _recover_time() -> float:
+	return data.recover_time * lerpf(1.3, 0.6, _tier_p())
+
+
+## Cooldown after a scare: shorter on higher floors (more pressure).
+func _cooldown_time() -> float:
+	return lerpf(6.0, 3.0, _tier_p())
+
+
+## How long an entity stays visible after the player last lit it with the flashlight:
+## ~5s on early floors, shrinking to ~1s deep in.
+func _reveal_duration() -> float:
+	return lerpf(5.0, 1.0, _tier_p())
+
+
+# ---------------------------------------------------------------- behaviour helpers
+
+func _is_passive() -> bool:
+	return data.behavior == NpcData.Behavior.PASSIVE
+
+
+func _is_aggressive() -> bool:
+	return data.behavior == NpcData.Behavior.AGGRESSIVE
+
+
+func _is_hidden() -> bool:
+	return data.behavior == NpcData.Behavior.HIDDEN
+
+
 # ---------------------------------------------------------------- states
 
 func _process_idle(delta: float) -> void:
@@ -189,31 +283,36 @@ func _process_idle(delta: float) -> void:
 	if data.afraid_of_player and sees_player:
 		var away: Vector2 = (global_position - _player.global_position).normalized()
 		velocity = away * data.move_speed * speed_scale * 1.4
+	elif _is_aggressive():
+		# Stands in its corner/doorway, sweeping its gaze (faster on higher floors).
+		velocity = Vector2.ZERO
+		_look_timer -= delta
+		if _look_timer <= 0.0:
+			_facing = -_facing
+			_look_timer = _look_interval()
 	elif _hide_spot != null:
 		_walk_to_hiding_spot(delta)
 	elif data.can_move:
 		_wander_time -= delta
 		if global_position.distance_to(_wander_target) < 6.0 or _wander_time <= 0.0:
 			_pick_wander_target()
-		velocity = global_position.direction_to(_wander_target) * data.move_speed * speed_scale * (1.1 if _investigating else 0.45)
+		velocity = global_position.direction_to(_wander_target) * _move_speed() * (1.1 if _investigating else 0.45)
 	else:
 		velocity = Vector2.ZERO
 
 	# Face where it walks; when standing still, glance the other way now and then.
 	if absf(velocity.x) > 5.0:
 		_facing = signf(velocity.x)
-	else:
+	elif not _is_aggressive():
 		_look_timer -= delta
 		if _look_timer <= 0.0:
 			_facing = -_facing
-			_look_timer = randf_range(data.look_around_min, data.look_around_max)
+			_look_timer = _look_interval()
 
 	if target != null and _can_start_windup():
 		_give_up_hiding_spot()
 		_target = target
 		_enter(State.WINDUP)
-	elif data.hides_in_corners and can_hide and not _investigating and randf() < 0.012 and target == null and _time_since_hide >= data.hide_cooldown:
-		_enter(State.CORNER_LURK)
 	elif _wants_to_hide() and target == null:
 		_hide_spot = _find_hiding_spot()
 		if _hide_spot:
@@ -223,25 +322,15 @@ func _process_idle(delta: float) -> void:
 			_time_since_hide = 0.0  # nothing free nearby: look again after the cooldown
 
 
-func _process_corner_lurk() -> void:
-	velocity = Vector2.ZERO
-	if _player == null:
-		return
-	var player_masked_or_hidden: bool = _player.get("is_masked") or _player.get("is_hidden")
-	if not player_masked_or_hidden and can_see_player():
-		_ambush_windup = true
-		_target = _player
-		_enter(State.WINDUP)
-		face_towards(_player.global_position)
-	elif _state_time >= data.hide_time:
-		_time_since_hide = 0.0
-		_enter(State.IDLE)
-
-
 func _process_windup(delta: float) -> void:
 	velocity = Vector2.ZERO
 	if not is_instance_valid(_target) or (_target is Kid and not (_target as Kid).is_scareable()) or (_target == _player and _player.get("is_masked")):
 		_enter(State.COOLDOWN)
+		return
+	# If the player slips back out of the FOV cone (still unhidden), the wind-up RESETS:
+	# stepping back in restarts the full prepare time.
+	if _target == _player and not _player.get("is_hidden") and not can_see_player():
+		_abort_to_idle()
 		return
 	face_towards(_target.global_position)
 	var to_target: Vector2 = _target.global_position - global_position
@@ -260,7 +349,7 @@ func _process_windup(delta: float) -> void:
 	bubble.text = "!"
 	bubble.scale = Vector2.ONE
 
-	if to_target.length() > _sight() * 1.65:
+	if to_target.length() > _fov_reach() * 1.65:
 		_enter(State.COOLDOWN)
 		return
 	if progress >= 1.0 or (to_target.length() <= 38.0 and _state_time >= 0.15):
@@ -269,14 +358,13 @@ func _process_windup(delta: float) -> void:
 
 func _release_scare() -> void:
 	bubble.scale = Vector2.ONE
-	_cooldown_duration = 5.0
+	_cooldown_duration = _cooldown_time()
 	if _target == _player and (_player.get("is_hidden") or _player.get("is_masked")):
 		bubble.text = "?"  # the player ducked into a hiding spot or put on a mask - miss!
 		_enter(State.COOLDOWN)
 		return
 	var in_range: bool = is_instance_valid(_target) and global_position.distance_to(_target.global_position) <= data.scare_range * 1.15
 	if in_range and _target == _player:
-		_cooldown_duration = 5.0
 		var is_ambush: bool = _ambush_windup
 		if _player and _player.has_method("is_facing_target") and _player.is_facing_target(global_position):
 			is_ambush = false
@@ -284,8 +372,8 @@ func _release_scare() -> void:
 		AudioManager.play_scare(scare_sfx, -2.5, randf_range(0.95, 1.05))
 		var dmg: float = (data.ambush_damage if is_ambush else data.scare_damage) * damage_scale
 		GameManager.scare_player(dmg, data.display_name)
-		# Wardrobe/hiding ambushers play jump-scare animation, vanish into walls and relocate into another wardrobe!
-		if is_ambush and data.hides_in_furniture:
+		# Wardrobe ambushers play jump-scare animation, vanish into walls and relocate into another wardrobe!
+		if is_ambush and _is_hidden():
 			_vanish_and_respawn_cupboard()
 			return
 	elif in_range and _target is Kid:
@@ -396,6 +484,16 @@ func _drop_loot() -> void:
 		Prop.spawn(prop_data, global_position + dir * 10.0, dir * randf_range(120.0, 260.0), get_tree())
 
 
+## Candy reward for a successful player scare (the monster didn't see it coming).
+func _drop_candy_reward() -> void:
+	if not GameManager.has_method("candy_drop_count"):
+		return
+	var candy_data: PropData = preload("res://data/props/candy.tres")
+	for i in GameManager.candy_drop_count(1 + randi() % 2):
+		var dir: Vector2 = Vector2.RIGHT.rotated(randf() * TAU)
+		Prop.spawn(candy_data, global_position + dir * 10.0, dir * randf_range(90.0, 200.0), get_tree())
+
+
 func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> void:
 	if state == State.PANIC or state == State.DONE:
 		return
@@ -403,7 +501,8 @@ func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> v
 	if state == State.HIDING:
 		if global_position.distance_to(origin) <= boo_range + 20.0:
 			_leave_hiding_spot(origin.direction_to(global_position))
-			get_scared("someone who saw its head peeking out")
+			if get_scared("someone who saw its head peeking out"):
+				_drop_candy_reward()
 		return
 	if global_position.distance_to(origin) > boo_range or not _has_line_of_sight(origin, global_position):
 		return
@@ -416,7 +515,8 @@ func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> v
 		get_tree().create_timer(0.9).timeout.connect(_hide_bubble_if_calm)
 		Narrator.say_event("boo_seen")
 		return
-	get_scared("a masked stranger")
+	if get_scared("a masked stranger"):
+		_drop_candy_reward()
 
 
 ## True if the player is within this NPC's alert range, in line of sight, not hidden, and not masked.
@@ -427,19 +527,14 @@ func can_see_player() -> bool:
 
 
 ## True if `node` is within the entity's FOV cone, in range and not blocked by walls/furniture.
-## - Ambushers waiting in corners or passive wanderers: smaller FOV cone (55 deg half-angle, reach ~95px).
-## - Active wandering monsters: wider FOV cone (65 deg half-angle, reach ~130px).
-## - FOV increases slightly with higher game level (floor).
 func can_see(node: Node2D) -> bool:
 	var to_node: Vector2 = node.global_position - global_position
 	var dist: float = to_node.length()
-	var max_range: float = _sight()
-	if dist > max_range:
+	if dist > _fov_reach():
 		return false
 	if not _has_line_of_sight(global_position, node.global_position):
 		return false
 
-	# Stationary corner/ambush lurkers only trigger if player walks directly into their vision cone
 	var half_angle_deg: float = _view_half_angle()
 	var angle_to_target: float = absf(rad_to_deg(Vector2(_facing, 0.0).angle_to(to_node)))
 	if angle_to_target <= half_angle_deg:
@@ -447,27 +542,6 @@ func can_see(node: Node2D) -> bool:
 
 	# Bumping directly into monster body
 	return dist <= TOUCH_SENSE
-
-
-## FOV half-angle scaled dynamically with level
-func _view_half_angle() -> float:
-	var base_angle: float = 52.0 if (state == State.CORNER_LURK or data.hides_in_corners) else 65.0
-	var level_bonus: float = minf(float(GameManager.current_level) * 2.5, 20.0)
-	return clampf(base_angle + level_bonus, 45.0, 85.0)
-
-
-## FOV cone reach: compact and not overly long
-func _fov_reach() -> float:
-	return _sight()
-
-
-## Dynamic windup time from alert to jumpscare:
-## - Corner lurkers / ambush: 0.50s (getting faster on higher levels down to 0.28s)
-## - Other passive/wandering entities: 0.75s (getting faster on higher levels down to 0.40s)
-func _windup_time() -> float:
-	var level_scale: float = clampf(1.0 - float(GameManager.current_level) * 0.08, 0.55, 1.0)
-	var base_time: float = 0.50 if (_ambush_windup or state == State.CORNER_LURK or data.hides_in_corners) else 0.75
-	return base_time * level_scale * windup_scale * GameManager.monster_windup_scale
 
 
 ## The player if it can see them, otherwise the nearest kid it can see (or null).
@@ -482,17 +556,10 @@ func _find_visible_target() -> Node2D:
 	return best
 
 
-## Compact FOV reach that scales moderately with higher levels:
-func _sight() -> float:
-	var level_bonus: float = minf(float(GameManager.current_level) * 8.0, 48.0)
-	var base_reach: float = 85.0 if (state == State.CORNER_LURK or data.hides_in_corners) else 110.0
-	return (base_reach + level_bonus) * sight_scale * GameManager.monster_sight_scale
-
-
 ## Turn to look at a point (used by tests and scripted moments).
 func face_towards(point: Vector2) -> void:
 	_facing = -1.0 if point.x < global_position.x else 1.0
-	_look_timer = randf_range(data.look_around_min, data.look_around_max)
+	_look_timer = _look_interval()
 
 
 ## Walls, furniture and doors (collision layer 1) block sight. Fake walls don't. ;)
@@ -516,21 +583,13 @@ func _enter(new_state: State) -> void:
 				status_bar.visible = false
 			_ambush_windup = false
 			_reset_visuals()
-		State.CORNER_LURK:
-			bubble.visible = false
-			if status_bar:
-				status_bar.visible = false
-			windup_light.enabled = false
-			sprite.material = null
-			z_index = 0
-			sprite.modulate = data.tint.darkened(0.45)
 		State.WINDUP:
 			bubble.visible = true
 			bubble.text = "!"
 			bubble.scale = Vector2.ONE
 			if status_bar:
 				status_bar.visible = false
-			sprite.material = null
+			sprite.material = _unshaded_mat
 			z_index = 0
 			windup_light.enabled = true
 			windup_light.color = Color(1.0, 0.3, 0.25, 1.0)
@@ -553,8 +612,8 @@ func _enter(new_state: State) -> void:
 			bubble.visible = false
 			if status_bar:
 				status_bar.visible = true
-				status_bar.max_value = data.recover_time
-				status_bar.value = data.recover_time
+				status_bar.max_value = _recover_time()
+				status_bar.value = _recover_time()
 				status_bar.modulate = Color(0.8, 0.4, 1.0)
 			sprite.material = _unshaded_mat
 			z_index = 25
@@ -591,22 +650,34 @@ func _recover() -> void:
 ## elsewhere in the room (or returns to its post if stationary) so it can lurk or hide again.
 func _relocate_and_reset() -> void:
 	_reset_visuals()
-	if data.can_move and wander_scale > 0.05 and not GameManager.is_safe_room:
-		var room_node: Node = get_parent().get_parent() if get_parent() else null
-		if room_node != null and room_node.has_method("get_random_relocate_point"):
-			var avoid: Vector2 = _player.global_position if _player != null else global_position
-			var new_pos: Vector2 = room_node.call("get_random_relocate_point", avoid, 165.0)
-			global_position = new_pos
-			_home = new_pos
-		if data.hides_in_furniture and can_hide:
+	if not GameManager.is_safe_room:
+		if _is_hidden() and can_hide:
 			var spot: HideSpot = _find_hiding_spot()
 			if spot != null:
 				_hide_spot = spot
 				_enter_hiding_spot()
 				return
-		if data.hides_in_corners and can_hide:
-			_enter(State.CORNER_LURK)
-			return
+		if data.can_move and wander_scale > 0.05:
+			_relocate_to_spot(165.0)
+	_enter(State.IDLE)
+	_pick_wander_target()
+
+
+## Snaps to a corner/relocate point well away from `avoid` (aggressive lurkers prefer corners).
+func _relocate_to_spot(min_dist: float) -> void:
+	var room_node: Node = get_parent().get_parent() if get_parent() else null
+	if room_node == null or not room_node.has_method("get_random_relocate_point"):
+		return
+	var avoid: Vector2 = _player.global_position if _player != null else global_position
+	var new_pos: Vector2 = room_node.call("get_random_relocate_point", avoid, min_dist)
+	global_position = new_pos
+	_home = new_pos
+
+
+## Wind-up was broken (target left the FOV cone) - reset with no cooldown penalty.
+func _abort_to_idle() -> void:
+	_ambush_windup = false
+	_target = null
 	_enter(State.IDLE)
 	_pick_wander_target()
 
@@ -614,9 +685,10 @@ func _relocate_and_reset() -> void:
 func _reset_visuals() -> void:
 	stumble.enabled = true
 	sprite.visible = true
+	_reveal_until = 0.0
 	if status_bar:
 		status_bar.visible = false
-	sprite.material = null
+	sprite.material = _unshaded_mat
 	z_index = 0
 	sprite.region_enabled = false
 	sprite.rotation = 0.0
@@ -627,15 +699,15 @@ func _reset_visuals() -> void:
 		sprite.texture = data.frames[0]
 
 
-## Heard a creaky board / a trap snap: walk over to look. Monsters that stay put (seated
-## guests, hiders) and ones busy scaring or switched off ignore it.
+## Heard a creaky board / a trap snap: walk over to look. Lurkers stay in ambush; monsters that
+## stay put (seated guests, hiders) and ones busy scaring or switched off ignore it.
 func _on_noise_made(at: Vector2, radius: float) -> void:
-	if (state != State.IDLE and state != State.CORNER_LURK) or not data.can_move or not can_chase or _hide_spot != null:
+	if state != State.IDLE or not data.can_move or not can_chase or _hide_spot != null:
 		return
+	if _is_aggressive():
+		return  # lurkers keep their ambush position
 	if global_position.distance_to(at) > radius:
 		return
-	if state == State.CORNER_LURK:
-		_enter(State.IDLE)
 	_wander_target = at
 	_wander_time = 8.0
 	_investigating = true
@@ -645,7 +717,7 @@ func _on_noise_made(at: Vector2, radius: float) -> void:
 
 func _pick_wander_target() -> void:
 	_investigating = false
-	_wander_target = _home + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(0.0, data.wander_radius * wander_scale)
+	_wander_target = _home + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(0.0, _wander_radius())
 	_wander_time = randf_range(1.5, 3.5)
 
 
@@ -667,19 +739,15 @@ func _animate(delta: float) -> void:
 		sprite.texture = data.frames[_frame]
 
 
-## Visibility & darkness:
-##   - In safe rooms or when winding up / panicking: visible if within line-of-sight or close.
-##   - When lurking in corners (CORNER_LURK) or in dark rooms: hidden in the shadows unless
-##     the player illuminates them with the flashlight (or comes right up to them) with line of sight!
-##   - Never shows magenta missing-texture placeholders on entities.
+## Visibility: passive AND aggressive entities show up as soon as the player is in the room
+## (line of sight reveals them, even in dark rooms). The flashlight still grants a brief
+## through-wall "reveal" so you can keep tracking them after you light them.
+## Hidden entities stay invisible inside furniture (handled by the HIDING state).
 func _update_loaded_look() -> void:
 	if state == State.DONE or state == State.COOLDOWN:
 		sprite.visible = true
 		return
 	if state == State.HIDING:
-		return
-	if GameManager.is_safe_room:
-		sprite.visible = true
 		return
 
 	var dist: float = _distance_to_player()
@@ -687,19 +755,14 @@ func _update_loaded_look() -> void:
 	var lit_by_player: bool = false
 	if _player != null and _player.has_method("is_illuminating"):
 		lit_by_player = _player.call("is_illuminating", global_position) and has_los
+	# Once lit, the entity stays revealed (and its FOV cone too) for a few seconds, so you can
+	# still track it after the beam moves off. Shorter reveal window on higher floors.
+	var now: float = Time.get_ticks_msec() / 1000.0
+	if lit_by_player:
+		_reveal_until = now + _reveal_duration()
+	var revealed: bool = lit_by_player or now <= _reveal_until
 
-	if state == State.CORNER_LURK:
-		# Corner lurkers stay completely invisible in the shadows unless the flashlight beam hits them directly
-		sprite.visible = lit_by_player
-		return
-
-	if load_in_radius > 0.0:
-		sprite.visible = (dist <= load_in_radius and has_los) or dist <= 40.0 or state == State.WINDUP or state == State.PANIC or lit_by_player
-		return
-
-	# Standard dark atmosphere: monsters behind walls or outside your light stay hidden in darkness
-	# When flashlight beam encompasses the entity, it becomes visible!
-	sprite.visible = lit_by_player or state == State.WINDUP or state == State.PANIC or (has_los and dist <= 50.0)
+	sprite.visible = has_los or revealed or dist <= 40.0 or state == State.WINDUP or state == State.PANIC
 
 
 func _distance_to_player() -> float:
@@ -711,7 +774,7 @@ func _distance_to_player() -> float:
 # ---------------------------------------------------------------- hiding & ambush
 
 func _wants_to_hide() -> bool:
-	return (data.hides_in_furniture and can_hide and _hide_spot == null and _time_since_hide >= data.hide_cooldown
+	return (_is_hidden() and can_hide and _hide_spot == null and _time_since_hide >= data.hide_cooldown
 		and not GameManager.is_safe_room)
 
 
@@ -720,6 +783,8 @@ func _find_hiding_spot() -> HideSpot:
 	var best_dist: float = data.hide_search_radius
 	for node in get_tree().get_nodes_in_group("hide_spots"):
 		var spot: HideSpot = node as HideSpot
+		if GameManager.shop_zone.has_point(spot.global_position):
+			continue  # the vending-machine room stays monster-free
 		var dist: float = global_position.distance_to(spot.global_position)
 		# Don't climb into a cupboard right in front of the player.
 		var too_close_to_player: bool = _player != null and spot.global_position.distance_to(_player.global_position) < 140.0
@@ -734,7 +799,7 @@ func _walk_to_hiding_spot(delta: float) -> void:
 	if not is_instance_valid(_hide_spot) or not _hide_spot.is_free_for(self) or _hide_walk_time > 6.0:
 		_give_up_hiding_spot()  # taken, or stuck behind furniture: try again later
 		return
-	velocity = global_position.direction_to(_hide_spot.global_position) * data.move_speed * speed_scale
+	velocity = global_position.direction_to(_hide_spot.global_position) * _move_speed()
 	if global_position.distance_to(_hide_spot.global_position) < _hide_spot.reach * 0.75:
 		_enter_hiding_spot()
 
@@ -799,28 +864,40 @@ func _give_up_hiding_spot() -> void:
 func _build_view_cone() -> void:
 	_view_cone = Polygon2D.new()
 	_view_cone.color = CONE_COLOR
-	_view_cone.z_index = -1
+	_view_cone.z_index = 1
+	_fov_material = ShaderMaterial.new()
+	_fov_material.shader = FOV_SHADER
+	_view_cone.material = _fov_material
 	add_child(_view_cone)
 
 
 ## The FOV cone shows where the entity looks:
-## - Visible whenever the player can see the entity (not when hiding in cupboards or off-screen in darkness).
-## - Shorter, compact reach.
-## - Alerts red during windup.
+## - Only when the entity is actually visible to the player (line of sight / revealed by the
+##   flashlight) - never through walls or from across the whole floor.
+## - Hidden entities (inside a cupboard) have no cone.
+## - Alerts red while the player is inside the cone (wind-up).
+## - The cone starts from the whole body (not a single point) and fades out softly via the shader.
 func _update_view_cone() -> void:
 	if _view_cone == null:
 		return
-	var cone_should_show: bool = sprite.visible and state != State.HIDING and state != State.DONE and state != State.COOLDOWN
+	var cone_should_show: bool = sprite.visible and (state == State.IDLE or state == State.WINDUP)
 	_view_cone.visible = cone_should_show
 	if not _view_cone.visible:
 		return
 	_view_cone.color = CONE_ALERT_COLOR if state == State.WINDUP else CONE_COLOR
+	_fov_material.set_shader_parameter("reach", _fov_reach())
+	_fov_material.set_shader_parameter("facing", _facing)
 	var space: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
-	var points: PackedVector2Array = [Vector2.ZERO]
+	# The cone spreads from the entity's body: a short perpendicular base, then the swept arc.
+	var perp := Vector2(0, 1)
+	var base_half := 10.0
+	var points := PackedVector2Array()
+	points.append(to_local(global_position - perp * base_half))
+	points.append(to_local(global_position + perp * base_half))
 	var half_deg: float = _view_half_angle()
 	var reach: float = _fov_reach()
 	for i in CONE_RAYS + 1:
-		var angle: float = deg_to_rad(lerpf(-half_deg, half_deg, float(i) / CONE_RAYS))
+		var angle: float = deg_to_rad(lerpf(half_deg, -half_deg, float(i) / CONE_RAYS))
 		var tip: Vector2 = global_position + Vector2(_facing, 0.0).rotated(angle * _facing) * reach
 		var query := PhysicsRayQueryParameters2D.create(global_position, tip, 1)
 		query.exclude = [get_rid()]

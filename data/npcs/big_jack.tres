@@ -11,6 +11,7 @@
 [resource]
 script = ExtResource("10_owba2")
 display_name = "Big Jack"
+behavior = 1
 frames = Array[Texture2D]([ExtResource("1_rr0sq")])
 anim_fps = 6.0
 tint = Color(1, 0.85, 0.7, 1)

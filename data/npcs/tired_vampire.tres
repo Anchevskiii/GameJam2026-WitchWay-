@@ -9,6 +9,7 @@
 [resource]
 script = ExtResource("8_plvyr")
 display_name = "Tired Vampire"
+behavior = 0
 frames = Array[Texture2D]([ExtResource("1_fgp8n")])
 anim_fps = 6.0
 tint = Color(1, 1, 1, 1)

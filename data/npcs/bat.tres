@@ -8,6 +8,7 @@
 [resource]
 script = ExtResource("7_68hiu")
 display_name = "Bat"
+behavior = 0
 frames = Array[Texture2D]([ExtResource("1_d76do")])
 anim_fps = 10.0
 tint = Color(1, 1, 1, 1)

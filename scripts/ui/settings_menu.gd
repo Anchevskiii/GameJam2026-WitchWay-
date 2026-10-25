@@ -23,6 +23,9 @@ var _settings_data: Dictionary = {}
 
 func _ready() -> void:
 	visible = false
+	var center: Control = get_node_or_null("CenterContainer")
+	if center:
+		center.theme = UiTheme.build()
 	_connect_signals()
 	load_and_apply_settings()
 
@@ -142,9 +145,11 @@ func _apply_vsync(is_vsync: bool) -> void:
 		Engine.max_fps = refresh if refresh > 0 else 240
 
 func _on_back_pressed() -> void:
+	AudioManager.play("pop", -8.0)
 	close()
 
 func _on_reset_pressed() -> void:
+	AudioManager.play("pop", -8.0)
 	_settings_data = {
 		"master_volume": 1.0,
 		"music_volume": 0.8,

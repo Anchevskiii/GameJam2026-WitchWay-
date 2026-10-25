@@ -1,0 +1,101 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/customization_menu.gd" id="1_custom_script"]
+
+[node name="CustomizationMenu" type="CanvasLayer"]
+process_mode = 3
+layer = 36
+script = ExtResource("1_custom_script")
+
+[node name="Root" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="Root"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.02, 0.05, 0.85)
+
+[node name="CenterContainer" type="CenterContainer" parent="Root"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="Root/CenterContainer"]
+custom_minimum_size = Vector2(760, 560)
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Root/CenterContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="Root/CenterContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "CUSTOMIZE"
+horizontal_alignment = 1
+
+[node name="PreviewContainer" type="CenterContainer" parent="Root/CenterContainer/PanelContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+
+[node name="Preview" type="TextureRect" parent="Root/CenterContainer/PanelContainer/VBoxContainer/PreviewContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 170)
+layout_mode = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameRow" type="HBoxContainer" parent="Root/CenterContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="NameLabel" type="Label" parent="Root/CenterContainer/PanelContainer/VBoxContainer/NameRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "NAME"
+
+[node name="NameEdit" type="LineEdit" parent="Root/CenterContainer/PanelContainer/VBoxContainer/NameRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Your name..."
+max_length = 16
+
+[node name="HSeparator" type="HSeparator" parent="Root/CenterContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="PresetGrid" type="HBoxContainer" parent="Root/CenterContainer/PanelContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="ButtonRow" type="HBoxContainer" parent="Root/CenterContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="BackButton" type="Button" parent="Root/CenterContainer/PanelContainer/VBoxContainer/ButtonRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "BACK"
+
+[node name="SaveButton" type="Button" parent="Root/CenterContainer/PanelContainer/VBoxContainer/ButtonRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "SAVE"

@@ -1,30 +1,16 @@
-[gd_scene load_steps=11 format=3 uid="uid://c6nmq8nx41main"]
+[gd_scene load_steps=12 format=3 uid="uid://c6nmq8nx41main"]
 
 [ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_main_script"]
-[ext_resource type="Texture2D" uid="uid://c5e3apxjwhxtn" path="res://assets/sprites/environment/menu_background.png" id="2_bg_tex"]
-[ext_resource type="Texture2D" uid="uid://buwrq6un7e85" path="res://assets/sprites/entities/ghost/Png_animation/Ghost1.png" id="3_ghost_tex"]
-[ext_resource type="Texture2D" uid="uid://crajfoxoxruvf" path="res://assets/sprites/environment/forest_path_bg.png" id="4_forest_bg"]
-[ext_resource type="Texture2D" uid="uid://sxgn25p37ovo" path="res://assets/sprites/environment/forest_foreground_left.png" id="5_tree_left"]
-[ext_resource type="Material" uid="uid://tree_wind_mat_left" path="res://assets/shaders/tree_wind_left.tres" id="6_wind_left"]
-[ext_resource type="Texture2D" uid="uid://d33gty0cljkhw" path="res://assets/sprites/environment/forest_foreground_right.png" id="7_tree_right"]
-[ext_resource type="Material" uid="uid://tree_wind_mat_right" path="res://assets/shaders/tree_wind_right.tres" id="8_wind_right"]
-[ext_resource type="PackedScene" uid="uid://df7x9kmq12set" path="res://scenes/ui/settings_menu.tscn" id="9_settings_menu"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_panel"]
-content_margin_left = 32.0
-content_margin_top = 24.0
-content_margin_right = 32.0
-content_margin_bottom = 24.0
-bg_color = Color(0.06, 0.05, 0.09, 0.82)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.4, 0.35, 0.55, 0.85)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+[ext_resource type="Script" path="res://scripts/ui/cog_button.gd" id="11_cog_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/environment/menu_background.png" id="2_bg_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/entities/ghost/Png_animation/Ghost1.png" id="3_ghost_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/environment/forest_path_bg.png" id="4_forest_bg"]
+[ext_resource type="Texture2D" path="res://assets/sprites/environment/forest_foreground_left.png" id="5_tree_left"]
+[ext_resource type="Material" path="res://assets/shaders/tree_wind_left.tres" id="6_wind_left"]
+[ext_resource type="Texture2D" path="res://assets/sprites/environment/forest_foreground_right.png" id="7_tree_right"]
+[ext_resource type="Material" path="res://assets/shaders/tree_wind_right.tres" id="8_wind_right"]
+[ext_resource type="PackedScene" path="res://scenes/ui/settings_menu.tscn" id="9_settings_menu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/customization_menu.tscn" id="10_custom_menu"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -128,89 +114,95 @@ offset_bottom = 720.0
 mouse_filter = 2
 texture = ExtResource("7_tree_right")
 
-[node name="MainLayout" type="VBoxContainer" parent="."]
+[node name="MenuRoot" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 60.0
-offset_top = 40.0
-offset_right = -60.0
-offset_bottom = -25.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 20
+mouse_filter = 2
 
-[node name="TitleBox" type="VBoxContainer" parent="MainLayout"]
-layout_mode = 2
-
-[node name="TitleLabel" type="Label" parent="MainLayout/TitleBox"]
-layout_mode = 2
+[node name="TitleLabel" type="Label" parent="MenuRoot"]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 44.0
+offset_right = 780.0
+offset_bottom = 120.0
 theme_override_colors/font_color = Color(0.96, 0.92, 0.85, 1)
 theme_override_colors/font_shadow_color = Color(0.08, 0.04, 0.12, 1)
 theme_override_constants/shadow_offset_x = 4
 theme_override_constants/shadow_offset_y = 4
-theme_override_font_sizes/font_size = 64
-text = "Witch Way?"
+theme_override_font_sizes/font_size = 48
+text = "WITCH WAY?"
+
+[node name="NewGameButton" type="Button" parent="MenuRoot"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 80.0
+offset_top = 280.0
+offset_right = 360.0
+offset_bottom = 340.0
+theme_override_font_sizes/font_size = 18
+text = "NEW GAME"
+
+[node name="ContinueButton" type="Button" parent="MenuRoot"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 80.0
+offset_top = 360.0
+offset_right = 360.0
+offset_bottom = 420.0
+theme_override_font_sizes/font_size = 18
+text = "CONTINUE"
+
+[node name="QuitButton" type="Button" parent="MenuRoot"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 80.0
+offset_top = 660.0
+offset_right = 220.0
+offset_bottom = 700.0
+theme_override_font_sizes/font_size = 12
+text = "QUIT"
+
+[node name="CogButton" type="TextureButton" parent="MenuRoot"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 1172.0
+offset_top = 24.0
+offset_right = 1256.0
+offset_bottom = 96.0
+script = ExtResource("11_cog_script")
+
+[node name="PlayerPreview" type="Sprite2D" parent="MenuRoot"]
+unique_name_in_owner = true
+texture_filter = 1
+position = Vector2(640, 436)
+scale = Vector2(4, 4)
+
+[node name="PlayerNameLabel" type="Label" parent="MenuRoot"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 520.0
+offset_top = 316.0
+offset_right = 760.0
+offset_bottom = 352.0
+theme_override_colors/font_color = Color(0.96, 0.58, 0.22, 1)
+theme_override_font_sizes/font_size = 16
+text = "THE VISITOR"
 horizontal_alignment = 1
 
-[node name="CenterBox" type="HBoxContainer" parent="MainLayout"]
-layout_mode = 2
-size_flags_vertical = 3
-alignment = 1
-
-[node name="MenuPanel" type="PanelContainer" parent="MainLayout/CenterBox"]
-custom_minimum_size = Vector2(340, 0)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_styles/panel = SubResource("StyleBoxFlat_menu_panel")
-
-[node name="ButtonList" type="VBoxContainer" parent="MainLayout/CenterBox/MenuPanel"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="NewGameButton" type="Button" parent="MainLayout/CenterBox/MenuPanel/ButtonList"]
+[node name="CustomizeButton" type="Button" parent="MenuRoot"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "New Game"
-
-[node name="ContinueButton" type="Button" parent="MainLayout/CenterBox/MenuPanel/ButtonList"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "Continue"
-
-[node name="SettingsButton" type="Button" parent="MainLayout/CenterBox/MenuPanel/ButtonList"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "Settings"
-
-[node name="QuitButton" type="Button" parent="MainLayout/CenterBox/MenuPanel/ButtonList"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "Quit Game"
-
-[node name="FooterBox" type="HBoxContainer" parent="MainLayout"]
-layout_mode = 2
-
-[node name="TeamLabel" type="Label" parent="MainLayout/FooterBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.5, 0.52, 0.65, 1)
-theme_override_font_sizes/font_size = 12
-text = "Game Jam 2026 • 2D Procedural Horror Dungeon Crawler"
-
-[node name="VersionLabel" type="Label" parent="MainLayout/FooterBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 0.52, 0.65, 1)
-theme_override_font_sizes/font_size = 12
-text = "v0.1.0-alpha"
+layout_mode = 0
+offset_left = 540.0
+offset_top = 560.0
+offset_right = 740.0
+offset_bottom = 612.0
+theme_override_font_sizes/font_size = 14
+text = "CUSTOMIZE"
 
 [node name="SettingsMenu" parent="." instance=ExtResource("9_settings_menu")]
+
+[node name="CustomizationMenu" parent="." instance=ExtResource("10_custom_menu")]

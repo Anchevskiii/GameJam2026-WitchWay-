@@ -9,6 +9,7 @@
 [resource]
 script = ExtResource("8_u85l6")
 display_name = "Ghost"
+behavior = 2
 frames = Array[Texture2D]([ExtResource("1_oj73o")])
 anim_fps = 6.0
 tint = Color(1, 1, 1, 1)

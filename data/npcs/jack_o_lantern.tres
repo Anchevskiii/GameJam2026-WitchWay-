@@ -8,6 +8,7 @@
 [resource]
 script = ExtResource("7_3ori1")
 display_name = "Jack-o'-lantern"
+behavior = 1
 frames = Array[Texture2D]([ExtResource("1_fctch")])
 anim_fps = 6.0
 tint = Color(1, 1, 1, 1)

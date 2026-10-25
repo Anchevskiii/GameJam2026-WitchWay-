@@ -26,6 +26,8 @@ var _peek: Sprite2D
 var _peek_timer: float = 0.0
 var _peek_side: float = 1.0
 var _player: Node2D = null
+## Whether an NPC occupant peeks at all (rolled when it climbs in; higher floors peek less/none).
+var _npc_peeks: bool = true
 
 
 func _ready() -> void:
@@ -76,10 +78,26 @@ func set_occupied(value: bool, who: Node2D = null) -> void:
 	reserved_by = null
 	_peek.visible = false
 	_peek_timer = randf_range(0.3, 0.8)  # first peek comes quickly so it's noticeable
+	# Monsters peeking out is a low-level tell: on higher floors they peek less, some never.
+	if value and occupant is Npc:
+		_npc_peeks = randf() < (1.0 - 0.85 * _tier_p())
+	else:
+		_npc_peeks = true
 	_wobble()
 
 
 # ---------------------------------------------------------------- peeking
+
+func _tier_p() -> float:
+	return clampf(float(GameManager.difficulty_tier()) / 6.0, 0.0, 1.0)
+
+
+func _peek_interval() -> float:
+	var mult: float = 1.0
+	if occupant is Npc:
+		mult = lerpf(1.0, 3.0, _tier_p())
+	return randf_range(peek_interval_min * mult, peek_interval_max * mult)
+
 
 func _update_peek(delta: float) -> void:
 	_peek_timer -= delta
@@ -87,10 +105,14 @@ func _update_peek(delta: float) -> void:
 		return
 	if _peek.visible:
 		_peek.visible = false
-		_peek_timer = randf_range(peek_interval_min, peek_interval_max)
+		_peek_timer = _peek_interval()
 	else:
+		# A hidden monster that rolled "never peeks" just stays put (deeper floors).
+		if occupant is Npc and not _npc_peeks:
+			_peek_timer = _peek_interval()
+			return
 		_start_peek()
-		_peek_timer = peek_duration
+		_peek_timer = peek_duration * lerpf(1.0, 0.5, _tier_p())
 
 
 func _start_peek() -> void:
