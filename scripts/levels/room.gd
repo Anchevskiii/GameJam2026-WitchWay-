@@ -190,6 +190,7 @@ func _process(delta: float) -> void:
 
 ## Periodically spawns a replacement monster away from the player when most monsters are disabled,
 ## ensuring the player never runs out of targets (especially on CPU overload floors).
+## Higher levels dynamically have more entities active simultaneously.
 func _check_respawn_entities() -> void:
 	if npc_legend.is_empty() or not is_instance_valid(player):
 		return
@@ -200,7 +201,7 @@ func _check_respawn_entities() -> void:
 		if is_instance_valid(npc) and npc.state != Npc.State.DONE:
 			active_count += 1
 
-	var desired_count: int = 2 + mini(GameManager.current_level / 3, 3)
+	var desired_count: int = 2 + mini(GameManager.current_level, 6)
 	if exit_requires_cpu_overload:
 		desired_count += 2
 	if active_count >= desired_count:
