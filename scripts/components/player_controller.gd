@@ -82,6 +82,7 @@ func _ready() -> void:
 		flashlight_beam.texture = _beam_texture()
 		flashlight_beam.texture_scale = 1.35
 	EventBus.game_over_triggered.connect(_on_game_over)
+	EventBus.player_scared.connect(_on_player_scared)
 	_reset_flicker_timer()
 	_update_flashlight_state()
 	if flashlight_pivot:
@@ -449,6 +450,39 @@ func _jump_out() -> void:
 
 
 # ---------------------------------------------------------------- game over
+
+## Visual & camera feedback right on the player when scared by an entity or trap:
+##   - brief hit-stop freeze
+##   - camera screen shake
+##   - crimson glow/flash on the player sprite and personal light
+##   - floating "-X SANITY" text right above the player's head
+func _on_player_scared(amount: float, _source_name: String) -> void:
+	if GameManager.is_game_over:
+		return
+	FloatingText.spawn(self, global_position + Vector2(0, -44), "-%d SANITY" % roundi(amount), Color(1.0, 0.28, 0.32), 18)
+	LagController.trigger_scare_freeze(0.085)
+
+	if player_sprite:
+		player_sprite.modulate = Color(1.0, 0.22, 0.25, 1.0)
+		var stween: Tween = create_tween()
+		stween.tween_property(player_sprite, "modulate", Color.WHITE, 0.42)
+
+	if glow_light:
+		var base_color: Color = Color(1.0, 0.85, 0.65, 1.0)
+		var base_energy: float = 0.35 if is_hidden else 0.42
+		glow_light.color = Color(1.0, 0.15, 0.2, 1.0)
+		glow_light.energy = 1.65
+		var ltween: Tween = create_tween()
+		ltween.tween_property(glow_light, "color", base_color, 0.45)
+		ltween.parallel().tween_property(glow_light, "energy", base_energy, 0.45)
+
+	if camera:
+		var ctween: Tween = create_tween()
+		var strength: float = clampf(amount * 0.45, 5.0, 12.0)
+		for i in 7:
+			ctween.tween_property(camera, "offset", Vector2(randf_range(-strength, strength), randf_range(-strength, strength)), 0.032)
+		ctween.tween_property(camera, "offset", Vector2.ZERO, 0.04)
+
 
 func _on_game_over() -> void:
 	_can_move = false

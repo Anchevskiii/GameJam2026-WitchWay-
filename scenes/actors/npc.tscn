@@ -28,15 +28,15 @@ texture_scale = 0.6
 [node name="Bubble" type="Label" parent="."]
 z_index = 20
 offset_left = -60.0
-offset_top = -62.0
+offset_top = -52.0
 offset_right = 60.0
-offset_bottom = -32.0
-pivot_offset = Vector2(60, 15)
+offset_bottom = -28.0
+pivot_offset = Vector2(60, 12)
 theme_override_colors/font_color = Color(1, 0.95, 0.95, 1)
-theme_override_colors/font_outline_color = Color(0.25, 0, 0.05, 1)
-theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 22
-text = "BOO"
+theme_override_colors/font_outline_color = Color(0.15, 0, 0.05, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 13
+text = "!"
 horizontal_alignment = 1
 
 [node name="StumbleAnimator" type="Node" parent="."]

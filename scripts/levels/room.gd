@@ -735,3 +735,30 @@ func _group_kids() -> void:
 
 static func cell_to_world(cell: Vector2i) -> Vector2:
 	return Vector2(cell * TILE_SIZE) + Vector2.ONE * TILE_SIZE * 0.5
+
+
+## Picks a floor tile in this room well away from `avoid_pos` (and preferentially near a wall/corner)
+## so an entity can relocate/reset after its cooldown or disabled state expires.
+func get_random_relocate_point(avoid_pos: Vector2, min_dist: float = 170.0) -> Vector2:
+	var corner_spots: Array[Vector2] = []
+	var floor_spots: Array[Vector2] = []
+	for y in range(1, _rows.size() - 1):
+		for x in range(1, _rows[y].length() - 1):
+			if _rows[y][x] != ".":
+				continue
+			var wp: Vector2 = cell_to_world(Vector2i(x, y))
+			if wp.distance_to(avoid_pos) < min_dist:
+				continue
+			var wall_neighbors: int = 0
+			for d in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+				if _is_wall(_char_at(Vector2i(x, y) + d)):
+					wall_neighbors += 1
+			if wall_neighbors >= 2:
+				corner_spots.append(wp)
+			else:
+				floor_spots.append(wp)
+	if not corner_spots.is_empty():
+		return corner_spots[randi() % corner_spots.size()]
+	if not floor_spots.is_empty():
+		return floor_spots[randi() % floor_spots.size()]
+	return avoid_pos + Vector2.RIGHT.rotated(randf() * TAU) * min_dist

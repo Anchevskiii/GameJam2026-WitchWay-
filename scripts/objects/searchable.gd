@@ -21,6 +21,8 @@ const KEY_TEXTURE: Texture2D = preload("res://assets/sprites/objects/key.png")
 var searched: bool = false
 ## 0..1 while the player is searching (drawn as a ring).
 var progress: float = 0.0
+## Global cooldown timestamp (seconds) after an empty-drawer poltergeist sound triggers.
+static var _empty_sfx_cooldown_until: float = 0.0
 
 var _prompt: Label
 var _player: Node2D = null
@@ -89,7 +91,9 @@ func open() -> void:
 			EventBus.jumpscare_requested.emit("ghoul", scare_damage)
 			EventBus.noise_made.emit(global_position, 200.0)
 		_:
-			if randf() < 0.30:
+			var now: float = Time.get_ticks_msec() / 1000.0
+			if now >= _empty_sfx_cooldown_until and randf() < 0.30:
+				_empty_sfx_cooldown_until = now + 5.0
 				AudioManager.play("poltergeist", -3.5, randf_range(0.96, 1.04))
 			FloatingText.spawn(self, top, "nothing...", Color(0.7, 0.7, 0.75), 14)
 
