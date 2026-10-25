@@ -168,7 +168,7 @@ func _on_player_booed(origin: Vector2, boo_range: float, _from_hiding: bool) -> 
 
 
 func _drop_candy(count: int) -> void:
-	for i in count:
+	for i in GameManager.candy_drop_count(count):
 		var dir: Vector2 = Vector2.RIGHT.rotated(randf() * TAU)
 		Prop.spawn(CANDY, global_position + dir * 8.0, dir * randf_range(80.0, 170.0), get_tree())
 

@@ -396,6 +396,14 @@ func _drop_loot() -> void:
 		Prop.spawn(prop_data, global_position + dir * 10.0, dir * randf_range(120.0, 260.0), get_tree())
 
 
+## Candy reward for a successful player scare (the monster didn't see it coming).
+func _drop_candy_reward() -> void:
+	var candy_data: PropData = preload("res://data/props/candy.tres")
+	for i in GameManager.candy_drop_count(1 + randi() % 2):
+		var dir: Vector2 = Vector2.RIGHT.rotated(randf() * TAU)
+		Prop.spawn(candy_data, global_position + dir * 10.0, dir * randf_range(90.0, 200.0), get_tree())
+
+
 func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> void:
 	if state == State.PANIC or state == State.DONE:
 		return
@@ -403,7 +411,8 @@ func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> v
 	if state == State.HIDING:
 		if global_position.distance_to(origin) <= boo_range + 20.0:
 			_leave_hiding_spot(origin.direction_to(global_position))
-			get_scared("someone who saw its head peeking out")
+			if get_scared("someone who saw its head peeking out"):
+				_drop_candy_reward()
 		return
 	if global_position.distance_to(origin) > boo_range or not _has_line_of_sight(origin, global_position):
 		return
@@ -416,7 +425,8 @@ func _on_player_booed(origin: Vector2, boo_range: float, from_hiding: bool) -> v
 		get_tree().create_timer(0.9).timeout.connect(_hide_bubble_if_calm)
 		Narrator.say_event("boo_seen")
 		return
-	get_scared("a masked stranger")
+	if get_scared("a masked stranger"):
+		_drop_candy_reward()
 
 
 ## True if the player is within this NPC's alert range, in line of sight, not hidden, and not masked.

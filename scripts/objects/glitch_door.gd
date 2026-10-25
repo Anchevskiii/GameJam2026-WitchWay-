@@ -165,6 +165,8 @@ func _update_lock_label() -> void:
 func _vanish() -> void:
 	stage = Stage.GONE
 	_gone_time_left = maxf(rerender_delay, _time_to_reach())
+	if GameManager.glitch_power_active:
+		_gone_time_left *= 0.6  # the Q power-up crash opens the door for a shorter time
 	sprite.visible = false
 	collision.set_deferred("disabled", true)
 	countdown_label.visible = true

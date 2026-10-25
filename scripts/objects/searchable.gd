@@ -84,7 +84,7 @@ func open() -> void:
 			Narrator.say_event("key_found" if not GameManager.has_all_keys() else "last_key", {}, true)
 		Contents.CANDY:
 			AudioManager.play("pop", -3.0, 1.15)
-			for i in 2:
+			for i in GameManager.candy_drop_count(1 + randi() % 2):
 				Prop.spawn(CANDY, top + Vector2(0, 30), Vector2(randf_range(-60, 60), randf_range(40, 90)), get_tree())
 			FloatingText.spawn(self, top, "candy!", Color(1.0, 0.6, 0.85), 16)
 		Contents.SCARE:
