@@ -151,6 +151,8 @@ func _load_ghost_frames() -> void:
 func _setup_decor() -> void:
 	if candy_icon_header:
 		candy_icon_header.texture = _get_texture_safe("res://assets/sprites/items/candy.png")
+		candy_icon_header.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		candy_icon_header.custom_minimum_size = Vector2(22, 22)
 	if pumpkin_sprite:
 		pumpkin_sprite.texture = _get_texture_safe("res://assets/sprites/objects/pumpkin.png")
 	if candle_sprite:
@@ -330,10 +332,10 @@ func _refresh_items() -> void:
 
 		var candy_img := TextureRect.new()
 		candy_img.texture = _get_texture_safe("res://assets/sprites/items/candy.png")
-		candy_img.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		candy_img.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		candy_img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		candy_img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		candy_img.custom_minimum_size = Vector2(18, 22)
+		candy_img.custom_minimum_size = Vector2(20, 20)
 		price_box.add_child(candy_img)
 
 		var price_lbl := Label.new()
@@ -460,12 +462,13 @@ func _get_texture_safe(path: String, fallback_path: String = "") -> Texture2D:
 		return _texture_cache[path]
 	var res: Texture2D = null
 
-	# If checking for candy, first check if user uploaded a custom candy icon in inspo/review
+	# If checking for candy, first check if user uploaded a custom candy icon in inspo/review/previews
 	if path.ends_with("candy.png"):
 		for custom_path in [
+			"res://assets/sprites/items/halloween-candy.png",
+			"res://assets/sprites/items/candy.png",
 			"res://inspo/candy.png",
 			"res://review/candy.png",
-			"res://assets/sprites/items/candy.png",
 		]:
 			if ResourceLoader.exists(custom_path):
 				res = load(custom_path) as Texture2D
@@ -478,9 +481,9 @@ func _get_texture_safe(path: String, fallback_path: String = "") -> Texture2D:
 					res = ImageTexture.create_from_image(img)
 					break
 		if res == null:
-			var external_dirs := ["../GameJam2026_Previews/inspo", "../GameJam2026_Previews/review", "../GameJam2026_Previews"]
+			var external_dirs := ["../GameJam2026_Previews", "../GameJam2026_Previews/inspo", "../GameJam2026_Previews/review"]
 			for ed in external_dirs:
-				for fn in ["candy.png", "candy_icon.png", "candy1.png"]:
+				for fn in ["halloween-candy.png", "candy.png", "candy_icon.png", "candy1.png"]:
 					var ext_p := "%s/%s" % [ed, fn]
 					if FileAccess.file_exists(ext_p):
 						var img := Image.load_from_file(ext_p)

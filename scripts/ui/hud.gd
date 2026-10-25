@@ -71,10 +71,10 @@ func _ready() -> void:
 	_candy_box = HBoxContainer.new()
 	_candy_box.add_theme_constant_override("separation", 6)
 	_candy_icon = TextureRect.new()
-	_candy_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_candy_icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_candy_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_candy_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_candy_icon.custom_minimum_size = Vector2(20, 16)
+	_candy_icon.custom_minimum_size = Vector2(22, 22)
 	_candy_icon.texture = _load_candy_texture()
 	_candy_box.add_child(_candy_icon)
 
@@ -171,9 +171,10 @@ func _on_narrator_line_changed(text: String) -> void:
 
 func _load_candy_texture() -> Texture2D:
 	for custom_path in [
+		"res://assets/sprites/items/halloween-candy.png",
+		"res://assets/sprites/items/candy.png",
 		"res://inspo/candy.png",
 		"res://review/candy.png",
-		"res://assets/sprites/items/candy.png",
 	]:
 		if ResourceLoader.exists(custom_path):
 			var t: Texture2D = load(custom_path) as Texture2D
@@ -184,9 +185,9 @@ func _load_candy_texture() -> Texture2D:
 			var img: Image = Image.load_from_file(custom_global)
 			if img != null and not img.is_empty():
 				return ImageTexture.create_from_image(img)
-	var external_dirs := ["../GameJam2026_Previews/inspo", "../GameJam2026_Previews/review", "../GameJam2026_Previews"]
+	var external_dirs := ["../GameJam2026_Previews", "../GameJam2026_Previews/inspo", "../GameJam2026_Previews/review"]
 	for ed in external_dirs:
-		for fn in ["candy.png", "candy_icon.png", "candy1.png"]:
+		for fn in ["halloween-candy.png", "candy.png", "candy_icon.png", "candy1.png"]:
 			var ext_p := "%s/%s" % [ed, fn]
 			if FileAccess.file_exists(ext_p):
 				var img := Image.load_from_file(ext_p)
