@@ -55,6 +55,7 @@ var _face_mask: Sprite2D = null
 var _mask_type: int = 0
 var _hide_spot: HideSpot = null
 var _pre_hide_position: Vector2
+var _hidden_pass_cooldown: float = 0.0
 
 var _facing_direction: Vector2 = Vector2.DOWN
 var _is_flashlight_on: bool = true
@@ -113,6 +114,14 @@ func _physics_process(delta: float) -> void:
 		return
 	if is_hidden:
 		velocity = Vector2.ZERO
+		_hidden_pass_cooldown -= delta
+		if _hidden_pass_cooldown <= 0.0:
+			for npc in get_tree().get_nodes_in_group("npcs"):
+				var n: Npc = npc as Npc
+				if is_instance_valid(n) and n.state != Npc.State.DONE and n.state != Npc.State.HIDING and global_position.distance_to(n.global_position) < 165.0:
+					_hidden_pass_cooldown = randf_range(8.5, 13.0)
+					AudioManager.play("haunted_pass", -3.5, randf_range(0.95, 1.05))
+					break
 		if Input.is_action_just_pressed("scare"):
 			_jump_out()
 		elif Input.is_action_just_pressed("interact"):
@@ -397,6 +406,7 @@ func _hide_in(spot: HideSpot) -> void:
 	is_hidden = true
 	_hide_spot = spot
 	_pre_hide_position = global_position
+	_hidden_pass_cooldown = 1.4
 	spot.set_occupied(true, self)  # your head peeks out now and then
 	velocity = Vector2.ZERO
 	player_sprite.visible = false

@@ -74,6 +74,8 @@ var _view_cone: Polygon2D
 var _hide_spot: HideSpot = null
 var _hide_walk_time: float = 0.0
 var _time_since_hide: float = 0.0
+## Duration of current COOLDOWN state (longer after scaring the player so packs don't spam).
+var _cooldown_duration: float = 2.5
 ## Shorter wind-up used right after jumping out of a hiding spot or corner ambush.
 var _ambush_windup: bool = false
 ## Who the current wind-up is aimed at: the player or a Kid.
@@ -127,8 +129,11 @@ func _physics_process(delta: float) -> void:
 		State.WINDUP:
 			_process_windup(delta)
 		State.COOLDOWN:
-			velocity = Vector2.ZERO
-			if _state_time >= data.scare_cooldown:
+			if data.can_move and _player != null and global_position.distance_to(_player.global_position) < 95.0:
+				velocity = (_player.global_position.direction_to(global_position)) * data.move_speed * 0.65
+			else:
+				velocity = Vector2.ZERO
+			if _state_time >= _cooldown_duration:
 				_enter(State.IDLE)
 		State.PANIC:
 			_process_panic(delta)
@@ -257,24 +262,23 @@ func _process_windup(delta: float) -> void:
 func _release_scare() -> void:
 	bubble.text = data.windup_text + "!"
 	bubble.scale = Vector2.ONE * 1.6
+	_cooldown_duration = maxf(data.scare_cooldown, 3.0)
 	if _target == _player and (_player.get("is_hidden") or _player.get("is_masked")):
 		bubble.text = "?"  # the player ducked into a hiding spot or put on a mask - miss!
 		_enter(State.COOLDOWN)
 		return
 	var in_range: bool = is_instance_valid(_target) and global_position.distance_to(_target.global_position) <= data.scare_range
 	if in_range and _target == _player:
+		_cooldown_duration = maxf(data.scare_cooldown * 2.2, 5.5)
 		var is_ambush: bool = _ambush_windup
 		if _player and _player.has_method("is_facing_target") and _player.is_facing_target(global_position):
 			is_ambush = false
-		var scare_sfx: String = "squeak_scare" if randf() < 0.55 else "poltergeist"
-		AudioManager.play(scare_sfx, 1.5, randf_range(0.96, 1.04))
+		var scare_sfx: String = "jumpscare_hit" if randf() < 0.45 else "scream"
+		AudioManager.play_scare(scare_sfx, -2.5, randf_range(0.95, 1.05))
 		var dmg: float = (data.ambush_damage if is_ambush else data.scare_damage) * damage_scale
 		GameManager.scare_player(dmg, data.display_name)
 	elif in_range and _target is Kid:
-		AudioManager.play(data.scare_sound, -4.0)
 		(_target as Kid).get_scared(global_position, "a " + data.display_name)
-	else:
-		AudioManager.play("haunted_pass", -5.0, randf_range(0.95, 1.05))
 	_enter(State.COOLDOWN)
 
 

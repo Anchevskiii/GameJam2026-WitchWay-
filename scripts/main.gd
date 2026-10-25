@@ -48,7 +48,8 @@ func _setup_transition_label() -> void:
 func _on_level_completed() -> void:
 	if _is_changing_room:
 		return
-	AudioManager.play("creak_door", 0.5, randf_range(0.94, 1.04))
+	AudioManager.play("byebye", 0.5, 1.0)
+	AudioManager.play("creak_door", -2.5, randf_range(0.94, 1.04))
 	GameManager.advance_level()
 	_on_room_change_requested(GameManager.scene_for_level(GameManager.current_level))
 

@@ -72,7 +72,6 @@ func _draw() -> void:
 func open() -> void:
 	searched = true
 	progress = 0.0
-	AudioManager.play("drawer")
 	var top: Vector2 = global_position + Vector2(0, -24)
 	match contents:
 		Contents.KEY:
@@ -82,6 +81,7 @@ func open() -> void:
 			_show_key(top)
 			Narrator.say_event("key_found" if not GameManager.has_all_keys() else "last_key", {}, true)
 		Contents.CANDY:
+			AudioManager.play("pop", -3.0, 1.15)
 			for i in 2:
 				Prop.spawn(CANDY, top + Vector2(0, 30), Vector2(randf_range(-60, 60), randf_range(40, 90)), get_tree())
 			FloatingText.spawn(self, top, "candy!", Color(1.0, 0.6, 0.85), 16)
@@ -89,6 +89,8 @@ func open() -> void:
 			EventBus.jumpscare_requested.emit("ghoul", scare_damage)
 			EventBus.noise_made.emit(global_position, 200.0)
 		_:
+			if randf() < 0.30:
+				AudioManager.play("poltergeist", -3.5, randf_range(0.96, 1.04))
 			FloatingText.spawn(self, top, "nothing...", Color(0.7, 0.7, 0.75), 14)
 
 

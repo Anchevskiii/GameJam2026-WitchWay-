@@ -89,7 +89,6 @@ func _show_shadow(player: Node2D) -> void:
 	shadow.modulate = Color(0, 0, 0, 0)
 	shadow.global_position = player.global_position + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(150.0, 230.0)
 	player.get_parent().add_child(shadow)
-	AudioManager.play("haunted_pass", -5.0, randf_range(0.95, 1.05))
 	var tween: Tween = shadow.create_tween()
 	tween.tween_property(shadow, "modulate:a", 0.6, 0.25)
 	tween.tween_interval(0.5)

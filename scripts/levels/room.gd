@@ -699,8 +699,7 @@ func _spawn_wall_lamps() -> void:
 ## The last key was taken: lights fail, everything hears it, and the Stalker comes -
 ## from behind you (the side away from the exit), so it chases rather than blocks.
 func _on_house_awakened() -> void:
-	AudioManager.play("slam", 2.0)
-	AudioManager.play("poltergeist", 0.0, 1.0)
+	AudioManager.play("slam", 1.5)
 	Narrator.say_event("house_awake", {}, true)
 	var dark: Color = ambient_color * Color(0.6, 0.55, 0.6)
 	var tween: Tween = create_tween()

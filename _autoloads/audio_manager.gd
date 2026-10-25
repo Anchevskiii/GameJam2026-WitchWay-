@@ -5,6 +5,7 @@ extends Node
 
 var _music_player: AudioStreamPlayer
 var _sfx_players: Array[AudioStreamPlayer] = []
+var _scare_player: AudioStreamPlayer
 var _muffled_player: AudioStreamPlayer
 var _echo_loop_player: AudioStreamPlayer
 var _whisper_loop_player: AudioStreamPlayer
@@ -12,8 +13,10 @@ var _whisper_loop_player: AudioStreamPlayer
 const SFX_POOL_SIZE: int = 8
 const MUFFLED_BUS: StringName = &"MuffledRoom"
 const AMBIENT_MIN_COOLDOWN: float = 4.0
+const SCARE_SOUND_COOLDOWN: float = 2.0
 
 var _muffled_busy_until: float = 0.0
+var _scare_busy_until: float = 0.0
 var _room_ambience_active: bool = false
 var _ambience_fade_weight: float = 0.0
 var _whisper_phase: float = 0.0
@@ -38,6 +41,10 @@ func _ready() -> void:
 	_muffled_player = AudioStreamPlayer.new()
 	_muffled_player.bus = MUFFLED_BUS
 	add_child(_muffled_player)
+
+	_scare_player = AudioStreamPlayer.new()
+	_scare_player.bus = "SFX"
+	add_child(_scare_player)
 
 	for i in range(SFX_POOL_SIZE):
 		var player := AudioStreamPlayer.new()
@@ -187,6 +194,23 @@ func _load_sfx(sfx_name: String) -> AudioStream:
 ## Play a sound by file name from assets/audio/sfx/, e.g. AudioManager.play("player_boo").
 func play(sfx_name: String, volume_db: float = 0.0, pitch_scale: float = 1.0) -> void:
 	play_sfx(_load_sfx(sfx_name), volume_db, pitch_scale)
+
+
+## Plays a jumpscare / entity scare sound on a dedicated non-overlapping channel with a cooldown
+## and volume cap so multiple monsters never clash or cause earrape.
+func play_scare(sfx_name: String, volume_db: float = -2.5, pitch_scale: float = 1.0, force: bool = false) -> bool:
+	var now: float = Time.get_ticks_msec() / 1000.0
+	if not force and (_scare_player.playing or now < _scare_busy_until):
+		return false
+	var stream: AudioStream = _load_sfx(sfx_name)
+	if stream == null:
+		return false
+	_scare_player.stream = stream
+	_scare_player.volume_db = clampf(volume_db, -18.0, -0.5)
+	_scare_player.pitch_scale = maxf(0.1, pitch_scale * (1.0 - 0.2 * LagController.lag_amount()))
+	_scare_player.play()
+	_scare_busy_until = now + SCARE_SOUND_COOLDOWN
+	return true
 
 
 ## Plays a full, uncut distant horror sound (woman screaming, evil laugh) through the MuffledRoom
