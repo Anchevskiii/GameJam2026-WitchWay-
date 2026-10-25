@@ -38,9 +38,9 @@ const ITEM_BADGES: Dictionary = {
 }
 
 const GHOST_ITEM_DIALOGUES: Dictionary = {
-	"flashlight": "Flashlight! Casts a sharp beam into the dark. Monsters hate the glow, but battery floors run out!",
-	"mask": "Spooky Ghost Mask! Wear it and roam freely among the restless horrors - they won't even notice!",
-	"glitch": "Glitch Charge! Tear a seam into reality itself to escape when you hold all the keys!",
+	"flashlight": "Flashlight [F]! Casts a sharp beam into the dark. Monsters hate the glow, but battery floors run out!",
+	"mask": "Spooky Ghost Mask [R]! Wear it and roam freely among the restless horrors - they won't even notice!",
+	"glitch": "Glitch Charge [Q]! Tear a seam into reality itself to escape when you hold all the keys!",
 	"sanity_resist": "Thick Skin! Monster howls won't shake your brain as hard. Essential armor for brittle sanity!",
 	"search": "Quick Fingers! Loot cupboards and drawers like lightning before the stalkers sneak up!",
 	"candy_sanity": "Sugar Rush! Pure sweet treats! Every candy you eat permanently restores +1 more Sanity!",
@@ -459,7 +459,38 @@ func _get_texture_safe(path: String, fallback_path: String = "") -> Texture2D:
 	if _texture_cache.has(path):
 		return _texture_cache[path]
 	var res: Texture2D = null
-	if ResourceLoader.exists(path):
+
+	# If checking for candy, first check if user uploaded a custom candy icon in inspo/review
+	if path.ends_with("candy.png"):
+		for custom_path in [
+			"res://inspo/candy.png",
+			"res://review/candy.png",
+			"res://assets/sprites/items/candy.png",
+		]:
+			if ResourceLoader.exists(custom_path):
+				res = load(custom_path) as Texture2D
+				if res != null:
+					break
+			var custom_global: String = ProjectSettings.globalize_path(custom_path)
+			if FileAccess.file_exists(custom_global):
+				var img: Image = Image.load_from_file(custom_global)
+				if img != null and not img.is_empty():
+					res = ImageTexture.create_from_image(img)
+					break
+		if res == null:
+			var external_dirs := ["../GameJam2026_Previews/inspo", "../GameJam2026_Previews/review", "../GameJam2026_Previews"]
+			for ed in external_dirs:
+				for fn in ["candy.png", "candy_icon.png", "candy1.png"]:
+					var ext_p := "%s/%s" % [ed, fn]
+					if FileAccess.file_exists(ext_p):
+						var img := Image.load_from_file(ext_p)
+						if img != null and not img.is_empty():
+							res = ImageTexture.create_from_image(img)
+							break
+				if res != null:
+					break
+
+	if res == null and ResourceLoader.exists(path):
 		var loaded: Resource = load(path)
 		if loaded is Texture2D:
 			res = loaded

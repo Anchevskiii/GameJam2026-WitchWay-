@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" uid="uid://bvkmq8nx41e7q" path="res://scenes/ui/hud.tscn" id="2_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/game_over.tscn" id="3_game_over"]
-[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="4_pause"]
+[ext_resource type="PackedScene" uid="uid://d3pmq8nx41e7q" path="res://scenes/ui/pause_menu.tscn" id="4_pause"]
 [ext_resource type="Shader" path="res://assets/shaders/glitch.gdshader" id="5_glitch"]
 [ext_resource type="Script" path="res://scripts/fx/glitch_fx.gd" id="6_glitch_fx"]
 [ext_resource type="Script" path="res://scripts/ui/jumpscare_overlay.gd" id="7_jumpscare"]

@@ -215,12 +215,28 @@ func _choose_shop_room(start: Vector2i, start_room: Rect2i, exit_room: Rect2i) -
 	return _shop_room.get_area() > 0
 
 
-## The vending machine stands in the middle of the shop room (or the nearest free cell).
+## The vending machine stands against a wall in the shop room.
 func _pick_shop_cell() -> Vector2i:
-	var middle: Vector2i = _center(_shop_room)
-	if _cell_at(middle) == "." and not _reserved.has(middle):
-		_reserved[middle] = true
-		return middle
+	var candidates: Array[Vector2i] = []
+	# 1. Prefer cells against the north wall where tile above is '#'
+	for x in range(_shop_room.position.x, _shop_room.end.x):
+		var c := Vector2i(x, _shop_room.position.y)
+		if _cell_at(c) == "." and not _reserved.has(c) and _cell_at(c + Vector2i(0, -1)) == "#":
+			candidates.append(c)
+	# 2. Or against west / east / south wall
+	if candidates.is_empty():
+		for y in range(_shop_room.position.y, _shop_room.end.y):
+			for x in range(_shop_room.position.x, _shop_room.end.x):
+				var c := Vector2i(x, y)
+				if _cell_at(c) == "." and not _reserved.has(c):
+					for dir in [Vector2i(0, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1)]:
+						if _cell_at(c + dir) == "#":
+							candidates.append(c)
+							break
+	if not candidates.is_empty():
+		var picked: Vector2i = candidates[candidates.size() / 2]
+		_reserved[picked] = true
+		return picked
 	return _random_free_cell(_shop_room)
 
 

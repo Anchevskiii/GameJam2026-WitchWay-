@@ -48,6 +48,7 @@ var current_cpu_overload: float = 0.0
 var is_glitch_mode: bool = false
 var is_game_over: bool = false
 var is_game_active: bool = false
+var is_transitioning: bool = false
 
 ## Set by the current Room. Safe rooms (Living Room) ignore scares and keep sanity full.
 var is_safe_room: bool = false
@@ -109,7 +110,7 @@ const VENDING_MARKUP: float = 1.35
 
 func _ready() -> void:
 	is_game_active = false
-	_ensure_action("use_mask", KEY_F)
+	_ensure_action("use_mask", KEY_R)
 	_ensure_action("glitch_power", KEY_Q)
 	reset_level_state()
 
@@ -189,7 +190,7 @@ func shop_items(mode: String) -> Array:
 	var markup: float = VENDING_MARKUP if mode == "vending" else 1.0
 	items.append(_item("flashlight", "Flashlight", "Works for %d floors. Shows what lurks in the dark." % FLASHLIGHT_FLOORS,
 			FLASHLIGHT_PRICE, markup, flashlight_floors <= 0, "Already have one (%d floors left)" % flashlight_floors))
-	items.append(_item("mask", "Mask [F]", "Wear it to be ignored. One at a time; it expires in the next Living Room.",
+	items.append(_item("mask", "Mask [R]", "Wear it to be ignored. One at a time; it expires in the next Living Room.",
 			MASK_PRICE, markup, not mask_owned, "You already carry a mask"))
 	var glitch_price: int = GLITCH_BASE_PRICE + GLITCH_PRICE_STEP * glitch_buys
 	items.append(_item("glitch", "Glitch Mode [Q]", "Crash the house on demand (brief). You still need all keys.",
@@ -247,14 +248,11 @@ func buy(id: String, mode: String) -> String:
 
 
 ## Q: spend the glitch charge to crash the house right now (opens an OVERLOAD exit if all keys are found).
+## Always allowed outside the Living Room; immediately drives the glitch bar to 100%.
 func use_glitch_power() -> void:
 	if glitch_charges <= 0 or is_game_over or is_safe_room:
-		return
-	if not exit_needs_crash:
-		Narrator.say("Nothing to crash here. Save the charge.")
-		return
-	if not has_all_keys():
-		Narrator.say_now("The exit is still locked. Find every key first.")
+		if is_safe_room and glitch_charges > 0:
+			Narrator.say("The Living Room is too stable to crash.")
 		return
 	glitch_charges -= 1
 	glitch_power_active = true

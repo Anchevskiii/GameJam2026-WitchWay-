@@ -20,6 +20,8 @@ const CPU_OVERLOAD: Color = Color(1.0, 0.0, 0.86)
 
 var _cpu_fill: StyleBoxFlat
 var _keys_label: Label
+var _candy_box: HBoxContainer
+var _candy_icon: TextureRect
 var _candy_label: Label
 var _items_label: Label
 var _narrator_tween: Tween
@@ -32,10 +34,10 @@ func _on_candy_changed(_amount: int) -> void:
 func _update_inventory() -> void:
 	if _candy_label == null:
 		return
-	_candy_label.text = "CANDY: %d" % GameManager.candy
+	_candy_label.text = "%d" % GameManager.candy
 	var parts: Array[String] = []
 	if GameManager.mask_owned:
-		parts.append("Mask [F]")
+		parts.append("Mask [R]")
 	if GameManager.glitch_charges > 0:
 		parts.append("Glitch [Q]")
 	if GameManager.flashlight_floors > 0:
@@ -56,18 +58,36 @@ func _ready() -> void:
 	EventBus.narrator_line_changed.connect(_on_narrator_line_changed)
 	# Keys for a locked exit: shown only on floors that have them.
 	_keys_label = Label.new()
+	_keys_label.add_theme_font_override("font", UiTheme.font())
+	_keys_label.add_theme_font_size_override("font_size", 10)
 	_keys_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 	_keys_label.visible = false
 	room_label.get_parent().add_child(_keys_label)
 	room_label.get_parent().move_child(_keys_label, room_label.get_index())
 	EventBus.keys_changed.connect(_on_keys_changed)
 	EventBus.house_awakened.connect(_on_house_awakened)
-	# Candy currency + owned items (mask [F], glitch charge [Q], flashlight floors).
+
+	# Candy currency widget with candy icon + number in pixel font:
+	_candy_box = HBoxContainer.new()
+	_candy_box.add_theme_constant_override("separation", 6)
+	_candy_icon = TextureRect.new()
+	_candy_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_candy_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_candy_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_candy_icon.custom_minimum_size = Vector2(20, 16)
+	_candy_icon.texture = _load_candy_texture()
+	_candy_box.add_child(_candy_icon)
+
 	_candy_label = Label.new()
-	_candy_label.add_theme_color_override("font_color", Color(1.0, 0.65, 0.88))
-	room_label.get_parent().add_child(_candy_label)
+	_candy_label.add_theme_font_override("font", UiTheme.font())
+	_candy_label.add_theme_font_size_override("font_size", 12)
+	_candy_label.add_theme_color_override("font_color", Color(1.0, 0.84, 0.32))
+	_candy_box.add_child(_candy_label)
+	room_label.get_parent().add_child(_candy_box)
+
 	_items_label = Label.new()
-	_items_label.add_theme_font_size_override("font_size", 12)
+	_items_label.add_theme_font_override("font", UiTheme.font())
+	_items_label.add_theme_font_size_override("font_size", 9)
 	_items_label.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0))
 	room_label.get_parent().add_child(_items_label)
 	GameManager.candy_changed.connect(_on_candy_changed)
@@ -147,3 +167,29 @@ func _on_narrator_line_changed(text: String) -> void:
 	narrator_text.visible_ratio = 0.0
 	_narrator_tween = create_tween()
 	_narrator_tween.tween_property(narrator_text, "visible_ratio", 1.0, minf(0.02 * text.length(), 1.2))
+
+
+func _load_candy_texture() -> Texture2D:
+	for custom_path in [
+		"res://inspo/candy.png",
+		"res://review/candy.png",
+		"res://assets/sprites/items/candy.png",
+	]:
+		if ResourceLoader.exists(custom_path):
+			var t: Texture2D = load(custom_path) as Texture2D
+			if t:
+				return t
+		var custom_global: String = ProjectSettings.globalize_path(custom_path)
+		if FileAccess.file_exists(custom_global):
+			var img: Image = Image.load_from_file(custom_global)
+			if img != null and not img.is_empty():
+				return ImageTexture.create_from_image(img)
+	var external_dirs := ["../GameJam2026_Previews/inspo", "../GameJam2026_Previews/review", "../GameJam2026_Previews"]
+	for ed in external_dirs:
+		for fn in ["candy.png", "candy_icon.png", "candy1.png"]:
+			var ext_p := "%s/%s" % [ed, fn]
+			if FileAccess.file_exists(ext_p):
+				var img := Image.load_from_file(ext_p)
+				if img != null and not img.is_empty():
+					return ImageTexture.create_from_image(img)
+	return null
