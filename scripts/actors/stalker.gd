@@ -102,7 +102,7 @@ func _process(delta: float) -> void:
 			if dist <= reacquire_range or sprinting_near or _has_clear_sight_to_player(reacquire_range * 1.4):
 				_tracking_player = true
 				_speed = start_speed
-				AudioManager.play_ambient("evil_laugh_deep", -2.0, randf_range(0.92, 1.05))
+				AudioManager.play("haunted_pass", -1.5, randf_range(0.95, 1.05))
 			else:
 				_roam_timer -= delta
 				if _roam_timer <= 0.0 or global_position.distance_to(_roam_target) < 24.0:
@@ -120,9 +120,8 @@ func _process(delta: float) -> void:
 
 	_whisper_left -= delta
 	if _whisper_left <= 0.0 and dist < 320.0:
-		_whisper_left = randf_range(4.2, 6.8)
-		var w_sfx: String = "whisper_ghost" if randf() < 0.5 else "whisper_ghost_2"
-		AudioManager.play_ambient(w_sfx, linear_to_db(clampf(1.0 - dist / 320.0, 0.2, 0.95)))
+		_whisper_left = randf_range(6.5, 9.5)
+		AudioManager.play("haunted_pass", linear_to_db(clampf(1.0 - dist / 320.0, 0.2, 0.95)))
 	if dist <= touch_range and not _player.is_hidden:
 		_touch()
 

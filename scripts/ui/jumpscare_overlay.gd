@@ -51,10 +51,8 @@ func _on_jumpscare_requested(face: String, damage: float) -> void:
 	_face.scale = Vector2.ONE * 0.35
 	_face.position = Vector2.ZERO
 	_flash.color.a = 0.85
-	var js_sounds: Array[String] = ["squeak_scare", "woman_scream", "poltergeist"]
-	if face == "stalker":
-		js_sounds = ["woman_scream", "squeak_scare", "evil_laugh_deep"]
-	AudioManager.play(js_sounds[randi() % js_sounds.size()], 3.5, randf_range(0.95, 1.05))
+	var js_sfx: String = "squeak_scare" if (face == "stalker" or randf() < 0.6) else "poltergeist"
+	AudioManager.play(js_sfx, 3.0, 1.0)
 	GameManager.scare_player(damage, "Jumpscare")
 
 	var tween: Tween = create_tween()
