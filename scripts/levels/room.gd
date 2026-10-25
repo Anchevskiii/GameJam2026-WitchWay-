@@ -751,17 +751,16 @@ func _spawn_vending_room() -> void:
 	decor_root.add_child(light)
 
 
-## A floor cell with open floor all around it, away from the player (for hand-made floors).
+## A floor cell against a wall, away from the player (for hand-made floors).
 func _find_alcove_cell() -> Vector2i:
 	var options: Array[Vector2i] = []
 	for y in range(2, _rows.size() - 2):
 		for x in range(2, _rows[y].length() - 2):
-			var clear: bool = true
-			for dy in range(-2, 3):
-				for dx in range(-2, 3):
-					if _char_at(Vector2i(x + dx, y + dy)) != ".":
-						clear = false
-			if clear and cell_to_world(Vector2i(x, y)).distance_to(player.global_position) > 260.0:
+			if _char_at(Vector2i(x, y)) != ".":
+				continue
+			var has_wall: bool = (_char_at(Vector2i(x, y - 1)) == "#" or _char_at(Vector2i(x - 1, y)) == "#" or _char_at(Vector2i(x + 1, y)) == "#")
+			var front_open: bool = _char_at(Vector2i(x, y + 1)) == "."
+			if has_wall and front_open and cell_to_world(Vector2i(x, y)).distance_to(player.global_position) > 200.0:
 				options.append(Vector2i(x, y))
 	if options.is_empty():
 		return Vector2i(-1, -1)

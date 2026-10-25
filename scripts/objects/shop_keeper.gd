@@ -18,6 +18,7 @@ var is_active_target: bool = false
 
 var _player: Node2D = null
 var _prompt: Label
+var _has_sprite: bool = false
 
 
 func _ready() -> void:
@@ -27,6 +28,7 @@ func _ready() -> void:
 	if texture != null:
 		var sprite := Sprite2D.new()
 		sprite.texture = texture
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		sprite.modulate = MERCHANT_TINT
 		sprite.offset = Vector2(0, -texture.get_height() * 0.5)
 		add_child(sprite)
@@ -34,17 +36,32 @@ func _ready() -> void:
 		bob.tween_property(sprite, "position:y", -3.0, 0.9).set_trans(Tween.TRANS_SINE)
 		bob.tween_property(sprite, "position:y", 0.0, 0.9).set_trans(Tween.TRANS_SINE)
 	else:
-		material = unshaded
+		var vm_tex: Texture2D = null
+		if ResourceLoader.exists("res://assets/sprites/objects/vending_machine.png"):
+			vm_tex = load("res://assets/sprites/objects/vending_machine.png")
+		if vm_tex == null:
+			var gpath: String = ProjectSettings.globalize_path("res://assets/sprites/objects/vending_machine.png")
+			if FileAccess.file_exists(gpath):
+				var img: Image = Image.load_from_file(gpath)
+				if img != null and not img.is_empty():
+					vm_tex = ImageTexture.create_from_image(img)
+		if vm_tex != null:
+			_has_sprite = true
+			var sprite := Sprite2D.new()
+			sprite.texture = vm_tex
+			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			sprite.offset = Vector2(0, -24)
+			add_child(sprite)
 		var body := StaticBody2D.new()
 		body.position = Vector2(0, -12)
 		var shape := RectangleShape2D.new()
-		shape.size = Vector2(26, 22)
+		shape.size = Vector2(28, 24)
 		var collision := CollisionShape2D.new()
 		collision.shape = shape
 		body.add_child(collision)
 		add_child(body)
 	var title := Label.new()
-	title.text = "MERCHANT" if mode == "main" else "CANDY MACHINE"
+	title.text = "CASPER (TAVERN)" if mode == "main" else "CANDY DISPENSER"
 	title.material = unshaded
 	title.add_theme_font_size_override("font_size", 11)
 	title.add_theme_color_override("font_color", MERCHANT_TINT)
@@ -52,12 +69,12 @@ func _ready() -> void:
 	title.add_theme_constant_override("outline_size", 4)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.size = Vector2(120, 16)
-	title.position = Vector2(-60, -72 if texture == null else -(texture.get_height() + 22))
+	title.position = Vector2(-60, -56 if texture == null else -(texture.get_height() + 22))
 	title.z_index = 60
 	add_child(title)
 	_prompt = Label.new()
 	_prompt.material = unshaded
-	_prompt.text = "E: Shop"
+	_prompt.text = "E: Tavern Shop" if mode == "main" else "E: Candy Dispenser"
 	_prompt.add_theme_font_size_override("font_size", 17)
 	_prompt.add_theme_color_override("font_color", Color(1.0, 0.98, 0.78))
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -74,7 +91,7 @@ func _process(_delta: float) -> void:
 	if _player == null:
 		_player = get_tree().get_first_node_in_group("player") as Node2D
 	_prompt.visible = is_active_target
-	if texture == null:
+	if texture == null and not _has_sprite:
 		queue_redraw()
 
 
@@ -88,9 +105,9 @@ func open_shop() -> void:
 	SHOP_UI.call("open", self, mode)
 
 
-## Vending machine drawn from rectangles (no art asset): bright candy window, glowing slot.
+## Vending machine drawn from rectangles (only if sprite asset missing).
 func _draw() -> void:
-	if texture != null:
+	if texture != null or _has_sprite:
 		return
 	var pulse: float = 0.85 + 0.15 * sin(Time.get_ticks_msec() * 0.006)
 	draw_rect(Rect2(-15, -46, 30, 46), Color(0.55, 0.08, 0.18))

@@ -1,0 +1,371 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8shopmenu41tscn"]
+
+[ext_resource type="Script" path="res://scripts/ui/shop_ui.gd" id="1_shop_script"]
+
+[node name="ShopUI" type="CanvasLayer"]
+process_mode = 3
+layer = 70
+script = ExtResource("1_shop_script")
+
+[node name="Root" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.015, 0.04, 0.9)
+
+[node name="AmbientParticles" type="CPUParticles2D" parent="Root"]
+position = Vector2(640, 360)
+amount = 35
+lifetime = 6.0
+preprocess = 3.0
+emission_shape = 3
+emission_rect_extents = Vector2(640, 360)
+direction = Vector2(0, -1)
+spread = 30.0
+gravity = Vector2(0, -4)
+initial_velocity_min = 5.0
+initial_velocity_max = 18.0
+scale_amount_min = 2.0
+scale_amount_max = 4.0
+color = Color(0.96, 0.65, 0.35, 0.22)
+
+[node name="CobwebLeft" type="TextureRect" parent="Root"]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0.35)
+texture_filter = 1
+layout_mode = 0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = 68.0
+offset_bottom = 54.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CobwebRight" type="TextureRect" parent="Root"]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0.35)
+texture_filter = 1
+layout_mode = 0
+offset_left = 1212.0
+offset_top = 10.0
+offset_right = 1268.0
+offset_bottom = 54.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+flip_h = true
+
+[node name="MainCenter" type="CenterContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainPanel" type="PanelContainer" parent="Root/MainCenter"]
+custom_minimum_size = Vector2(1160, 660)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Root/MainCenter/MainPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxMain" type="VBoxContainer" parent="Root/MainCenter/MainPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TopBar" type="HBoxContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain"]
+layout_mode = 2
+
+[node name="TitleBox" type="VBoxContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ShopTitle" type="Label" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/TopBar/TitleBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.92, 0.85, 1)
+theme_override_colors/font_shadow_color = Color(0.08, 0.04, 0.12, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 20
+text = "THE SPOOKY TAVERN & MERCH"
+
+[node name="ShopSubtitle" type="Label" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/TopBar/TitleBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.6, 0.76, 1)
+theme_override_font_sizes/font_size = 9
+text = "Trade hard-earned candies for spectral survival tools & charms"
+
+[node name="Spacer" type="Control" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="WalletPanel" type="PanelContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/TopBar"]
+layout_mode = 2
+
+[node name="WalletMargin" type="MarginContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/TopBar/WalletPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 6
+
+[node name="WalletHBox" type="HBoxContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/TopBar/WalletPanel/WalletMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="CandyIconHeader" type="TextureRect" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/TopBar/WalletPanel/WalletMargin/WalletHBox"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(20, 24)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CandyCountLabel" type="Label" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/TopBar/WalletPanel/WalletMargin/WalletHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0.32, 1)
+theme_override_font_sizes/font_size = 15
+text = "CANDY: 0"
+
+[node name="HSeparator" type="HSeparator" parent="Root/MainCenter/MainPanel/Margin/VBoxMain"]
+layout_mode = 2
+
+[node name="ContentHBox" type="HBoxContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="LeftColumn" type="VBoxContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+
+[node name="BoothPanel" type="PanelContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BoothMargin" type="MarginContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="BoothVBox" type="VBoxContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MerchantTitle" type="Label" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.58, 0.22, 1)
+theme_override_font_sizes/font_size = 11
+text = "CASPER THE TAVERN KEEPER"
+horizontal_alignment = 1
+
+[node name="GhostStage" type="Control" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+
+[node name="GhostGlow" type="TextureRect" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox/GhostStage"]
+unique_name_in_owner = true
+modulate = Color(0.6, 0.4, 0.9, 0.45)
+layout_mode = 0
+offset_left = 98.0
+offset_top = 10.0
+offset_right = 218.0
+offset_bottom = 130.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GhostSprite" type="TextureRect" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox/GhostStage"]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 0
+offset_left = 118.0
+offset_top = 22.0
+offset_right = 198.0
+offset_bottom = 118.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GhostButton" type="TextureButton" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox/GhostStage"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 108.0
+offset_top = 18.0
+offset_right = 208.0
+offset_bottom = 126.0
+mouse_default_cursor_shape = 2
+
+[node name="CounterDecor" type="PanelContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox"]
+layout_mode = 2
+
+[node name="DecorMargin" type="MarginContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox/CounterDecor"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="HBoxDecor" type="HBoxContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox/CounterDecor/DecorMargin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="PumpkinSprite" type="TextureRect" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox/CounterDecor/DecorMargin/HBoxDecor"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(38, 30)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CandleSprite" type="TextureRect" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox/CounterDecor/DecorMargin/HBoxDecor"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(28, 30)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CauldronSprite" type="TextureRect" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox/CounterDecor/DecorMargin/HBoxDecor"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(28, 26)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MugSprite" type="TextureRect" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox/CounterDecor/DecorMargin/HBoxDecor"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SpeechPanel" type="PanelContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox"]
+layout_mode = 2
+
+[node name="SpeechMargin" type="MarginContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox/SpeechPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="DialogueLabel" type="Label" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox/SpeechPanel/SpeechMargin"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.92, 0.98, 1)
+theme_override_font_sizes/font_size = 9
+autowrap_mode = 3
+
+[node name="GhostHint" type="Label" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/LeftColumn/BoothPanel/BoothMargin/BoothVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.52, 0.65, 1)
+theme_override_font_sizes/font_size = 8
+text = "[Click Casper for spooky banter]"
+horizontal_alignment = 1
+
+[node name="RightColumn" type="VBoxContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CatalogPanel" type="PanelContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/RightColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CatalogMargin" type="MarginContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/RightColumn/CatalogPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxCatalog" type="VBoxContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/RightColumn/CatalogPanel/CatalogMargin"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="CatalogHeaderRow" type="HBoxContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/RightColumn/CatalogPanel/CatalogMargin/VBoxCatalog"]
+layout_mode = 2
+
+[node name="LabelItemHeader" type="Label" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/RightColumn/CatalogPanel/CatalogMargin/VBoxCatalog/CatalogHeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.6, 0.8, 1)
+theme_override_font_sizes/font_size = 10
+text = "UPGRADE / TOOL"
+
+[node name="Spacer2" type="Control" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/RightColumn/CatalogPanel/CatalogMargin/VBoxCatalog/CatalogHeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LabelPriceHeader" type="Label" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/RightColumn/CatalogPanel/CatalogMargin/VBoxCatalog/CatalogHeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.6, 0.8, 1)
+theme_override_font_sizes/font_size = 10
+text = "PRICE & ACTION"
+
+[node name="HSeparator2" type="HSeparator" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/RightColumn/CatalogPanel/CatalogMargin/VBoxCatalog"]
+layout_mode = 2
+
+[node name="ItemsScroll" type="ScrollContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/RightColumn/CatalogPanel/CatalogMargin/VBoxCatalog"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 360)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ItemsContainer" type="VBoxContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/ContentHBox/RightColumn/CatalogPanel/CatalogMargin/VBoxCatalog/ItemsScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BottomBar" type="HBoxContainer" parent="Root/MainCenter/MainPanel/Margin/VBoxMain"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 2
+
+[node name="StatusMessage" type="Label" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/BottomBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="CloseButton" type="Button" parent="Root/MainCenter/MainPanel/Margin/VBoxMain/BottomBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(250, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "LEAVE TAVERN [ESC / E]"

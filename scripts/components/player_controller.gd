@@ -102,7 +102,7 @@ func _apply_player_profile() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if not _can_move:
+	if not _can_move or GameManager.is_transitioning:
 		velocity = velocity.lerp(Vector2.ZERO, friction * delta)
 		move_and_slide()
 		return
@@ -169,8 +169,10 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
-## Q = glitch power-up, F = put on the mask you bought.
+## Q = glitch power-up, R = put on the mask you bought.
 func _handle_power_ups() -> void:
+	if GameManager.is_transitioning:
+		return
 	if Input.is_action_just_pressed("glitch_power"):
 		GameManager.use_glitch_power()
 	if Input.is_action_just_pressed("use_mask") and GameManager.mask_owned and not is_masked:
