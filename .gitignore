@@ -40,3 +40,6 @@ godot.log
 
 # Windows build for the jam submission
 !Build/*.exe
+
+# Presentation + video zip for the jam submission
+!Documentation/*.zip
