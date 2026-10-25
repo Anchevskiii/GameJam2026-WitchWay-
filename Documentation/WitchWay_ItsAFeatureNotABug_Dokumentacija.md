@@ -63,7 +63,8 @@ Celotna hiša je proceduralno generirana (BSP-razdelitev v sobe z različnimi te
 | Shift | tek |
 | E (drži) | iskanje po pohištvu, interakcija |
 | Space | BOO! – prestraši pošasti |
-| F | svetilka (vklop/izklop); če imaš kupljeno masko, si jo nadeneš |
+| F | svetilka (vklop/izklop) |
+| R | nadeni si masko (če jo imaš) |
 | Q | Glitch naboj (kupljen v trgovini) |
 | Esc | pavza |
 
