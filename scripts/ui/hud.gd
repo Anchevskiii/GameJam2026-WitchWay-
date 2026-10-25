@@ -20,7 +20,28 @@ const CPU_OVERLOAD: Color = Color(1.0, 0.0, 0.86)
 
 var _cpu_fill: StyleBoxFlat
 var _keys_label: Label
+var _candy_label: Label
+var _items_label: Label
 var _narrator_tween: Tween
+
+
+func _on_candy_changed(_amount: int) -> void:
+	_update_inventory()
+
+
+func _update_inventory() -> void:
+	if _candy_label == null:
+		return
+	_candy_label.text = "CANDY: %d" % GameManager.candy
+	var parts: Array[String] = []
+	if GameManager.mask_owned:
+		parts.append("Mask [F]")
+	if GameManager.glitch_charges > 0:
+		parts.append("Glitch [Q]")
+	if GameManager.flashlight_floors > 0:
+		parts.append("Flashlight (%d floor%s)" % [GameManager.flashlight_floors, "" if GameManager.flashlight_floors == 1 else "s"])
+	_items_label.text = "  ".join(parts)
+	_items_label.visible = not parts.is_empty()
 
 
 func _ready() -> void:
@@ -41,6 +62,17 @@ func _ready() -> void:
 	room_label.get_parent().move_child(_keys_label, room_label.get_index())
 	EventBus.keys_changed.connect(_on_keys_changed)
 	EventBus.house_awakened.connect(_on_house_awakened)
+	# Candy currency + owned items (mask [F], glitch charge [Q], flashlight floors).
+	_candy_label = Label.new()
+	_candy_label.add_theme_color_override("font_color", Color(1.0, 0.65, 0.88))
+	room_label.get_parent().add_child(_candy_label)
+	_items_label = Label.new()
+	_items_label.add_theme_font_size_override("font_size", 12)
+	_items_label.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0))
+	room_label.get_parent().add_child(_items_label)
+	GameManager.candy_changed.connect(_on_candy_changed)
+	GameManager.inventory_changed.connect(_update_inventory)
+	_update_inventory()
 	_on_sanity_changed(GameManager.current_sanity, GameManager.max_sanity)
 	_on_cpu_overload_changed(GameManager.current_cpu_overload, GameManager.max_cpu_overload)
 

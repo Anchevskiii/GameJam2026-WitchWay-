@@ -108,6 +108,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_handle_mask(delta)
+	_handle_power_ups()
 	_handle_ghost_chills()
 	_update_best_interact_target()
 
@@ -155,6 +156,10 @@ func _physics_process(delta: float) -> void:
 				_search_time = 0.0
 				velocity = Vector2.ZERO
 				return
+		elif _active_interact_target.is_in_group("shops"):
+			velocity = Vector2.ZERO
+			_active_interact_target.call("open_shop")
+			return
 	if Input.is_action_just_pressed("scare") and _boo_cooldown_left <= 0.0:
 		_boo(global_position, boo_range, false)
 
@@ -164,13 +169,32 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
-## Selects at most ONE interactable object (either a HideSpot or a Searchable) that is in reach,
+## Q = glitch power-up, F = put on the mask you bought.
+func _handle_power_ups() -> void:
+	if Input.is_action_just_pressed("glitch_power"):
+		GameManager.use_glitch_power()
+	if Input.is_action_just_pressed("use_mask") and GameManager.mask_owned and not is_masked:
+		GameManager.mask_owned = false
+		GameManager.inventory_changed.emit()
+		activate_disguise_mask(GameManager.MASK_DURATION, MaskTypes.random_type())
+		AudioManager.play("pop", -2.0, 0.8)
+
+
+## Selects at most ONE interactable object (hide spot, drawer or shop) that is in reach,
 ## choosing the one the player is closest to and facing towards.
 func _update_best_interact_target() -> void:
 	var best_target: Node2D = null
 	var best_score: float = INF
 
 	if not is_hidden and _searching == null:
+		for node in get_tree().get_nodes_in_group("shops"):
+			var shop: Node2D = node as Node2D
+			if not shop.call("is_player_in_reach"):
+				continue
+			var shop_score: float = _interaction_score(shop.global_position) - 20.0  # shops win ties
+			if shop_score < best_score:
+				best_score = shop_score
+				best_target = shop
 		for node in get_tree().get_nodes_in_group("hide_spots"):
 			var spot: HideSpot = node as HideSpot
 			if not spot.is_player_in_reach():
@@ -196,6 +220,8 @@ func _update_best_interact_target() -> void:
 				best_target = drawer
 
 	_active_interact_target = best_target
+	for node in get_tree().get_nodes_in_group("shops"):
+		(node as Node2D).set("is_active_target", node == best_target)
 	for node in get_tree().get_nodes_in_group("hide_spots"):
 		(node as HideSpot).is_active_target = (node == best_target)
 	for node in get_tree().get_nodes_in_group("searchables"):
@@ -406,8 +432,9 @@ func _process_search(delta: float) -> void:
 		_searching = null
 		return
 	_search_time += delta
-	_searching.progress = clampf(_search_time / _searching.search_time, 0.0, 1.0)
-	if _search_time >= _searching.search_time:
+	var needed: float = _searching.search_time * GameManager.search_time_scale()
+	_searching.progress = clampf(_search_time / needed, 0.0, 1.0)
+	if _search_time >= needed:
 		var drawer: Searchable = _searching
 		_searching = null
 		drawer.open()

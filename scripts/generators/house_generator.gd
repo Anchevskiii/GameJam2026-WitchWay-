@@ -80,6 +80,8 @@ var _piece_origins: Array = []          # [[top-left cell, FurnitureData], ...] 
 var _search_contents: Dictionary = {}   # top-left cell -> Searchable.Contents
 var _traps: Array = []                  # [[cell, "bear" | "creak" | "jumpscare"], ...]
 var _room_has_hide: bool = false        # the room being furnished has a hiding spot
+var _shop_room: Rect2i = Rect2i()       # bright monster-free room with the vending machine
+var _shop_cell: Vector2i = Vector2i(-1, -1)
 
 
 ## Returns Room property name -> value. `level` sets difficulty and the level kind.
@@ -130,6 +132,8 @@ func _try_generate(tier: int, kind: Kind) -> Dictionary:
 	var exit_room_index: int = _place_exit(start, kind)
 	if exit_room_index < 0:
 		return {}
+	if not _choose_shop_room(start, start_room, _leaves[exit_room_index]):
+		return {}
 	if kind == Kind.DARK:
 		_glitch_an_inner_wall()
 
@@ -140,6 +144,9 @@ func _try_generate(tier: int, kind: Kind) -> Dictionary:
 		npc_count -= 6
 	_furnish(start_room, kind)
 	if _furniture_legend.size() + _wall_decor_legend.size() > CHAR_POOL.length():
+		return {}
+	_shop_cell = _pick_shop_cell()
+	if _shop_cell.x < 0:
 		return {}
 	_place_monsters(start_room, maxi(npc_count, 2), tier, kind, _leaves[exit_room_index])
 	# Fewer trick-or-treaters (= less candy to heal with) the deeper you go.
@@ -190,6 +197,31 @@ func _open_doorway(cells: Array) -> void:
 	for cell in cells:
 		_put(cell, ".")
 		_doorways.append(cell)
+
+
+## One room per floor is set aside for the vending machine: no monsters, kids, keys or traps.
+## It's the room closest to the start (never the start room or the exit room).
+func _choose_shop_room(start: Vector2i, start_room: Rect2i, exit_room: Rect2i) -> bool:
+	var dist: Dictionary = _distances_from(start)
+	var best_dist: int = 1 << 30
+	_shop_room = Rect2i()
+	for room in _leaves:
+		if room == start_room or room == exit_room:
+			continue
+		var d: int = dist.get(_center(room), -1)
+		if d >= 0 and d < best_dist:
+			best_dist = d
+			_shop_room = room
+	return _shop_room.get_area() > 0
+
+
+## The vending machine stands in the middle of the shop room (or the nearest free cell).
+func _pick_shop_cell() -> Vector2i:
+	var middle: Vector2i = _center(_shop_room)
+	if _cell_at(middle) == "." and not _reserved.has(middle):
+		_reserved[middle] = true
+		return middle
+	return _random_free_cell(_shop_room)
 
 
 ## Puts the exit door in the outer wall of the room farthest from the start.
@@ -259,7 +291,7 @@ func _glitch_an_inner_wall() -> void:
 func _place_party(start_room: Rect2i, tier: int) -> float:
 	var party_room: Rect2i = Rect2i()
 	for room in _leaves:
-		if room != start_room and room.get_area() > party_room.get_area() and room.size.x >= 7 and room.size.y >= 5:
+		if room != start_room and room != _shop_room and room.get_area() > party_room.get_area() and room.size.x >= 7 and room.size.y >= 5:
 			party_room = room
 	if party_room.get_area() == 0:
 		return 0.0
@@ -288,7 +320,7 @@ func _furnish(start_room: Rect2i, kind: Kind) -> void:
 	var previous: String = ""
 	for room in _leaves:
 		var theme_id: String
-		if room == start_room:
+		if room == start_room or room == _shop_room:
 			theme_id = "living_room"
 		elif room == _party_room:
 			theme_id = "dining"
@@ -645,7 +677,7 @@ func _clutter(room: Rect2i, kind: Kind) -> void:
 func _place_monsters(start_room: Rect2i, count: int, tier: int, kind: Kind, exit_room: Rect2i) -> void:
 	var rooms: Array[Rect2i] = []
 	for room in _leaves:
-		if room != start_room:
+		if room != start_room and room != _shop_room:
 			rooms.append(room)
 	if rooms.is_empty():
 		return
@@ -673,7 +705,7 @@ func _place_monsters(start_room: Rect2i, count: int, tier: int, kind: Kind, exit
 func _place_kids(start_room: Rect2i, count: int) -> void:
 	var rooms: Array[Rect2i] = []
 	for room in _leaves:
-		if room != start_room:
+		if room != start_room and room != _shop_room:
 			rooms.append(room)
 	if rooms.is_empty():
 		return
@@ -706,6 +738,10 @@ func _hide_keys(start: Vector2i, start_room: Rect2i, keys: int, tier: int) -> bo
 			if _leaves[i].has_point(cell):
 				room_index = i
 		var below: Vector2i = cell + Vector2i(0, piece.footprint.y)  # where you stand to search
+		if room_index >= 0 and _leaves[room_index] == _shop_room:
+			# The shop room is calm: no keys, no scares - at most a little candy.
+			_search_contents[cell] = Searchable.Contents.CANDY if rng.randf() < 0.4 else Searchable.Contents.NOTHING
+			continue
 		drawers.append([cell, room_index, dist.get(below, dist.get(cell, 0))])
 	# Farthest first, at most one key per room (start room last resort).
 	drawers.sort_custom(func(a: Array, b: Array) -> bool: return a[2] > b[2])
@@ -746,7 +782,7 @@ func _place_traps(start: Vector2i, start_room: Rect2i, tier: int) -> void:
 	var used: Dictionary = {}
 	var gates: Array[Vector2i] = []
 	for cell in _doorways:
-		if _cell_at(cell) == "." and not start_room.grow(1).has_point(cell) and _manhattan(cell, door) > 3:
+		if _cell_at(cell) == "." and not start_room.grow(1).has_point(cell) and not _shop_room.grow(2).has_point(cell) and _manhattan(cell, door) > 3:
 			gates.append(cell)
 	_shuffle(gates)
 	var scares: int = clampi(1 + tier / 2, 1, 3)
@@ -885,6 +921,8 @@ func _settings(tier: int, kind: Kind, party_loot: float) -> Dictionary:
 		"stalker_speed": minf(90.0 + 6.0 * tier, 130.0),
 		"npc_sight_scale": minf(1.0 + 0.06 * tier, 1.4),
 		"sanity_regen_scale": maxf(0.35, 1.0 - 0.1 * tier),
+		"shop_cell": _shop_cell,
+		"shop_room": _shop_room,
 	}
 	if kind == Kind.DARK:
 		title = DARK_TITLES[rng.randi_range(0, DARK_TITLES.size() - 1)]

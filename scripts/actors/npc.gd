@@ -486,8 +486,6 @@ func _drop_loot() -> void:
 
 ## Candy reward for a successful player scare (the monster didn't see it coming).
 func _drop_candy_reward() -> void:
-	if not GameManager.has_method("candy_drop_count"):
-		return
 	var candy_data: PropData = preload("res://data/props/candy.tres")
 	for i in GameManager.candy_drop_count(1 + randi() % 2):
 		var dir: Vector2 = Vector2.RIGHT.rotated(randf() * TAU)

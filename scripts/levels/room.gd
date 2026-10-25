@@ -31,6 +31,8 @@ const DOOR_SCENE: PackedScene = preload("res://scenes/objects/bugs/glitch_door.t
 const KID_SCENE: PackedScene = preload("res://scenes/actors/kid.tscn")
 const MASK_SCENE: PackedScene = preload("res://scenes/objects/mask_pickup.tscn")
 const LAMP_SCENE: PackedScene = preload("res://scenes/objects/wall_lamp.tscn")
+const SHOP_KEEPER: Script = preload("res://scripts/objects/shop_keeper.gd")
+const CANDY_DATA: PropData = preload("res://data/props/candy.tres")
 ## Kids that start within this distance of each other form one group.
 const KID_GROUP_RANGE: float = 130.0
 const MASK_RESPAWN_DELAY: float = 14.0
@@ -122,6 +124,10 @@ static var _visited_scenes: Dictionary = {}
 @export var traps: Array = []
 ## The Stalker's speed when the house wakes up (after the last key).
 @export var stalker_speed: float = 95.0
+## Vending-machine room (bright, monster-free). Set by HouseGenerator; Vector2i(-1, -1) = none
+## (hand-made floors get a small lit alcove somewhere instead).
+@export var shop_cell: Vector2i = Vector2i(-1, -1)
+@export var shop_room: Rect2i = Rect2i()
 
 @export_group("Narrator")
 @export var intro_lines: Array[String] = []
@@ -158,17 +164,24 @@ func _ready() -> void:
 		SaveManager.save_progress(GameManager.current_level)  # this Living Room = checkpoint
 
 	GameManager.set_keys_needed(keys_needed)
+	GameManager.exit_needs_crash = exit_requires_cpu_overload and not is_safe_room
+	GameManager.shop_zone = Rect2()
+	if is_safe_room:
+		GameManager.on_enter_living_room()
 	_build_from_layout()
 	_build_wall_outlines()
 	_spawn_traps()
 	_spawn_initial_masks()
 	_spawn_wall_lamps()
+	_spawn_vending_room()
+	_spawn_floor_candy()
 	_group_kids()
 	add_child(Dread.new())
 	EventBus.house_awakened.connect(_on_house_awakened)
-	player.set_flashlight_available(flashlight_works)
+	# The flashlight is a bought item now (a couple of floors per purchase).
+	player.set_flashlight_available(GameManager.has_flashlight())
 
-	EventBus.room_entered.emit("Floor %d: %s" % [GameManager.current_level + 1, room_title], objective)
+	EventBus.room_entered.emit(GameManager.floor_title(room_title), objective)
 	Narrator.clear()
 	var revisit: bool = _visited_scenes.has(scene_file_path) and not revisit_lines.is_empty()
 	for line in (revisit_lines if revisit else intro_lines):
@@ -212,7 +225,7 @@ func _check_respawn_entities() -> void:
 		for x in range(1, _rows[y].length() - 1):
 			if _rows[y][x] == ".":
 				var world_p: Vector2 = cell_to_world(Vector2i(x, y))
-				if world_p.distance_to(player.global_position) > 200.0:
+				if world_p.distance_to(player.global_position) > 200.0 and not GameManager.shop_zone.has_point(world_p):
 					spawn_candidates.append(Vector2i(x, y))
 	if spawn_candidates.is_empty():
 		return
@@ -409,6 +422,14 @@ func _spawn_from_legend(ch: String, cell: Vector2i) -> void:
 	if furniture_legend.has(ch):
 		_spawn_furniture(furniture_legend[ch], cell)
 	elif npc_legend.has(ch):
+		if is_safe_room and (npc_legend[ch] as NpcData).is_harmless:
+			# The Living Room's training dummy is the Merchant now.
+			var merchant: Node2D = SHOP_KEEPER.new()
+			merchant.set("mode", "main")
+			merchant.set("texture", (npc_legend[ch] as NpcData).frames[0])
+			merchant.position = cell_to_world(cell) + Vector2(0, TILE_SIZE * 0.5 - 2.0)
+			decor_root.add_child(merchant)
+			return
 		var npc: Npc = NPC_SCENE.instantiate()
 		npc.data = npc_legend[ch]
 		npc.load_in_radius = npc_load_radius
@@ -697,6 +718,71 @@ func _spawn_wall_lamps() -> void:
 			placed.append(wp)
 
 
+## A bright, empty room with one vending machine (flashlight / mask / glitch mode for candy).
+## Generated floors set aside a whole room; hand-made floors get a small lit alcove.
+func _spawn_vending_room() -> void:
+	if is_safe_room:
+		return
+	var cell: Vector2i = shop_cell
+	var zone: Rect2i = shop_room
+	if cell.x < 0:
+		cell = _find_alcove_cell()
+		if cell.x < 0:
+			return
+		zone = Rect2i(cell - Vector2i(2, 2), Vector2i(5, 5))
+	var machine: Node2D = SHOP_KEEPER.new()
+	machine.set("mode", "vending")
+	machine.position = cell_to_world(cell) + Vector2(0, TILE_SIZE * 0.5 - 2.0)
+	decor_root.add_child(machine)
+	var rect := Rect2(Vector2(zone.position * TILE_SIZE), Vector2(zone.size * TILE_SIZE))
+	GameManager.shop_zone = rect
+	# The only properly lit room on the floor: visible as if the lights were on.
+	var light := PointLight2D.new()
+	light.texture = GLOW_TEXTURE
+	light.color = Color(0.95, 0.97, 1.0)
+	light.energy = 1.5
+	light.texture_scale = maxf(rect.size.x, rect.size.y) * 0.8 / 128.0
+	light.position = rect.get_center()
+	decor_root.add_child(light)
+
+
+## A floor cell with open floor all around it, away from the player (for hand-made floors).
+func _find_alcove_cell() -> Vector2i:
+	var options: Array[Vector2i] = []
+	for y in range(2, _rows.size() - 2):
+		for x in range(2, _rows[y].length() - 2):
+			var clear: bool = true
+			for dy in range(-2, 3):
+				for dx in range(-2, 3):
+					if _char_at(Vector2i(x + dx, y + dy)) != ".":
+						clear = false
+			if clear and cell_to_world(Vector2i(x, y)).distance_to(player.global_position) > 260.0:
+				options.append(Vector2i(x, y))
+	if options.is_empty():
+		return Vector2i(-1, -1)
+	return options[randi() % options.size()]
+
+
+## Loose candy on the floor: few on early floors, more the deeper you go.
+func _spawn_floor_candy() -> void:
+	if is_safe_room:
+		return
+	var count: int = clampi(2 + GameManager.difficulty_tier() * 2, 2, 14)
+	var spots: Array[Vector2] = []
+	for y in range(1, _rows.size() - 1):
+		for x in range(1, _rows[y].length() - 1):
+			if _rows[y][x] != ".":
+				continue
+			var wp: Vector2 = cell_to_world(Vector2i(x, y))
+			if wp.distance_to(player.global_position) > 140.0 and not GameManager.shop_zone.has_point(wp):
+				spots.append(wp)
+	spots.shuffle()
+	for i in mini(count, spots.size()):
+		var candy: Prop = Prop.spawn(CANDY_DATA, spots[i], Vector2.ZERO, get_tree())
+		if candy != null:
+			candy.set_meta("floor_candy", true)
+
+
 ## The last key was taken: lights fail, everything hears it, and the Stalker comes -
 ## from behind you (the side away from the exit), so it chases rather than blocks.
 func _on_house_awakened() -> void:
@@ -748,7 +834,7 @@ func get_random_relocate_point(avoid_pos: Vector2, min_dist: float = 170.0) -> V
 			if _rows[y][x] != ".":
 				continue
 			var wp: Vector2 = cell_to_world(Vector2i(x, y))
-			if wp.distance_to(avoid_pos) < min_dist:
+			if wp.distance_to(avoid_pos) < min_dist or GameManager.shop_zone.has_point(wp):
 				continue
 			var wall_neighbors: int = 0
 			for d in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:

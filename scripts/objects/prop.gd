@@ -61,6 +61,8 @@ func _ready() -> void:
 	angular_velocity = randf_range(-8.0, 8.0)
 
 	_register()
+	if has_meta("floor_candy"):
+		return  # candy lying around on the floor: free currency, no glitch / sound on spawn
 	GameManager.add_cpu_load(data.load_weight)
 	GameManager.stats_props_spawned += 1
 	EventBus.prop_spawned.emit(data.prop_name, data.load_weight)
@@ -101,8 +103,10 @@ func _physics_process(delta: float) -> void:
 
 	var player: Node2D = get_tree().get_first_node_in_group("player") as Node2D
 	if player and not player.get("is_hidden") and global_position.distance_to(player.global_position) < PICKUP_RADIUS:
-		GameManager.restore_sanity(data.sanity_restore)
-		FloatingText.spawn(self, global_position, "+%d SANITY" % roundi(data.sanity_restore), Color(0.5, 1.0, 0.55), 18)
+		var sanity_gain: float = GameManager.candy_sanity_amount()
+		GameManager.add_candy(1)
+		GameManager.restore_sanity(sanity_gain)
+		FloatingText.spawn(self, global_position, "+1 CANDY  +%d SANITY" % roundi(sanity_gain), Color(1.0, 0.7, 0.9), 16)
 		AudioManager.play("pop", -4.0, 1.5)
 		queue_free()
 

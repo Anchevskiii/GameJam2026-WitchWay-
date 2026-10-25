@@ -50,6 +50,7 @@ func _on_level_completed() -> void:
 		return
 	AudioManager.play("byebye", 0.5, 1.0)
 	AudioManager.play("creak_door", -2.5, randf_range(0.94, 1.04))
+	GameManager.on_floor_completed()
 	GameManager.advance_level()
 	_on_room_change_requested(GameManager.scene_for_level(GameManager.current_level))
 
@@ -66,7 +67,7 @@ func _on_room_change_requested(scene_path: String) -> void:
 	# 2. In complete silence on the black screen, load the new room and show "Progressing to 'Floor X: Room Name'"
 	tween.tween_callback(func() -> void:
 		var title: String = _load_room(scene_path)
-		_transition_label.text = "Progressing to 'Floor %d: %s'" % [GameManager.current_level + 1, title]
+		_transition_label.text = "Progressing to '%s'" % GameManager.floor_title(title)
 	)
 	tween.tween_property(_transition_label, "modulate:a", 1.0, 0.35)
 	tween.tween_interval(hold_black_time)
