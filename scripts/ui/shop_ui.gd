@@ -280,10 +280,10 @@ func _refresh_items() -> void:
 		icon_panel.add_theme_stylebox_override("panel", icon_sb)
 
 		var icon_rect := TextureRect.new()
-		icon_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon_rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR if item_id in ["flashlight", "candy_sanity"] else CanvasItem.TEXTURE_FILTER_NEAREST
 		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon_rect.custom_minimum_size = Vector2(44, 44)
+		icon_rect.custom_minimum_size = Vector2(48, 48)
 		icon_rect.texture = _get_item_icon(item_id)
 		icon_panel.add_child(icon_rect)
 		hbox.add_child(icon_panel)
@@ -491,6 +491,23 @@ func _get_texture_safe(path: String, fallback_path: String = "") -> Texture2D:
 							res = ImageTexture.create_from_image(img)
 							break
 				if res != null:
+					break
+
+	# If checking for flashlight, check processed sprite or full version
+	if path.ends_with("flashlight.png") and res == null:
+		for custom_path in [
+			"res://assets/sprites/items/flashlight.png",
+			"res://assets/sprites/items/flashlight_full.png",
+		]:
+			if ResourceLoader.exists(custom_path):
+				res = load(custom_path) as Texture2D
+				if res != null:
+					break
+			var custom_global: String = ProjectSettings.globalize_path(custom_path)
+			if FileAccess.file_exists(custom_global):
+				var img: Image = Image.load_from_file(custom_global)
+				if img != null and not img.is_empty():
+					res = ImageTexture.create_from_image(img)
 					break
 
 	if res == null and ResourceLoader.exists(path):
