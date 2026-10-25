@@ -80,6 +80,10 @@ static var _visited_scenes: Dictionary = {}
 ## Generated floors: [[Rect2i area, RoomTheme], ...] so every room of the house gets its own look.
 @export var zones: Array = []
 
+@export_group("Audio")
+## Soundtrack for this room, such as the Living Room theme. Empty = no room music.
+@export var room_music: AudioStream
+
 @export_group("Generation")
 ## Build this room with HouseGenerator (endless levels) instead of the layout above.
 @export var procedural: bool = false
@@ -149,6 +153,7 @@ func _ready() -> void:
 	if procedural:
 		_apply_generated(HouseGenerator.new().generate(GameManager.current_level, randi()))
 
+	AudioManager.play_room_music(room_music)
 	props_root.add_to_group("prop_layer")
 	actors_root.add_to_group("actors_root")
 	if not is_safe_room and (ambient_color.r > 0.12 or ambient_color.g > 0.12):

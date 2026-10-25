@@ -40,16 +40,26 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func toggle_pause() -> void:
 	_is_paused = not _is_paused
+	if _is_paused:
+		AudioManager.pause_room_music()
+		AudioManager.play_menu_music()
+	else:
+		AudioManager.stop_menu_music()
+		AudioManager.resume_room_music()
 	get_tree().paused = _is_paused
 	visible = _is_paused
 
 func _on_resume_pressed() -> void:
 	_is_paused = false
+	AudioManager.stop_menu_music()
+	AudioManager.resume_room_music()
 	get_tree().paused = false
 	visible = false
 
 func _on_restart_pressed() -> void:
 	_is_paused = false
+	AudioManager.stop_menu_music()
+	AudioManager.stop_room_music()
 	get_tree().paused = false
 	visible = false
 	GameManager.reset_level_state()
@@ -61,6 +71,7 @@ func _on_settings_pressed() -> void:
 
 func _on_main_menu_pressed() -> void:
 	_is_paused = false
+	AudioManager.stop_room_music()
 	get_tree().paused = false
 	visible = false
 	GameManager.is_game_active = false
@@ -68,5 +79,7 @@ func _on_main_menu_pressed() -> void:
 
 func _on_quit_pressed() -> void:
 	_is_paused = false
+	AudioManager.stop_menu_music()
+	AudioManager.stop_room_music()
 	get_tree().paused = false
 	get_tree().quit()

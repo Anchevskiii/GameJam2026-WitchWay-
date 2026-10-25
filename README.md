@@ -110,16 +110,16 @@ res://
 │       ├── main_menu.tscn       # Začetni zaslon
 │       └── game_over.tscn       # Zaslon ob izgonu iz hiše ("polulane hlače")
 └── scripts/                     # Modularna logika in skripte (.gd)
-    ├── components/              # Komponente, ki jih pripnemo na druge objekte
-    │   ├── sanity_component.gd  # Računanje strahu na igralcu
-    │   ├── scare_source.gd      # Skripta na pošastih/pasteh, ki oddaja strah
-    │   └── interactable.gd      # Osnovna logika za interakcijo (tipka E)
-    ├── generators/
-    │   ├── room_generator.gd    # Algoritem za sprotno generiranje sob in hodnikov
-    │   └── bug_spawner.gd       # Logika, ki v vsak nivo vstavi obvezen "Feature Bug"
-    └── resources/               # Definicije za Custom Resources (.gd za .tres datoteke)
-        ├── entity_data.gd
-        └── level_config.gd
+	├── components/              # Komponente, ki jih pripnemo na druge objekte
+	│   ├── sanity_component.gd  # Računanje strahu na igralcu
+	│   ├── scare_source.gd      # Skripta na pošastih/pasteh, ki oddaja strah
+	│   └── interactable.gd      # Osnovna logika za interakcijo (tipka E)
+	├── generators/
+	│   ├── room_generator.gd    # Algoritem za sprotno generiranje sob in hodnikov
+	│   └── bug_spawner.gd       # Logika, ki v vsak nivo vstavi obvezen "Feature Bug"
+	└── resources/               # Definicije za Custom Resources (.gd za .tres datoteke)
+		├── entity_data.gd
+		└── level_config.gd
 ```
 
 **Podatkovni model (Kratek pregled):**[cite: 1, 2]

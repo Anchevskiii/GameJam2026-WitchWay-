@@ -27,8 +27,18 @@ func _ready() -> void:
 	EventBus.level_completed.connect(_on_level_completed)
 	# Fresh start, death and "Restart" all reload Main: resume at the last Living Room.
 	GameManager.current_level = GameManager.checkpoint_level
+	AudioManager.stop_room_music()
 	_load_room(GameManager.scene_for_level(GameManager.current_level))
-	AudioManager.start_room_ambience(1.4)
+	AudioManager.stop_menu_music()
+	_apply_room_ambience(1.4)
+
+
+## Safe rooms keep their own music; the haunted whispers only play on real floors.
+func _apply_room_ambience(fade_in_duration: float) -> void:
+	if GameManager.is_safe_room:
+		AudioManager.fade_out_room_ambience(0.35)
+	else:
+		AudioManager.start_room_ambience(fade_in_duration)
 
 
 func _setup_transition_label() -> void:
@@ -74,7 +84,7 @@ func _on_room_change_requested(scene_path: String) -> void:
 	tween.tween_property(_transition_label, "modulate:a", 0.0, 0.35)
 	# 3. Fade screen back in from black while ambient sound & whispers slowly fade in
 	tween.tween_callback(func() -> void:
-		AudioManager.start_room_ambience(fade_in_time + 0.5)
+		_apply_room_ambience(fade_in_time + 0.5)
 	)
 	tween.tween_property(fade_rect, "color:a", 0.0, fade_in_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tween.tween_callback(func() -> void: _is_changing_room = false)
