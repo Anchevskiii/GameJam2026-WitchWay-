@@ -61,6 +61,8 @@ var _home: Vector2
 var _state_time: float = 0.0
 var _wander_target: Vector2
 var _wander_time: float = 0.0
+## Heading to a noise it heard (walks there faster than a wander).
+var _investigating: bool = false
 var _panic_dir: Vector2 = Vector2.RIGHT
 var _panic_turn_time: float = 0.0
 var _anim_time: float = 0.0
