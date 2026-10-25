@@ -37,3 +37,6 @@ desktop.ini
 
 # Crash logs
 godot.log
+
+# Windows build for the jam submission
+!Build/*.exe
